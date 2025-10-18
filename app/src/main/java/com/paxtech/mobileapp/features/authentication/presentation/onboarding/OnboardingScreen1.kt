@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -43,23 +44,26 @@ fun OnboardingScreen1(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundWhite)
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Header con botón Skip
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onSkipClick) {
                     Text(
                         text = "Skip",
                         color = TextPrimary,
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -87,7 +91,7 @@ fun OnboardingScreen1(
                         )
                         Text(
                             text = "Barbería",
-                            fontSize = 18.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
                             color = TextSecondary
                         )
@@ -99,12 +103,9 @@ fun OnboardingScreen1(
                 // Título
                 Text(
                     text = "Explora Salones de Belleza en tu Área",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
-                        fontSize = 28.sp,
-                        lineHeight = 36.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -114,11 +115,8 @@ fun OnboardingScreen1(
                 // Descripción
                 Text(
                     text = "Descubre los mejores salones y estilistas cerca de ti. Encuentra servicios de calidad con solo unos toques.",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary,
-                        fontSize = 16.sp,
-                        lineHeight = 24.sp
-                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextSecondary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -126,7 +124,9 @@ fun OnboardingScreen1(
             
             // Footer con indicadores y botón
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp) // Espacio adicional para evitar la barra de navegación
             ) {
                 // Indicadores de progreso
                 Row(
@@ -175,7 +175,7 @@ fun OnboardingScreen1(
                         Text(
                             text = "Next",
                             color = Color.White,
-                            fontSize = 16.sp,
+                            style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
                     }

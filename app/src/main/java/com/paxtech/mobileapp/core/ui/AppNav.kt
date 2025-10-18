@@ -99,6 +99,9 @@ fun AppNav(){
                 },
                 onRegisterClick = {
                     navController.navigate(Route.Register.route)
+                },
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -116,6 +119,9 @@ fun AppNav(){
                     }
                 },
                 onLoginClick = {
+                    navController.popBackStack()
+                },
+                onBackClick = {
                     navController.popBackStack()
                 }
             )

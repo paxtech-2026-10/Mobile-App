@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +44,8 @@ fun SplashScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(DarkPurple), // Fondo púrpura sólido como en la imagen
+                .background(DarkPurple)
+                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars),
             contentAlignment = Alignment.Center
         ) {
             Column(

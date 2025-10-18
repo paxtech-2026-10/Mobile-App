@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,6 +26,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,214 +55,313 @@ import com.paxtech.mobileapp.ui.theme.TextSecondary
 @Composable
 fun LoginScreen(
     onLoginClick: () -> Unit = {},
-    onRegisterClick: () -> Unit = {}
+    onRegisterClick: () -> Unit = {},
+    onBackClick: () -> Unit = {}
 ) {
-    var username by remember { mutableStateOf("") }
+    var emailPhone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var saveMe by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundWhite)
+            .background(LightPurple)
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Contenido superior
-            Column(
-                modifier = Modifier.fillMaxWidth()
+            // Header con botón de regreso y título
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.height(60.dp))
-                
-                // Título
-                Text(
-                    text = "¡Bienvenido de nuevo!",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
-                        fontSize = 28.sp
-                    ),
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Subtítulo
-                Text(
-                    text = "¿Listo para tu próximo servicio de belleza? Inicia sesión.",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary,
-                        fontSize = 16.sp
-                    ),
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                Spacer(modifier = Modifier.height(40.dp))
-                
-                // Campo Usuario
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { 
-                        Text(
-                            "Usuario",
-                            color = TextSecondary
-                        ) 
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryPurple,
-                        unfocusedBorderColor = DividerGray,
-                        focusedLabelColor = PrimaryPurple,
-                        unfocusedLabelColor = TextSecondary
-                    )
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Campo Contraseña
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { 
-                        Text(
-                            "Contraseña",
-                            color = TextSecondary
-                        ) 
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
-                                tint = TextSecondary
-                            )
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryPurple,
-                        unfocusedBorderColor = DividerGray,
-                        focusedLabelColor = PrimaryPurple,
-                        unfocusedLabelColor = TextSecondary
-                    )
-                )
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                // Botón Iniciar Sesión
-                Button(
-                    onClick = onLoginClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryPurple
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "Iniciar sesión",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp
+                IconButton(onClick = onBackClick) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                // Divider
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Divider(
-                        modifier = Modifier.weight(1f),
-                        color = DividerGray
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(DividerGray, CircleShape)
-                    )
-                    Divider(
-                        modifier = Modifier.weight(1f),
-                        color = DividerGray
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                // Botones sociales
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Apple
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(Color(0xFFF3F4F6), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("🍎", style = MaterialTheme.typography.headlineSmall)
-                    }
-                    
-                    // Google
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(Color(0xFFF3F4F6), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("G", style = MaterialTheme.typography.headlineSmall)
-                    }
-                    
-                    // Facebook
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(Color(0xFFF3F4F6), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("f", style = MaterialTheme.typography.headlineSmall)
                     }
                 }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                Text(
+                    text = "Log in",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.width(48.dp)) // Balancear el espacio del botón
             }
             
-            // Enlace de registro
-            TextButton(
-                onClick = onRegisterClick,
-                modifier = Modifier.fillMaxWidth()
+            // Banner púrpura grande
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .background(PrimaryPurple),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "¿No tienes cuenta? ",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = TextPrimary,
-                        fontSize = 16.sp
-                    )
+                    text = "Login to your account to access all the features in uTime",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 32.dp)
                 )
-                Text(
-                    text = "Regístrate aquí",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = PrimaryPurple,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp
-                    )
-                )
+            }
+            
+            // Tarjeta blanca principal con esquinas redondeadas superiores
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                    .background(BackgroundWhite)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Contenido principal
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        // Email / Phone Number
+                        Column {
+                            Text(
+                                text = "Email / Phone Number",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = emailPhone,
+                                onValueChange = { emailPhone = it },
+                                placeholder = { 
+                                    Text(
+                                        "Enter email/phone number",
+                                        color = TextSecondary
+                                    ) 
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = PrimaryPurple,
+                                    unfocusedBorderColor = DividerGray
+                                )
+                            )
+                        }
+                        
+                        // Password
+                        Column {
+                            Text(
+                                text = "Password",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = password,
+                                onValueChange = { password = it },
+                                placeholder = { 
+                                    Text(
+                                        "Enter your password",
+                                        color = TextSecondary
+                                    ) 
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                trailingIcon = {
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(
+                                            imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                            tint = TextSecondary
+                                        )
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = PrimaryPurple,
+                                    unfocusedBorderColor = DividerGray
+                                )
+                            )
+                        }
+                        
+                        // Options Row: Save Me toggle y Forgot Password
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Save Me toggle
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Switch(
+                                    checked = saveMe,
+                                    onCheckedChange = { saveMe = it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = PrimaryPurple,
+                                        checkedTrackColor = PrimaryPurple.copy(alpha = 0.3f),
+                                        uncheckedThumbColor = Color.Gray,
+                                        uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
+                                    )
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Save Me",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextPrimary
+                                )
+                            }
+                            
+                            // Forgot Password link
+                            TextButton(onClick = { /* TODO: Implement forgot password */ }) {
+                                Text(
+                                    text = "Forgot Password?",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PrimaryPurple,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Log In Button
+                        Button(
+                            onClick = onLoginClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryPurple
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "Log In",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Divider
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Divider(
+                                modifier = Modifier.weight(1f),
+                                color = DividerGray
+                            )
+                            Text(
+                                text = "Or Sign in with",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                            Divider(
+                                modifier = Modifier.weight(1f),
+                                color = DividerGray
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Social Media Buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            // Facebook
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(Color(0xFF1877F2), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("f", style = MaterialTheme.typography.headlineSmall, color = Color.White)
+                            }
+                            
+                            // Google
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(Color.White, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("G", style = MaterialTheme.typography.headlineSmall, color = Color.Black)
+                            }
+                            
+                            // Twitter
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(Color(0xFF1DA1F2), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("🐦", style = MaterialTheme.typography.headlineSmall)
+                            }
+                            
+                            // Instagram
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(Color(0xFFE4405F), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("📷", style = MaterialTheme.typography.headlineSmall)
+                            }
+                        }
+                    }
+                    
+                    // Sign Up Link
+                    TextButton(
+                        onClick = onRegisterClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    ) {
+                        Text(
+                            text = "Don't have an account? ",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "SIGN UP",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PrimaryPurple,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }
