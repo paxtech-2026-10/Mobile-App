@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.ExperimentalMaterial3Api
 import com.paxtech.mobileapp.ui.theme.BackgroundWhite
 import com.paxtech.mobileapp.ui.theme.DividerGray
 import com.paxtech.mobileapp.ui.theme.LightPurple
@@ -62,6 +63,7 @@ enum class RegisterType {
     CLIENT, BUSINESS
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     onRegisterClick: (RegisterType) -> Unit = {},

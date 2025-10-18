@@ -9,7 +9,11 @@ import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 
 // Configuración de la fuente Nunito
-val provider = GoogleFont.Provider("com.google.android.gms.fonts", "com.google.android.gms")
+val provider = GoogleFont.Provider(
+    providerAuthority = "com.google.android.gms.fonts",
+    providerPackage = "com.google.android.gms",
+    certificates = null
+)
 
 val NunitoFontFamily = FontFamily(
     Font(GoogleFont("Nunito"), provider, FontWeight.Normal),
