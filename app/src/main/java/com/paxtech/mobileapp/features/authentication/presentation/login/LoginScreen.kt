@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paxtech.mobileapp.ui.theme.BackgroundWhite
 import com.paxtech.mobileapp.ui.theme.DividerGray
+import com.paxtech.mobileapp.ui.theme.LightPurple
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import com.paxtech.mobileapp.ui.theme.TextPrimary
 import com.paxtech.mobileapp.ui.theme.TextSecondary
@@ -69,7 +71,7 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(LightPurple)
-            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
+            .windowInsetsPadding(WindowInsets.systemBars)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
