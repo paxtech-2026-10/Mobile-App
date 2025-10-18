@@ -13,7 +13,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.paxtech.mobileapp.features.authentication.presentation.splash.SplashScreen
-import com.paxtech.mobileapp.features.authentication.presentation.welcome.WelcomeScreen
+import com.paxtech.mobileapp.features.authentication.presentation.onboarding.OnboardingScreen1
+import com.paxtech.mobileapp.features.authentication.presentation.onboarding.OnboardingScreen2
+import com.paxtech.mobileapp.features.authentication.presentation.onboarding.OnboardingScreen3
 import com.paxtech.mobileapp.features.authentication.presentation.login.LoginScreen
 import com.paxtech.mobileapp.features.authentication.presentation.register.RegisterScreen
 import com.paxtech.mobileapp.features.authentication.presentation.register.RegisterType
@@ -40,16 +42,47 @@ fun AppNav(){
         composable(Route.Splash.route) {
             SplashScreen(
                 onNavigateToWelcome = {
-                    navController.navigate(Route.Welcome.route) {
+                    navController.navigate(Route.Onboarding1.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Route.Welcome.route) {
-            WelcomeScreen(
+        composable(Route.Onboarding1.route) {
+            OnboardingScreen1(
+                onNextClick = {
+                    navController.navigate(Route.Onboarding2.route)
+                },
+                onSkipClick = {
+                    navController.navigate(Route.Login.route) {
+                        popUpTo(Route.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Route.Onboarding2.route) {
+            OnboardingScreen2(
+                onNextClick = {
+                    navController.navigate(Route.Onboarding3.route)
+                },
+                onSkipClick = {
+                    navController.navigate(Route.Login.route) {
+                        popUpTo(Route.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Route.Onboarding3.route) {
+            OnboardingScreen3(
                 onStartClick = {
+                    navController.navigate(Route.Login.route) {
+                        popUpTo(Route.Splash.route) { inclusive = true }
+                    }
+                },
+                onSkipClick = {
                     navController.navigate(Route.Login.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
                     }
@@ -294,7 +327,9 @@ fun AppNav(){
 sealed class Route(val route: String) {
 
     object Splash: Route("splash")
-    object Welcome: Route("welcome")
+    object Onboarding1: Route("onboarding1")
+    object Onboarding2: Route("onboarding2")
+    object Onboarding3: Route("onboarding3")
     object Login: Route("login")
     object Register: Route("register")
     object SuccessClient: Route("success_client")

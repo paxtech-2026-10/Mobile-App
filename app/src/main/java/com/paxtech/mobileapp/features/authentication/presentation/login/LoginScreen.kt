@@ -43,6 +43,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paxtech.mobileapp.ui.theme.BackgroundWhite
+import com.paxtech.mobileapp.ui.theme.DividerGray
+import com.paxtech.mobileapp.ui.theme.PrimaryPurple
+import com.paxtech.mobileapp.ui.theme.TextPrimary
+import com.paxtech.mobileapp.ui.theme.TextSecondary
 
 @Composable
 fun LoginScreen(
@@ -56,7 +61,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(BackgroundWhite)
     ) {
         Column(
             modifier = Modifier
@@ -75,7 +80,8 @@ fun LoginScreen(
                     text = "¡Bienvenido de nuevo!",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = TextPrimary,
+                        fontSize = 28.sp
                     ),
                     textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth()
@@ -87,7 +93,8 @@ fun LoginScreen(
                 Text(
                     text = "¿Listo para tu próximo servicio de belleza? Inicia sesión.",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = Color.Black
+                        color = TextSecondary,
+                        fontSize = 16.sp
                     ),
                     textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth()
@@ -99,10 +106,21 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Usuario") },
+                    label = { 
+                        Text(
+                            "Usuario",
+                            color = TextSecondary
+                        ) 
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryPurple,
+                        unfocusedBorderColor = DividerGray,
+                        focusedLabelColor = PrimaryPurple,
+                        unfocusedLabelColor = TextSecondary
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -111,7 +129,12 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Contraseña") },
+                    label = { 
+                        Text(
+                            "Contraseña",
+                            color = TextSecondary
+                        ) 
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -119,11 +142,18 @@ fun LoginScreen(
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                                contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                                tint = TextSecondary
                             )
                         }
                     },
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryPurple,
+                        unfocusedBorderColor = DividerGray,
+                        focusedLabelColor = PrimaryPurple,
+                        unfocusedLabelColor = TextSecondary
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -135,7 +165,7 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8B5CF6) // Púrpura
+                        containerColor = PrimaryPurple
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -143,7 +173,8 @@ fun LoginScreen(
                         text = "Iniciar sesión",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             color = Color.White,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp
                         )
                     )
                 }
@@ -157,16 +188,16 @@ fun LoginScreen(
                 ) {
                     Divider(
                         modifier = Modifier.weight(1f),
-                        color = Color(0xFFE5E7EB)
+                        color = DividerGray
                     )
                     Box(
                         modifier = Modifier
                             .size(8.dp)
-                            .background(Color(0xFFE5E7EB), CircleShape)
+                            .background(DividerGray, CircleShape)
                     )
                     Divider(
                         modifier = Modifier.weight(1f),
-                        color = Color(0xFFE5E7EB)
+                        color = DividerGray
                     )
                 }
                 
@@ -217,14 +248,16 @@ fun LoginScreen(
                 Text(
                     text = "¿No tienes cuenta? ",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Black
+                        color = TextPrimary,
+                        fontSize = 16.sp
                     )
                 )
                 Text(
                     text = "Regístrate aquí",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color(0xFF8B5CF6),
-                        fontWeight = FontWeight.Medium
+                        color = PrimaryPurple,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
                     )
                 )
             }
