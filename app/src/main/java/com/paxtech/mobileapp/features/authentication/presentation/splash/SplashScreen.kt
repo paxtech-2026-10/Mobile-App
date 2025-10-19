@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +45,7 @@ fun SplashScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(DarkPurple)
-                .windowInsetsPadding(WindowInsets.systemBars),
+                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars),
             contentAlignment = Alignment.Center
         ) {
             Column(
