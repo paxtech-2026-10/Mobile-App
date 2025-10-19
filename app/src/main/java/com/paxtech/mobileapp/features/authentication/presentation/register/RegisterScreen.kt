@@ -1,6 +1,7 @@
 package com.paxtech.mobileapp.features.authentication.presentation.register
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,72 +84,87 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightPurple)
+            .background(BackgroundWhite)
             .statusBarsPadding()
     ) {
-        // Tarjeta blanca principal
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(BackgroundWhite)
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(
+            // Header con botón de regreso y título
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Header con botón de regreso y título
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = TextPrimary
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.width(8.dp))
-                        
-                        Text(
-                            text = "Sign Up",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary,
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        Spacer(modifier = Modifier.width(48.dp)) // Balancear el espacio del botón
-                    }
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Banner púrpura
+                IconButton(onClick = onBackClick) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(80.dp)
-                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                            .background(PrimaryPurple),
+                            .size(40.dp)
+                            .background(Color.White, CircleShape)
+                            .border(1.dp, DividerGray, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Sign Up to access all the\nfeatures in Barber Shop",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Medium
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                    
-                    Spacer(modifier = Modifier.height(32.dp))
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                Text(
+                    text = "Sign Up",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.width(48.dp)) // Balancear el espacio del botón
+            }
+            
+            // Banner púrpura con bordes redondeados superiores
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                    .background(PrimaryPurple),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Sign Up to access all the features in Barber Shop",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 32.dp)
+                )
+            }
+            
+            // Tarjeta blanca principal que se superpone al banner púrpura
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(y = (-24).dp) // Se superpone al banner púrpura
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                    .background(BackgroundWhite)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Contenido principal
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
                     
                     // Campos del formulario
                     Column(
@@ -358,27 +374,28 @@ fun RegisterScreen(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
-                
-                // Login Link
-                TextButton(
-                    onClick = onLoginClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 32.dp)
-                ) {
-                    Text(
-                        text = "Have an account? ",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "SIGN IN",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PrimaryPurple,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Spacer(modifier = Modifier.height(32.dp))
+                    }
+                    
+                    // Login Link
+                    TextButton(
+                        onClick = onLoginClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 32.dp)
+                    ) {
+                        Text(
+                            text = "Have an account? ",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "SIGN IN",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PrimaryPurple,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
