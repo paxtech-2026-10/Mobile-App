@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -112,12 +112,11 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.width(48.dp)) // Balancear el espacio del botón
             }
             
-            // Banner púrpura más pequeño con bordes redondeados inferiores
+            // Banner púrpura con esquinas en punta
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
-                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                     .background(PrimaryPurple),
                 contentAlignment = Alignment.Center
             ) {
@@ -131,10 +130,11 @@ fun LoginScreen(
                 )
             }
             
-            // Tarjeta blanca principal con esquinas redondeadas superiores
+            // Tarjeta blanca principal que se superpone al banner púrpura
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .offset(y = (-24).dp) // Se superpone al banner púrpura
                     .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                     .background(BackgroundWhite)
             ) {
