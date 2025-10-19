@@ -112,11 +112,12 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.width(48.dp)) // Balancear el espacio del botón
             }
             
-            // Banner púrpura más pequeño
+            // Banner púrpura más pequeño con bordes redondeados inferiores
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
+                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                     .background(PrimaryPurple),
                 contentAlignment = Alignment.Center
             ) {
