@@ -126,7 +126,7 @@ fun OnboardingScreen3(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 24.dp) // Espacio adicional para evitar la barra de navegación
+                    .padding(bottom = 80.dp) // Más espacio para evitar la barra de navegación
             ) {
                 // Indicadores de progreso
                 Row(

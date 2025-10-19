@@ -358,76 +358,7 @@ fun RegisterScreen(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Divider
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Divider(
-                            modifier = Modifier.weight(1f),
-                            color = DividerGray
-                        )
-                        Text(
-                            text = "Or Sign up with",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                        Divider(
-                            modifier = Modifier.weight(1f),
-                            color = DividerGray
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Social Media Buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        // Facebook
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(Color(0xFF1877F2), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("f", style = MaterialTheme.typography.headlineSmall, color = Color.White)
-                        }
-                        
-                        // Google
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(Color.White, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("G", style = MaterialTheme.typography.headlineSmall, color = Color.Black)
-                        }
-                        
-                        // Twitter
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(Color(0xFF1DA1F2), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("🐦", style = MaterialTheme.typography.headlineSmall)
-                        }
-                        
-                        // Instagram
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(Color(0xFFE4405F), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("📷", style = MaterialTheme.typography.headlineSmall)
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
                 
                 // Login Link
@@ -435,7 +366,7 @@ fun RegisterScreen(
                     onClick = onLoginClick,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 32.dp)
                 ) {
                     Text(
                         text = "Have an account? ",
