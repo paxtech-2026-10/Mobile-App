@@ -1,6 +1,6 @@
 package com.paxtech.mobileapp.features.authentication.presentation.login
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -87,7 +87,8 @@ fun LoginScreen(
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .background(Color.White, CircleShape),
+                            .background(Color.White, CircleShape)
+                            .border(1.dp, DividerGray, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -103,7 +104,7 @@ fun LoginScreen(
                 
                 Text(
                     text = "Log in",
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
                     modifier = Modifier.weight(1f),
@@ -113,11 +114,12 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.width(48.dp)) // Balancear el espacio del botón
             }
             
-            // Banner púrpura con esquinas en punta
+            // Banner púrpura con bordes redondeados superiores
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                     .background(PrimaryPurple),
                 contentAlignment = Alignment.Center
             ) {
