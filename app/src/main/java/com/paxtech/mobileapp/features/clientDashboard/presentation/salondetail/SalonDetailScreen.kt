@@ -41,25 +41,7 @@ fun SalonDetailScreen(
     var selectedCategory by remember { mutableStateOf("Destacados") }
     val categories = listOf("Destacados", "Cabello", "Barba", "Skin Care", "Prom")
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -71,9 +53,23 @@ fun SalonDetailScreen(
                         contentDescription = salon?.companyName,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
+                            .height(280.dp),
                         contentScale = ContentScale.Crop
                     )
+
+                    // Botón de Back
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(top = 40.dp, start = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
 
                     // Badge de rating
                     Surface(
@@ -81,7 +77,7 @@ fun SalonDetailScreen(
                         color = Color.White,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(12.dp)
+                            .padding(top = 40.dp, end = 16.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -112,7 +108,7 @@ fun SalonDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White)
-                        .padding(16.dp)
+                        .padding(top = 20.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -259,13 +255,12 @@ private fun ServiceCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
-            // Título y precio en la misma fila
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -280,41 +275,36 @@ private fun ServiceCard(
                     )
                 }
 
-                // Precio y duración
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        svc.price,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        "${svc.durationMins} mins",
-                        fontSize = 11.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Botón Reservar a la derecha
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(
-                    onClick = { onReserveService(svc) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE8DEF8)
-                    ),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "Reservar",
-                        color = Color(0xFF6750A4),
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            svc.price,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            "${svc.durationMins} mins",
+                            fontSize = 11.sp,
+                            color = Color.Gray
+                        )
+                    }
+                    Button(
+                        onClick = { onReserveService(svc) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE8DEF8)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            "Reservar",
+                            color = Color(0xFF6750A4),
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp
+                        )
+                    }
                 }
             }
         }
