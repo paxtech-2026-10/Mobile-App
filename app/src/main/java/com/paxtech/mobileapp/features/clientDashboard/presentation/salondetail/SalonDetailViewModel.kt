@@ -35,7 +35,7 @@ class SalonDetailViewModel : ViewModel() {
         viewModelScope.launch {
             _salon.value = Salon(
                 id = salonId,
-                companyName = "Salón de Belleza Ejemplo",
+                companyName = "Salón de Belleza",
                 coverImageUrl = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000"
             )
 

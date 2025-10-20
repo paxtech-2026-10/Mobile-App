@@ -1,17 +1,25 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 data class TimeSlot(
     val time: String,
@@ -38,23 +46,29 @@ fun TimeSelectionScreen(
     )
 
     val timeSlots = listOf(
-        TimeSlot("10:00 am"),
-        TimeSlot("10:30 am"),
-        TimeSlot("11:00 am"),
-        TimeSlot("11:30 am"),
-        TimeSlot("12:00 pm"),
-        TimeSlot("12:30 pm"),
-        TimeSlot("13:00 pm"),
-        TimeSlot("13:30 pm"),
-        TimeSlot("14:00 pm"),
-        TimeSlot("14:30 pm"),
-        TimeSlot("15:00 pm")
+        TimeSlot("10:00 a.m."),
+        TimeSlot("10:30 a.m."),
+        TimeSlot("11:00 a.m."),
+        TimeSlot("11:30 a.m."),
+        TimeSlot("12:00 p.m."),
+        TimeSlot("12:30 p.m."),
+        TimeSlot("13:00 p.m."),
+        TimeSlot("13:30 p.m."),
+        TimeSlot("14:00 p.m."),
+        TimeSlot("14:30 p.m."),
+        TimeSlot("15:00 p.m.")
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Seleccionar hora") },
+                title = {
+                    Text(
+                        "Seleccionar hora",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -68,52 +82,61 @@ fun TimeSelectionScreen(
         bottomBar = {
             Surface(
                 tonalElevation = 8.dp,
+                shadowElevation = 8.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             servicePrice,
-                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             "$serviceName - $serviceDuration min",
-                            style = MaterialTheme.typography.bodyMedium
+                            fontSize = 13.sp,
+                            color = Color.Gray
                         )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        selectedProfessional,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
+                        Text(
+                            selectedProfessional,
+                            fontSize = 13.sp,
+                            color = Color.Gray
+                        )
                         if (selectedDate != null && selectedTime != null) {
-                            "${selectedDate!!.substring(0, 2)} de octubre - ${selectedTime}"
-                        } else {
-                            "Selecciona fecha y hora"
-                        },
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(Modifier.height(16.dp))
+                            Text(
+                                "${selectedDate!!.split(" ")[0]} de octubre - ${selectedTime}",
+                                fontSize = 13.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
                     Button(
                         onClick = {
                             if (selectedDate != null && selectedTime != null) {
-                                val formattedDate = "Martes ${selectedDate!!.substring(0, 2)} de octubre"
+                                val formattedDate = "Martes ${selectedDate!!.split(" ")[0]} de octubre"
                                 val formattedTime = "${selectedTime!!} – ${calculateEndTime(selectedTime!!, serviceDuration)}"
                                 onContinue(selectedDate!!, selectedTime!!, formattedDate, formattedTime)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = selectedDate != null && selectedTime != null
+                        enabled = selectedDate != null && selectedTime != null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE8DEF8),
+                            disabledContainerColor = Color(0xFFE8DEF8).copy(alpha = 0.5f)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 12.dp)
                     ) {
-                        Text("Continuar")
+                        Text(
+                            "Continuar",
+                            color = Color(0xFF6750A4),
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp
+                        )
                     }
                 }
             }
@@ -125,38 +148,51 @@ fun TimeSelectionScreen(
                 .padding(padding)
         ) {
             item {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "Cualquier profesional",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color(0xFFF5F5F5)
+                    ) {
+                        Text(
+                            text = selectedProfessional,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            fontSize = 14.sp
+                        )
+                    }
+
+                    IconButton(onClick = { /* TODO: Abrir calendario */ }) {
+                        Icon(
+                            Icons.Default.CalendarToday,
+                            contentDescription = "Calendario",
+                            tint = Color.Black
+                        )
+                    }
                 }
-                Divider()
             }
 
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
                 ) {
                     Text(
                         "Octubre 2025",
-                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        october2025Dates.forEach { date ->
+                        items(october2025Dates) { date ->
                             DateChip(
                                 date = date,
                                 isSelected = selectedDate == date,
@@ -165,31 +201,14 @@ fun TimeSelectionScreen(
                         }
                     }
                 }
-                Divider()
-            }
-
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        "Horarios disponibles",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                }
             }
 
             items(timeSlots) { timeSlot ->
-                TimeSlotItem(
+                TimeSlotCard(
                     timeSlot = timeSlot,
                     isSelected = selectedTime == timeSlot.time,
                     onSelect = { selectedTime = timeSlot.time }
                 )
-                Divider()
             }
 
             item { Spacer(Modifier.height(16.dp)) }
@@ -207,77 +226,64 @@ private fun DateChip(
     val dayNumber = parts[0]
     val dayName = parts[1]
 
-    Card(
+    Surface(
         modifier = Modifier
-            .width(40.dp)
+            .size(48.dp)
             .clickable { onSelect() },
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 2.dp)
+        shape = CircleShape,
+        color = if (isSelected) Color(0xFFE8DEF8) else Color(0xFFF5F5F5)
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = dayNumber,
-                style = MaterialTheme.typography.bodyMedium,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                else MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) Color(0xFF6750A4) else Color.Black
             )
             Text(
                 text = dayName,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                else MaterialTheme.colorScheme.onSurfaceVariant
+                fontSize = 10.sp,
+                color = if (isSelected) Color(0xFF6750A4) else Color.Gray
             )
         }
     }
 }
 
 @Composable
-private fun TimeSlotItem(
+private fun TimeSlotCard(
     timeSlot: TimeSlot,
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .clickable(
                 enabled = timeSlot.isAvailable,
                 onClick = onSelect
             ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) Color(0xFFE8DEF8) else Color.White,
+        border = if (!isSelected) ButtonDefaults.outlinedButtonBorder else null,
+        tonalElevation = if (isSelected) 0.dp else 0.dp
     ) {
-        Text(
-            text = timeSlot.time,
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (!timeSlot.isAvailable) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            else if (isSelected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurface
-        )
-
-        if (isSelected) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Text(
-                text = "Seleccionado",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-        } else if (timeSlot.isAvailable) {
-            Button(onClick = onSelect) {
-                Text("Seleccionar")
-            }
-        } else {
-            Text(
-                text = "No disponible",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                text = timeSlot.time,
+                fontSize = 15.sp,
+                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                color = if (isSelected) Color(0xFF6750A4) else Color.Black
             )
         }
     }
@@ -285,17 +291,17 @@ private fun TimeSlotItem(
 
 private fun calculateEndTime(startTime: String, duration: Int): String {
     return when (startTime) {
-        "10:00 am" -> "10:50 am"
-        "10:30 am" -> "11:20 am"
-        "11:00 am" -> "11:50 am"
-        "11:30 am" -> "12:20 pm"
-        "12:00 pm" -> "12:50 pm"
-        "12:30 pm" -> "13:20 pm"
-        "13:00 pm" -> "13:50 pm"
-        "13:30 pm" -> "14:20 pm"
-        "14:00 pm" -> "14:50 pm"
-        "14:30 pm" -> "15:20 pm"
-        "15:00 pm" -> "15:50 pm"
+        "10:00 a.m." -> "10:50 a.m."
+        "10:30 a.m." -> "11:20 a.m."
+        "11:00 a.m." -> "11:50 a.m."
+        "11:30 a.m." -> "12:20 p.m."
+        "12:00 p.m." -> "12:50 p.m."
+        "12:30 p.m." -> "13:20 p.m."
+        "13:00 p.m." -> "13:50 p.m."
+        "13:30 p.m." -> "14:20 p.m."
+        "14:00 p.m." -> "14:50 p.m."
+        "14:30 p.m." -> "15:20 p.m."
+        "15:00 p.m." -> "15:50 p.m."
         else -> "${duration} min después"
     }
 }
