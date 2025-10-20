@@ -1,239 +1,8 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 package com.paxtech.mobileapp.features.clientDashboard.presentation.confirmation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -241,14 +10,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.paxtech.mobileapp.R
+import androidx.compose.ui.unit.sp
 import com.paxtech.mobileapp.features.clientDashboard.presentation.shared.ReservationData
 
 @Composable
@@ -257,7 +24,7 @@ fun ReservationConfirmedScreen(
     onBackToHome: () -> Unit
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = Color.White
     ) { padding ->
         Column(
             modifier = Modifier
@@ -267,21 +34,29 @@ fun ReservationConfirmedScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "Cita confirmada",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(120.dp)
-            )
+            // Ícono de check con fondo circular morado
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFE8DEF8)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircle,
+                    contentDescription = "Cita confirmada",
+                    tint = Color(0xFF6750A4),
+                    modifier = Modifier.size(80.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "¡Cita confirmada!",
-                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = Color.Black,
                 textAlign = TextAlign.Center
             )
 
@@ -289,10 +64,10 @@ fun ReservationConfirmedScreen(
 
             Text(
                 text = "Tu reserva ha sido confirmada exitosamente. Te hemos enviado un correo con todos los detalles.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 15.sp,
+                color = Color(0xFF666666),
                 textAlign = TextAlign.Center,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2
+                lineHeight = 22.sp
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -306,24 +81,30 @@ fun ReservationConfirmedScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE8DEF8)
+                )
             ) {
                 Text(
                     text = "Volver al inicio",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF6750A4)
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
             TextButton(
                 onClick = { /* TODO: Agregar funcionalidad de compartir */ },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = "Compartir reserva",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    fontSize = 15.sp,
+                    color = Color(0xFF6750A4),
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -338,64 +119,68 @@ private fun ReservationDetailsCard(reservationData: ReservationData) {
             .padding(horizontal = 8.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
+            // Header con imagen y nombre del salón
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "Salón",
+                Box(
                     modifier = Modifier
-                        .size(50.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(8.dp)
-                        ),
-                    contentScale = ContentScale.Crop
-                )
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE8DEF8)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = "Salón",
+                        tint = Color(0xFF6750A4),
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column {
                     Text(
                         text = reservationData.salonName,
-                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.Black
                     )
                     Text(
                         text = reservationData.salonAddress,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontSize = 13.sp,
+                        color = Color(0xFF666666)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-
+            // Detalles de la reserva
             ReservationDetailItem(
                 title = "Servicio",
                 value = reservationData.service.title
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             ReservationDetailItem(
                 title = "Profesional",
                 value = reservationData.selectedProfessional
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -416,40 +201,37 @@ private fun ReservationDetailsCard(reservationData: ReservationData) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             ReservationDetailItem(
                 title = "Duración",
                 value = "${reservationData.service.durationMins} minutos"
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
+            HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
 
-            Divider(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-            )
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
+            // Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total a pagar",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "Total pagado",
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color.Black
                 )
 
                 Text(
                     text = reservationData.service.price,
-                    style = MaterialTheme.typography.headlineSmall,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = Color(0xFF6750A4)
                 )
             }
         }
@@ -464,15 +246,16 @@ private fun ReservationDetailItem(
     Column {
         Text(
             text = title,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontSize = 13.sp,
+            color = Color(0xFF666666),
+            fontWeight = FontWeight.Normal
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = Color.Black
         )
     }
 }
