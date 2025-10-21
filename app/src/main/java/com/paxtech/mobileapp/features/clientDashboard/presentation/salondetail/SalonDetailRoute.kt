@@ -1,6 +1,9 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
 
@@ -8,7 +11,14 @@ import com.paxtech.mobileapp.features.clientDashboard.presentation.details.Servi
 fun SalonDetailRoute(
     salonId: Int,
     onBack: () -> Unit,
-    onReserveService: (service: ServiceUi, salonName: String, salonAddress: String, salonRating: Double) -> Unit,
+    onReserveService: (
+        service: ServiceUi,
+        salonName: String,
+        salonAddress: String,
+        salonRating: Double,
+        salonImageUrl: String
+    ) -> Unit,
+    // si no estás usando Hilt aquí, puedes crear el VM por defecto:
     viewModel: SalonDetailViewModel = hiltViewModel()
 ) {
     LaunchedEffect(salonId) { viewModel.load(salonId) }
@@ -18,37 +28,27 @@ fun SalonDetailRoute(
     val reviews by viewModel.reviews.collectAsState()
     val about by viewModel.about.collectAsState()
 
-    val defaultAbout = about ?: com.paxtech.mobileapp.features.clientDashboard.presentation.details.AboutUi(
-        description = "Información no disponible",
-        schedule = listOf("Horario no especificado"),
-        address = "Dirección no disponible",
-        phone = "Teléfono no disponible"
-    )
+    val defaultServices = if (services.isEmpty())
+        listOf(ServiceUi("0", "Servicio no disponible", "Descripción no disponible", "s/0.00", 0))
+    else services
 
-    val defaultServices = services.ifEmpty {
-        listOf(
-            ServiceUi("1", "Servicio no disponible", "Descripción no disponible", "s/0.00", 0)
-        )
-    }
-
-    val defaultReviews = reviews.ifEmpty {
-        listOf(
-            com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi("Cliente", 5, "No hay reseñas disponibles")
-        )
-    }
+    val defaultReviews = if (reviews.isEmpty())
+        listOf(com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi("Cliente", 5, "Sin reseñas"))
+    else reviews
 
     SalonDetailScreen(
         salon = salon,
         services = defaultServices,
         reviews = defaultReviews,
-        about = defaultAbout,
+        about = about,
         onBack = onBack,
         onReserveService = { service ->
             onReserveService(
                 service,
                 salon?.companyName ?: "Salón",
-                defaultAbout.address,
-                4.7
+                about.address,
+                4.7,
+                salon?.coverImageUrl.orEmpty()
             )
         }
     )

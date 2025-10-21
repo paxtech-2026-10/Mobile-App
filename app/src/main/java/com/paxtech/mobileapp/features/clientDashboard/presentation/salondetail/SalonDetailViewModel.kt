@@ -2,13 +2,14 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.clientDashboard.presentation.details.AboutUi
+import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi
+import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
+import com.paxtech.mobileapp.features.clientDashboard.presentation.home.HomeMockProvider
+import com.paxtech.mobileapp.shared.model.Salon
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
-import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi
-import com.paxtech.mobileapp.features.clientDashboard.presentation.details.AboutUi
-import com.paxtech.mobileapp.shared.model.Salon
 
 class SalonDetailViewModel : ViewModel() {
 
@@ -21,40 +22,30 @@ class SalonDetailViewModel : ViewModel() {
     private val _reviews = MutableStateFlow<List<ReviewUi>>(emptyList())
     val reviews: StateFlow<List<ReviewUi>> = _reviews
 
-    private val _about = MutableStateFlow<AboutUi>(
+    private val _about = MutableStateFlow(
         AboutUi(
-            description = "Cargando información...",
-            schedule = listOf("Cargando horario..."),
-            address = "Cargando dirección...",
-            phone = "Cargando teléfono..."
+            description = "Servicios profesionales de belleza.",
+            schedule = listOf("Lun - Sáb: 9:00 - 19:00"),
+            address = "Av. Primavera 123, Santiago de Surco",   // <-- dirección fija, NO 'Cargando'
+            phone = "+51 987 654 321"
         )
     )
     val about: StateFlow<AboutUi> = _about
 
     fun load(salonId: Int) {
         viewModelScope.launch {
-            _salon.value = Salon(
-                id = salonId,
-                companyName = "Salón de Belleza",
-                coverImageUrl = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000"
-            )
+            // Toma el salón EXACTO desde los mocks de Home
+            _salon.value = HomeMockProvider.getById(salonId)
 
+            // mocks de servicios/reseñas
             _services.value = listOf(
-                ServiceUi("1", "Corte simple", "Corte de cabello básico", "s/40.00", 50),
-                ServiceUi("2", "Corte + Lavado", "Corte completo con lavado", "s/60.00", 75),
-                ServiceUi("3", "Coloración", "Tinte completo del cabello", "s/120.00", 120)
+                ServiceUi("1", "Corte simple", "Corte básico", "s/40.00", 50),
+                ServiceUi("2", "Corte + Lavado", "Corte con lavado", "s/60.00", 75),
+                ServiceUi("3", "Coloración", "Tinte completo", "s/120.00", 120)
             )
-
             _reviews.value = listOf(
-                ReviewUi("María González", 5, "Excelente servicio, muy profesionales"),
-                ReviewUi("Carlos López", 4, "Buen atención, volveré pronto")
-            )
-
-            _about.value = AboutUi(
-                description = "Salón de belleza especializado en cortes modernos y tratamientos capilares.",
-                schedule = listOf("Lunes a Viernes: 9:00 - 19:00", "Sábados: 9:00 - 17:00"),
-                address = "Av. Primavera 123, Santiago de Surco",
-                phone = "+51 987 654 321"
+                ReviewUi("María González", 5, "Excelente servicio"),
+                ReviewUi("Carlos López", 4, "Muy buena atención")
             )
         }
     }

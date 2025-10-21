@@ -25,7 +25,6 @@ import com.paxtech.mobileapp.features.clientDashboard.presentation.details.Revie
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
 import com.paxtech.mobileapp.shared.model.Salon
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalonDetailScreen(
     salon: Salon?,
@@ -43,13 +42,15 @@ fun SalonDetailScreen(
 
     Scaffold { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) {
             // Header con imagen
             item {
                 Box {
                     AsyncImage(
-                        model = salon?.coverImageUrl ?: "",
+                        model = salon?.coverImageUrl.orEmpty(),
                         contentDescription = salon?.companyName,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -66,7 +67,7 @@ fun SalonDetailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Volver",
                             tint = Color.White
                         )
                     }
@@ -92,11 +93,7 @@ fun SalonDetailScreen(
                             Spacer(Modifier.width(4.dp))
                             Text("4.7", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(6.dp))
-                            Text(
-                                "100 reviews",
-                                fontSize = 11.sp,
-                                color = Color.Gray
-                            )
+                            Text("100 reviews", fontSize = 11.sp, color = Color.Gray)
                         }
                     }
                 }
@@ -116,7 +113,7 @@ fun SalonDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            salon?.companyName ?: "Glow & Go Hair Studio",
+                            salon?.companyName ?: "Salón",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -147,14 +144,8 @@ fun SalonDetailScreen(
                     Spacer(Modifier.height(12.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        AssistChip(
-                            onClick = {},
-                            label = { Text("Instagram", fontSize = 12.sp) }
-                        )
-                        AssistChip(
-                            onClick = {},
-                            label = { Text("TikTok", fontSize = 12.sp) }
-                        )
+                        AssistChip(onClick = {}, label = { Text("Instagram", fontSize = 12.sp) })
+                        AssistChip(onClick = {}, label = { Text("TikTok", fontSize = 12.sp) })
                     }
                 }
             }
@@ -222,6 +213,7 @@ fun SalonDetailScreen(
                     }
                     item { Spacer(Modifier.height(80.dp)) }
                 }
+
                 1 -> {
                     items(reviews) { rev ->
                         ReviewRow(rev)
@@ -229,6 +221,7 @@ fun SalonDetailScreen(
                     }
                     item { Spacer(Modifier.height(80.dp)) }
                 }
+
                 2 -> {
                     item {
                         AboutBlock(about)
@@ -239,6 +232,8 @@ fun SalonDetailScreen(
         }
     }
 }
+
+/* ---------- Composables PRIVADOS usados arriba (en el mismo archivo) ---------- */
 
 @Composable
 private fun ServiceCard(
@@ -263,16 +258,8 @@ private fun ServiceCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        svc.title,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp
-                    )
-                    Text(
-                        svc.subtitle,
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
+                    Text(svc.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text(svc.subtitle, fontSize = 12.sp, color = Color.Gray)
                 }
 
                 Row(
@@ -280,22 +267,12 @@ private fun ServiceCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            svc.price,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            "${svc.durationMins} mins",
-                            fontSize = 11.sp,
-                            color = Color.Gray
-                        )
+                        Text(svc.price, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("${svc.durationMins} mins", fontSize = 11.sp, color = Color.Gray)
                     }
                     Button(
                         onClick = { onReserveService(svc) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE8DEF8)
-                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8DEF8)),
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
                     ) {
                         Text(
@@ -345,9 +322,7 @@ private fun AboutBlock(about: AboutUi) {
         Spacer(Modifier.height(16.dp))
         Text("Horario", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         Spacer(Modifier.height(4.dp))
-        about.schedule.forEach {
-            Text("• $it", fontSize = 14.sp, color = Color.DarkGray)
-        }
+        about.schedule.forEach { Text("• $it", fontSize = 14.sp, color = Color.DarkGray) }
 
         Spacer(Modifier.height(16.dp))
         Text("Ubicación", fontWeight = FontWeight.Bold, fontSize = 16.sp)
