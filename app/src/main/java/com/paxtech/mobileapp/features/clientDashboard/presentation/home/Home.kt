@@ -2,12 +2,14 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +41,7 @@ fun Home(
     viewModel: HomeViewModel = hiltViewModel(),
     onSalonClick: (Int) -> Unit = {}
 ) {
-    val salons by viewModel.salons.collectAsState()
+val salons by viewModel.salons.collectAsState()
 
     val trending = remember { mockTrendingSalons() }
     val recents  = remember { mockRecentSalons() }
@@ -55,6 +57,24 @@ fun Home(
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
+
+        // Debug info
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Text(
+                text = "🔍 Debug: ${salons.size} salones del API",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = { viewModel.getAllSalons() },
+                modifier = Modifier.height(32.dp)
+            ) {
+                Text("Refresh", style = MaterialTheme.typography.bodySmall)
+            }
+        }
 
         // section title
         Text(
