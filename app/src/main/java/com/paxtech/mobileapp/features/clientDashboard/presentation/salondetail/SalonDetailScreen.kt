@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,6 +23,11 @@ import com.paxtech.mobileapp.features.clientDashboard.presentation.details.About
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
 import com.paxtech.mobileapp.shared.model.Salon
+import com.paxtech.mobileapp.ui.theme.BackgroundWhite
+import com.paxtech.mobileapp.ui.theme.DividerGray
+import com.paxtech.mobileapp.ui.theme.PrimaryPurple
+import com.paxtech.mobileapp.ui.theme.TextPrimary
+import com.paxtech.mobileapp.ui.theme.TextSecondary
 
 @Composable
 fun SalonDetailScreen(
@@ -58,7 +62,7 @@ fun SalonDetailScreen(
                         contentScale = ContentScale.Crop
                     )
 
-                    // Botón de Back
+                    // Botón Back (blanco sobre imagen)
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
@@ -68,14 +72,14 @@ fun SalonDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = BackgroundWhite
                         )
                     }
 
                     // Badge de rating
                     Surface(
                         shape = MaterialTheme.shapes.small,
-                        color = Color.White,
+                        color = BackgroundWhite,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(top = 40.dp, end = 16.dp)
@@ -87,13 +91,13 @@ fun SalonDetailScreen(
                             Icon(
                                 Icons.Filled.Star,
                                 contentDescription = null,
-                                tint = Color(0xFFFFA500),
+                                tint = androidx.compose.ui.graphics.Color(0xFFFFA500),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text("4.7", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text("4.7", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                             Spacer(Modifier.width(6.dp))
-                            Text("100 reviews", fontSize = 11.sp, color = Color.Gray)
+                            Text("100 reviews", fontSize = 11.sp, color = TextSecondary)
                         }
                     }
                 }
@@ -104,7 +108,7 @@ fun SalonDetailScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(BackgroundWhite)
                         .padding(top = 20.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
                 ) {
                     Row(
@@ -115,12 +119,13 @@ fun SalonDetailScreen(
                         Text(
                             salon?.companyName ?: "Salón",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
                         Icon(
                             Icons.Outlined.FavoriteBorder,
                             contentDescription = "Favorite",
-                            tint = Color.Gray
+                            tint = TextSecondary
                         )
                     }
 
@@ -130,22 +135,34 @@ fun SalonDetailScreen(
                         Icon(
                             Icons.Filled.Place,
                             contentDescription = null,
-                            tint = Color.Gray,
+                            tint = TextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             about.address,
                             fontSize = 13.sp,
-                            color = Color.Gray
+                            color = TextSecondary
                         )
                     }
 
                     Spacer(Modifier.height(12.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        AssistChip(onClick = {}, label = { Text("Instagram", fontSize = 12.sp) })
-                        AssistChip(onClick = {}, label = { Text("TikTok", fontSize = 12.sp) })
+                        AssistChip(
+                            onClick = {},
+                            label = { Text("Instagram", fontSize = 12.sp) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                labelColor = PrimaryPurple
+                            )
+                        )
+                        AssistChip(
+                            onClick = {},
+                            label = { Text("TikTok", fontSize = 12.sp) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                labelColor = PrimaryPurple
+                            )
+                        )
                     }
                 }
             }
@@ -155,7 +172,7 @@ fun SalonDetailScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(BackgroundWhite)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
@@ -164,10 +181,14 @@ fun SalonDetailScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.weight(1f)
                         ) {
-                            TextButton(onClick = { selectedTab = index }) {
+                            TextButton(
+                                onClick = { selectedTab = index },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = if (selectedTab == index) PrimaryPurple else TextSecondary
+                                )
+                            ) {
                                 Text(
                                     title,
-                                    color = if (selectedTab == index) Color.Black else Color.Gray,
                                     fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 14.sp
                                 )
@@ -177,7 +198,7 @@ fun SalonDetailScreen(
                                     modifier = Modifier
                                         .width(40.dp)
                                         .height(2.dp)
-                                        .background(Color.Black)
+                                        .background(PrimaryPurple)
                                 )
                             }
                         }
@@ -193,7 +214,7 @@ fun SalonDetailScreen(
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White),
+                                .background(BackgroundWhite),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
@@ -201,7 +222,24 @@ fun SalonDetailScreen(
                                 FilterChip(
                                     selected = selectedCategory == category,
                                     onClick = { selectedCategory = category },
-                                    label = { Text(category, fontSize = 13.sp) }
+                                    label = {
+                                        Text(
+                                            category,
+                                            fontSize = 13.sp,
+                                            color = if (selectedCategory == category) PrimaryPurple else TextSecondary
+                                        )
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        containerColor = BackgroundWhite,
+                                        selectedContainerColor = androidx.compose.ui.graphics.Color(0xFFEDE9FE), // morado muy claro
+                                        labelColor = TextSecondary,
+                                        selectedLabelColor = PrimaryPurple
+                                    ),
+                                    border = FilterChipDefaults.filterChipBorder(
+                                        enabled = true,
+                                        selected = selectedCategory == category,
+                                        borderColor = if (selectedCategory == category) PrimaryPurple else DividerGray
+                                    )
                                 )
                             }
                         }
@@ -217,7 +255,10 @@ fun SalonDetailScreen(
                 1 -> {
                     items(reviews) { rev ->
                         ReviewRow(rev)
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = DividerGray
+                        )
                     }
                     item { Spacer(Modifier.height(80.dp)) }
                 }
@@ -233,7 +274,7 @@ fun SalonDetailScreen(
     }
 }
 
-/* ---------- Composables PRIVADOS usados arriba (en el mismo archivo) ---------- */
+/* ---------- Composables PRIVADOS ---------- */
 
 @Composable
 private fun ServiceCard(
@@ -244,7 +285,7 @@ private fun ServiceCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = BackgroundWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -258,8 +299,8 @@ private fun ServiceCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(svc.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                    Text(svc.subtitle, fontSize = 12.sp, color = Color.Gray)
+                    Text(svc.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = TextPrimary)
+                    Text(svc.subtitle, fontSize = 12.sp, color = TextSecondary)
                 }
 
                 Row(
@@ -267,17 +308,17 @@ private fun ServiceCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(svc.price, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("${svc.durationMins} mins", fontSize = 11.sp, color = Color.Gray)
+                        Text(svc.price, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
+                        Text("${svc.durationMins} mins", fontSize = 11.sp, color = TextSecondary)
                     }
                     Button(
                         onClick = { onReserveService(svc) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8DEF8)),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
                     ) {
                         Text(
                             "Reservar",
-                            color = Color(0xFF6750A4),
+                            color = BackgroundWhite,
                             fontWeight = FontWeight.Medium,
                             fontSize = 13.sp
                         )
@@ -295,43 +336,43 @@ private fun ReviewRow(rev: ReviewUi) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(rev.author, fontWeight = FontWeight.SemiBold)
+            Text(rev.author, fontWeight = FontWeight.SemiBold, color = TextPrimary)
             Row {
                 repeat(rev.rating) {
                     Icon(
                         Icons.Filled.Star,
                         contentDescription = null,
-                        tint = Color(0xFFFFA500),
+                        tint = androidx.compose.ui.graphics.Color(0xFFFFA500),
                         modifier = Modifier.size(16.dp)
                     )
                 }
             }
         }
         Spacer(Modifier.height(6.dp))
-        Text(rev.comment, fontSize = 14.sp, color = Color.DarkGray)
+        Text(rev.comment, fontSize = 14.sp, color = TextSecondary)
     }
 }
 
 @Composable
 private fun AboutBlock(about: AboutUi) {
     Column(Modifier.padding(16.dp)) {
-        Text("Sobre nosotros", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Sobre nosotros", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
         Spacer(Modifier.height(8.dp))
-        Text(about.description, fontSize = 14.sp, color = Color.DarkGray)
+        Text(about.description, fontSize = 14.sp, color = TextSecondary)
 
         Spacer(Modifier.height(16.dp))
-        Text("Horario", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Horario", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
         Spacer(Modifier.height(4.dp))
-        about.schedule.forEach { Text("• $it", fontSize = 14.sp, color = Color.DarkGray) }
+        about.schedule.forEach { Text("• $it", fontSize = 14.sp, color = TextSecondary) }
 
         Spacer(Modifier.height(16.dp))
-        Text("Ubicación", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Ubicación", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
         Spacer(Modifier.height(4.dp))
-        Text(about.address, fontSize = 14.sp, color = Color.DarkGray)
+        Text(about.address, fontSize = 14.sp, color = TextSecondary)
 
         Spacer(Modifier.height(16.dp))
-        Text("Teléfono", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Teléfono", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
         Spacer(Modifier.height(4.dp))
-        Text(about.phone, fontSize = 14.sp, color = Color.DarkGray)
+        Text(about.phone, fontSize = 14.sp, color = TextSecondary)
     }
 }

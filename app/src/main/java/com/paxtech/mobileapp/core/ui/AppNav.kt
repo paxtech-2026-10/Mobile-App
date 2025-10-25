@@ -276,6 +276,9 @@ fun AppNav() {
             if (current != null) {
                 ReservationConfirmedScreen(
                     reservationData = current,
+                    onCancel = {                       // ← agregado: volver a la pantalla anterior
+                        navController.popBackStack()
+                    },
                     onBackToHome = {
                         navController.navigate(Route.Home.route) {
                             popUpTo(Route.Home.route) { inclusive = true }

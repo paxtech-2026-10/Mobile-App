@@ -1,25 +1,36 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paxtech.mobileapp.ui.theme.PrimaryPurple
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
-data class TimeSlot(val time: String, val isAvailable: Boolean = true)
+data class TimeSlot(
+    val time: String,
+    val status: TimeStatus = TimeStatus.AVAILABLE
+)
+
+enum class TimeStatus { AVAILABLE, SELECTED, BOOKED }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,160 +44,360 @@ fun TimeSelectionScreen(
     onBack: () -> Unit,
     onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String) -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf<String?>(null) }
-    var selectedTime by remember { mutableStateOf<String?>(null) }
+    val localeEn = Locale.ENGLISH
+    val localeEs = Locale("es", "ES")
 
-    val october2025Dates = listOf("6 Lun", "7 Mar", "8 Mié", "9 Jue", "10 Vie", "11 Sáb", "12 Dom")
+    var currentWeekStart by remember { mutableStateOf(startOfWeek(Calendar.getInstance())) }
+    var selectedDate by remember { mutableStateOf(cloneCal(currentWeekStart)) }
+    var selectedTime by remember { mutableStateOf("10:00 AM") }
+
+    val weekDates = remember(currentWeekStart.timeInMillis) {
+        List(6) { idx -> addDays(currentWeekStart, idx) }
+    }
+
+    val monthTitle = remember(currentWeekStart.timeInMillis) {
+        capFirst(SimpleDateFormat("MMMM yyyy", localeEn).format(currentWeekStart.time), localeEn)
+    }
+
     val timeSlots = listOf(
-        TimeSlot("10:00 a.m."), TimeSlot("10:30 a.m."), TimeSlot("11:00 a.m."),
-        TimeSlot("11:30 a.m."), TimeSlot("12:00 p.m."), TimeSlot("12:30 p.m."),
-        TimeSlot("13:00 p.m."), TimeSlot("13:30 p.m."), TimeSlot("14:00 p.m."),
-        TimeSlot("14:30 p.m."), TimeSlot("15:00 p.m.")
+        listOf("10:00 AM", "10:15 AM", "10:30 AM", "10:45 AM"),
+        listOf("11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM"),
+        listOf("12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM"),
+        listOf("01:00 PM", "01:15 PM", "01:30 PM", "01:45 PM"),
+        listOf("02:00 PM", "02:15 PM", "02:30 PM", "02:45 PM"),
+        listOf("03:00 PM", "03:15 PM", "03:30 PM", "03:45 PM")
     )
 
-    val dayMap = mapOf(
-        "Lun" to "Lunes", "Mar" to "Martes", "Mié" to "Miércoles",
-        "Jue" to "Jueves", "Vie" to "Viernes", "Sáb" to "Sábado", "Dom" to "Domingo"
-    )
+    val timeStatuses = remember {
+        mutableMapOf(
+            "12:00 PM" to TimeStatus.BOOKED,
+            "12:45 PM" to TimeStatus.BOOKED,
+            "01:30 PM" to TimeStatus.BOOKED
+        ).withDefault { TimeStatus.AVAILABLE }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Seleccionar hora", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Select Date & Time",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color(0xFFF2F1FF)
+                )
             )
         },
-        bottomBar = {
-            Surface(tonalElevation = 8.dp, shadowElevation = 8.dp, modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+        containerColor = Color(0xFFF2F1FF)
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Banner morado con esquinas redondeadas superiores
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(PrimaryPurple)
+                        .padding(24.dp)
+                        .padding(bottom = 24.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(servicePrice, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        Text("$serviceName - $serviceDuration min", fontSize = 13.sp, color = Color.Gray)
-                        Text(selectedProfessional, fontSize = 13.sp, color = Color.Gray)
-                        if (selectedDate != null && selectedTime != null) {
-                            val parts = selectedDate!!.split(" ")
-                            val dayNumber = parts[0]
-                            Text("$dayNumber de octubre - $selectedTime", fontSize = 13.sp, color = Color.Gray)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    currentWeekStart = startOfWeek(addDays(currentWeekStart, -7))
+                                    selectedDate = cloneCal(currentWeekStart)
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Filled.ChevronLeft,
+                                    contentDescription = "Previous",
+                                    tint = Color.White
+                                )
+                            }
+                            Text(
+                                monthTitle,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            IconButton(
+                                onClick = {
+                                    currentWeekStart = startOfWeek(addDays(currentWeekStart, +7))
+                                    selectedDate = cloneCal(currentWeekStart)
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Filled.ChevronRight,
+                                    contentDescription = "Next",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            weekDates.forEach { dateCal ->
+                                DateCircle(
+                                    cal = dateCal,
+                                    isSelected = isSameDay(dateCal, selectedDate),
+                                    onSelect = { selectedDate = cloneCal(dateCal) }
+                                )
+                            }
                         }
                     }
+                }
+
+                // Sección blanca superpuesta
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(y = (-24).dp)
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(20.dp)
+                            .padding(bottom = 90.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Time",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                LegendItem(color = PrimaryPurple, label = "Selected")
+                                LegendItem(color = Color(0xFFF3EDFF), label = "Available")
+                                LegendItem(color = Color(0xFFE7F1ED), label = "Booked")
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        timeSlots.forEach { row ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                row.forEach { time ->
+                                    val status = when {
+                                        time == selectedTime -> TimeStatus.SELECTED
+                                        timeStatuses[time] == TimeStatus.BOOKED -> TimeStatus.BOOKED
+                                        else -> TimeStatus.AVAILABLE
+                                    }
+                                    TimeSlotButton(
+                                        time = time,
+                                        status = status,
+                                        onSelect = {
+                                            if (status != TimeStatus.BOOKED) selectedTime = time
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // BOTTOM BAR
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 12.dp
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
                     Button(
                         onClick = {
-                            val parts = selectedDate!!.split(" ")
-                            val dayNumber = parts[0]
-                            val dayAbbr = parts.getOrNull(1) ?: ""
-                            val dayFull = dayMap[dayAbbr] ?: dayAbbr
-                            val formattedDate = "$dayFull $dayNumber de octubre"
-                            val formattedTime = "$selectedTime – ${calculateEndTime(selectedTime!!, serviceDuration)}"
-                            onContinue(selectedDate!!, selectedTime!!, formattedDate, formattedTime)
+                            val sdfEs = SimpleDateFormat("EEE d 'de' MMMM", localeEs)
+                            val formatted = capFirst(sdfEs.format(selectedDate.time), localeEs)
+                            onContinue(
+                                selectedDate.get(Calendar.DAY_OF_MONTH).toString(),
+                                selectedTime,
+                                formatted,
+                                selectedTime
+                            )
                         },
-                        enabled = selectedDate != null && selectedTime != null,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE8DEF8),
-                            disabledContainerColor = Color(0xFFE8DEF8).copy(alpha = 0.5f)
-                        ),
-                        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 12.dp)
-                    ) { Text("Continuar", color = Color(0xFF6750A4), fontWeight = FontWeight.Medium, fontSize = 14.sp) }
-                }
-            }
-        }
-    ) { padding ->
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(shape = RoundedCornerShape(20.dp), color = Color(0xFFF5F5F5)) {
-                        Text(selectedProfessional, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), fontSize = 14.sp)
-                    }
-                    IconButton(onClick = { /* calendario */ }) {
-                        Icon(Icons.Filled.CalendarToday, contentDescription = "Calendario", tint = Color.Black)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text(
+                            "Continue",
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp
+                        )
                     }
                 }
             }
-
-            item {
-                Column(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)) {
-                    Text("Octubre 2025", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(october2025Dates) { date ->
-                            DateChip(date = date, isSelected = selectedDate == date) { selectedDate = date }
-                        }
-                    }
-                }
-            }
-
-            items(timeSlots) { slot ->
-                TimeSlotCard(timeSlot = slot, isSelected = selectedTime == slot.time) { selectedTime = slot.time }
-            }
-
-            item { Spacer(Modifier.height(16.dp)) }
         }
     }
 }
 
 @Composable
-private fun DateChip(date: String, isSelected: Boolean, onSelect: () -> Unit) {
-    val parts = date.split(" ")
-    val dayNumber = parts[0]
-    val dayName = parts[1]
-    Surface(
-        modifier = Modifier.size(48.dp).clickable { onSelect() },
-        shape = CircleShape,
-        color = if (isSelected) Color(0xFFE8DEF8) else Color(0xFFF5F5F5)
+private fun DateCircle(
+    cal: Calendar,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
+    val dayNumber = cal.get(Calendar.DAY_OF_MONTH)
+    val dayName = SimpleDateFormat("EEE", Locale.ENGLISH).format(cal.time).replace(".", "")
+
+    Box(
+        modifier = Modifier
+            .width(50.dp)
+            .height(72.dp)
+            .clip(RoundedCornerShape(36.dp))
+            .background(if (isSelected) Color.White else Color(0x4DFFFFFF))
+            .clickable { onSelect() },
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(dayNumber, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = if (isSelected) Color(0xFF6750A4) else Color.Black)
-            Text(dayName, fontSize = 10.sp, color = if (isSelected) Color(0xFF6750A4) else Color.Gray)
-        }
-    }
-}
-
-@Composable
-private fun TimeSlotCard(timeSlot: TimeSlot, isSelected: Boolean, onSelect: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(enabled = timeSlot.isAvailable, onClick = onSelect),
-        shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) Color(0xFFE8DEF8) else Color.White,
-        border = if (!isSelected) ButtonDefaults.outlinedButtonBorder else null,
-        tonalElevation = 0.dp
-    ) {
-        Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) PrimaryPurple else Color.White.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = dayNumber.toString(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = timeSlot.time,
-                fontSize = 15.sp,
-                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-                color = if (isSelected) Color(0xFF6750A4) else Color.Black
+                text = dayName,
+                fontSize = 11.sp,
+                color = if (isSelected) PrimaryPurple else Color.White.copy(alpha = 0.9f),
+                fontWeight = FontWeight.Normal
             )
         }
     }
 }
 
-private fun calculateEndTime(startTime: String, duration: Int): String = when (startTime) {
-    "10:00 a.m." -> "10:50 a.m."
-    "10:30 a.m." -> "11:20 a.m."
-    "11:00 a.m." -> "11:50 a.m."
-    "11:30 a.m." -> "12:20 p.m."
-    "12:00 p.m." -> "12:50 p.m."
-    "12:30 p.m." -> "13:20 p.m."
-    "13:00 p.m." -> "13:50 p.m."
-    "13:30 p.m." -> "14:20 p.m."
-    "14:00 p.m." -> "14:50 p.m."
-    "14:30 p.m." -> "15:20 p.m."
-    "15:00 p.m." -> "15:50 p.m."
-    else -> "${duration} min después"
+@Composable
+private fun TimeSlotButton(
+    time: String,
+    status: TimeStatus,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = when (status) {
+        TimeStatus.SELECTED -> PrimaryPurple
+        TimeStatus.BOOKED -> Color(0xFFE7F1ED)
+        TimeStatus.AVAILABLE -> Color(0xFFF3EDFF)
+    }
+    val textColor = when (status) {
+        TimeStatus.SELECTED -> Color.White
+        TimeStatus.BOOKED -> Color(0xFF4DD0E1)
+        TimeStatus.AVAILABLE -> Color(0xFF9CA3AF)
+    }
+
+    Surface(
+        modifier = modifier
+            .height(44.dp)
+            .clickable(enabled = status != TimeStatus.BOOKED) { onSelect() },
+        shape = RoundedCornerShape(12.dp),
+        color = backgroundColor
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = time,
+                fontSize = 13.sp,
+                fontWeight = if (status == TimeStatus.SELECTED) FontWeight.SemiBold else FontWeight.Normal,
+                color = textColor
+            )
+        }
+    }
 }
+
+@Composable
+private fun LegendItem(color: Color, label: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(color))
+        Text(text = label, fontSize = 10.sp, color = Color.Gray)
+    }
+}
+
+private fun cloneCal(src: Calendar): Calendar =
+    (src.clone() as Calendar)
+
+private fun addDays(base: Calendar, days: Int): Calendar =
+    (base.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, days) }
+
+private fun startOfWeek(input: Calendar): Calendar {
+    val c = input.clone() as Calendar
+    c.firstDayOfWeek = Calendar.MONDAY
+    while (c.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+        c.add(Calendar.DAY_OF_MONTH, -1)
+    }
+    c.set(Calendar.HOUR_OF_DAY, 0)
+    c.set(Calendar.MINUTE, 0)
+    c.set(Calendar.SECOND, 0)
+    c.set(Calendar.MILLISECOND, 0)
+    return c
+}
+
+private fun isSameDay(a: Calendar, b: Calendar): Boolean =
+    a.get(Calendar.YEAR) == b.get(Calendar.YEAR) &&
+            a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR)
+
+private fun capFirst(s: String, locale: Locale): String =
+    s.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
