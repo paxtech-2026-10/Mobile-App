@@ -18,7 +18,10 @@ class HomeViewModel @Inject constructor(private val repository: SalonRepository)
 
     fun getAllSalons(){
         viewModelScope.launch {
-            _salons.value = repository.getAllSalons()
+            println("🔍 HomeViewModel: Calling getAllSalons...")
+            val salons = repository.getAllSalons()
+            println("🔍 HomeViewModel: Received ${salons.size} salons")
+            _salons.value = salons
         }
     }
 
