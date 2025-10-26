@@ -3,6 +3,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,12 +20,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -151,12 +155,14 @@ fun Home(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
             ) {
-                items(favoriteSalons) { salon ->
-                    SalonCard(
-                        salon = salon,
-                        onClick = { onSalonClick(salon.id) }
-                    )
-                }
+            items(favoriteSalons) { salon ->
+                SalonCard(
+                    salon = salon,
+                    onClick = { onSalonClick(salon.id) },
+                    isFavorite = true,
+                    onFavoriteClick = { viewModel.toggleFavorite(salon) }
+                )
+            }
             }
         }
 
@@ -179,7 +185,9 @@ fun Home(
                     onClick = { 
                         viewModel.saveVisit(salon)
                         onSalonClick(salon.id) 
-                    }
+                    },
+                    isFavorite = favoriteSalons.any { it.id == salon.id },
+                    onFavoriteClick = { viewModel.toggleFavorite(salon) }
                 )
             }
         }
@@ -201,7 +209,9 @@ fun Home(
                 items(recentVisits) { salon ->
                     TrendingSalonCard(
                         salon = salon,
-                        onClick = { onSalonClick(salon.id) }
+                        onClick = { onSalonClick(salon.id) },
+                        isFavorite = favoriteSalons.any { it.id == salon.id },
+                        onFavoriteClick = { viewModel.toggleFavorite(salon) }
                     )
                 }
             }
@@ -212,7 +222,9 @@ fun Home(
 @Composable
 private fun TrendingSalonCard(
     salon: Salon,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isFavorite: Boolean = false,
+    onFavoriteClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -252,12 +264,29 @@ private fun TrendingSalonCard(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = salon.companyName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = salon.companyName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = onFavoriteClick,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                            tint = if (isFavorite) Color(0xFFF44336) else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Salon description placeholder",
