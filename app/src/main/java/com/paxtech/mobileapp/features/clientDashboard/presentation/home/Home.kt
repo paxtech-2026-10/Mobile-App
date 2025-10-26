@@ -44,17 +44,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.paxtech.mobileapp.shared.model.Salon
 
-private fun mockTrendingSalons(): List<Salon> = listOf(
-    Salon(101, "Glow & Go Hair", "https://images.unsplash.com/photo-1582095133179-bfd08e2fc6b3?q=80&w=1200"),
-    Salon(102, "Estilo Único",   "https://images.unsplash.com/photo-1580136579312-94651dfd596d?q=80&w=1200"),
-    Salon(103, "Urban Cuts",     "https://images.unsplash.com/photo-1582095133429-3e73b1a5b9b0?q=80&w=1200")
-)
-
-private fun mockRecentSalons(): List<Salon> = listOf(
-    Salon(201, "Hair Loft",      "https://images.unsplash.com/photo-1582095133185-4c9c4c94a9b0?q=80&w=1200"),
-    Salon(202, "Spa Serena",     "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?q=80&w=1200"),
-    Salon(203, "Glam & Glow",    "https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=1200")
-)
 
 
 @Composable
@@ -63,9 +52,9 @@ fun Home(
     onSalonClick: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
-    val salons by viewModel.salons.collectAsState()
-    val trending = remember { mockTrendingSalons() }
-    val recents = remember { mockRecentSalons() }
+    val recommendedSalons by viewModel.recommendedSalons.collectAsState()
+    val favoriteSalons by viewModel.favoriteSalons.collectAsState()
+    val recentVisits by viewModel.recentVisits.collectAsState()
     
     // Obtener el nombre del usuario desde SharedPreferences
     val userName = remember {
@@ -145,34 +134,29 @@ fun Home(
                 }
                 
                 Spacer(modifier = Modifier.weight(1f))
-                
-                // Debug info (temporary)
-                Text(
-                    text = "🔍 ${salons.size}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Recent Salons Section (Horizontal)
-        Text(
-            text = "Recent Salons",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
-        ) {
-            items(recents) { salon ->
-                SalonCard(
-                    salon = salon,
-                    onClick = { onSalonClick(salon.id) }
-                )
+        // Favorite Salons Section (Horizontal)
+        if (favoriteSalons.isNotEmpty()) {
+            Text(
+                text = "Favorite Salons",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+            ) {
+                items(favoriteSalons) { salon ->
+                    SalonCard(
+                        salon = salon,
+                        onClick = { onSalonClick(salon.id) }
+                    )
+                }
             }
         }
 
@@ -189,32 +173,37 @@ fun Home(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
         ) {
-            items(salons) { salon ->
+            items(recommendedSalons) { salon ->
                 SalonCard(
                     salon = salon,
-                    onClick = { onSalonClick(salon.id) }
+                    onClick = { 
+                        viewModel.saveVisit(salon)
+                        onSalonClick(salon.id) 
+                    }
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Trending Salons Section (Vertical List)
-        Text(
-            text = "Trending Salons",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
-        ) {
-            items(trending) { salon ->
-                TrendingSalonCard(
-                    salon = salon,
-                    onClick = { onSalonClick(salon.id) }
-                )
+        // Recent Visits Section (Vertical List)
+        if (recentVisits.isNotEmpty()) {
+            Text(
+                text = "Recent Visits",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+            ) {
+                items(recentVisits) { salon ->
+                    TrendingSalonCard(
+                        salon = salon,
+                        onClick = { onSalonClick(salon.id) }
+                    )
+                }
             }
         }
     }

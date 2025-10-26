@@ -1,7 +1,9 @@
 package com.paxtech.mobileapp.features.clientDashboard.domain.di
 
+import com.paxtech.mobileapp.features.clientDashboard.data.repositories.LocalSalonRepositoryImpl
 import com.paxtech.mobileapp.features.clientDashboard.data.repositories.SalonRepositoryImpl
 import com.paxtech.mobileapp.features.clientDashboard.data.repositories.ReviewRepositoryImpl
+import com.paxtech.mobileapp.features.clientDashboard.domain.domain.LocalSalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.domain.SalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.domain.ReviewRepository
 import dagger.Binds
@@ -17,4 +19,7 @@ interface RepositoryModule {
     
     @Binds
     fun provideReviewRepository(impl: ReviewRepositoryImpl): ReviewRepository
+    
+    @Binds
+    fun provideLocalSalonRepository(impl: LocalSalonRepositoryImpl): LocalSalonRepository
 }

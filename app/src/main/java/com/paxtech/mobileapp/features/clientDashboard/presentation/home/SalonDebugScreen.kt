@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 //Para testear si agarra
+/*
 @Composable
 fun SalonDebugScreen(
     viewModel: HomeViewModel = hiltViewModel()
@@ -55,3 +56,5 @@ fun SalonDebugScreen(
 fun SalonDebugScreenPreview() {
     SalonDebugScreen()
 }*/
+
+ */
