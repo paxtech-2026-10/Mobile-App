@@ -5,3 +5,4 @@ import com.paxtech.mobileapp.features.clientDashboard.presentation.details.Revie
 interface ReviewRepository {
     suspend fun getReviewsByProviderId(providerId: Int): List<ReviewUi>
 }
+

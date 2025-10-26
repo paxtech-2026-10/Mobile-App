@@ -8,3 +8,4 @@ interface ReviewService {
     @GET("api/v1/reviews")
     suspend fun getAllReviews(): Response<List<ReviewDto>>
 }
+

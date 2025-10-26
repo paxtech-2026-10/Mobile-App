@@ -7,3 +7,4 @@ data class ReviewDto(
     val rating: Int,
     val review: String
 )
+

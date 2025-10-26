@@ -1,5 +1,6 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,9 +62,19 @@ fun Home(
     viewModel: HomeViewModel = hiltViewModel(),
     onSalonClick: (Int) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val salons by viewModel.salons.collectAsState()
     val trending = remember { mockTrendingSalons() }
     val recents = remember { mockRecentSalons() }
+    
+    // Obtener el nombre del usuario desde SharedPreferences
+    val userName = remember {
+        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        prefs.getString("user_full_name", "Usuario") ?: "Usuario"
+    }
+    val userInitials = remember {
+        userName.split(" ").mapNotNull { it.firstOrNull() }.joinToString("").uppercase().take(2)
+    }
 
     Column(
         modifier = Modifier
@@ -96,7 +108,7 @@ fun Home(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "IR",
+                            text = userInitials,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
@@ -109,7 +121,7 @@ fun Home(
                 // User info
                 Column {
                     Text(
-                        text = "Ibne Riead",
+                        text = userName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer

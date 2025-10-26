@@ -1,5 +1,6 @@
 package com.paxtech.mobileapp.features.authentication.presentation.register
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
@@ -53,12 +54,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.paxtech.mobileapp.ui.theme.BackgroundWhite
 import com.paxtech.mobileapp.ui.theme.DividerGray
 import com.paxtech.mobileapp.ui.theme.LightPurple
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import com.paxtech.mobileapp.ui.theme.TextPrimary
 import com.paxtech.mobileapp.ui.theme.TextSecondary
+import kotlinx.coroutines.launch
 
 enum class RegisterType {
     CLIENT, BUSINESS
@@ -67,6 +73,7 @@ enum class RegisterType {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
+    viewModel: RegisterViewModel = hiltViewModel(),
     onRegisterClick: (RegisterType) -> Unit = {},
     onLoginClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
@@ -78,6 +85,13 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var genderExpanded by remember { mutableStateOf(false) }
+
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    val firstName = fullName.trim()
+    val lastName = phoneNumber.trim() // phoneNumber ahora contiene el lastName del usuario
+    val scope = rememberCoroutineScope()
     
     val genderOptions = listOf("Male", "Female", "Other")
 
@@ -226,41 +240,27 @@ fun RegisterScreen(
                             )
                         }
                         
-                        // Phone Number
+                        // Last Name
                         Column {
                             Text(
-                                text = "Phone Number",
+                                text = "Last Name",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
-                                value = phoneNumber,
+                                value = phoneNumber, // Reutilizando phoneNumber como lastName
                                 onValueChange = { phoneNumber = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter you number.",
+                                        "Enter your last name.",
                                         color = TextSecondary
                                     ) 
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                                 shape = RoundedCornerShape(12.dp),
-                                leadingIcon = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text("🇺🇸", fontSize = 16.sp)
-                                        Text("+1", style = MaterialTheme.typography.bodyMedium)
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = "Dropdown",
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                },
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
                                     unfocusedBorderColor = DividerGray
@@ -354,25 +354,53 @@ fun RegisterScreen(
                     }
                     
                     Spacer(modifier = Modifier.height(32.dp))
-                    
-                    // Sign Up Button
-                    Button(
-                        onClick = { onRegisterClick(RegisterType.CLIENT) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryPurple
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = "Sign Up",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    viewModel.signUp(email, password, firstName, lastName)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryPurple
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isLoading && firstName.isNotEmpty() && lastName.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()
+                        ) {
+                            if (isLoading) {
+                                Text("Registrando...", color = Color.White)
+                            } else {
+                                Text(
+                                    text = "Sign Up",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        // Mostrar error si existe
+                        if (error != null) {
+                            Text(
+                                text = error ?: "",
+                                color = Color.Red,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+
+                        // Observar el éxito del registro
+                        val user by viewModel.user.collectAsState()
+                        val client by viewModel.client.collectAsState()
+
+                        LaunchedEffect(user, client) {
+                            if (user != null && client != null) {
+                                // Cuando el usuario y cliente se crean exitosamente, navegar
+                                onRegisterClick(RegisterType.CLIENT)
+                            }
+                        }
                     
                         Spacer(modifier = Modifier.height(32.dp))
                     }
