@@ -1,8 +1,8 @@
 package com.paxtech.mobileapp.core.di
 
-import com.paxtech.mobileapp.core.network.AuthInterceptor
 import com.paxtech.mobileapp.core.network.LoggingInterceptor
 import com.paxtech.mobileapp.features.authentication.data.remote.services.AuthService
+import com.paxtech.mobileapp.features.reservations.data.remote.services.ReservationService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,5 +45,11 @@ object RemoteModule {
     @Singleton
     fun provideAuthService(retrofit: Retrofit): AuthService {
         return retrofit.create(AuthService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReservationService(retrofit: Retrofit): ReservationService {
+        return retrofit.create(ReservationService::class.java)
     }
 }

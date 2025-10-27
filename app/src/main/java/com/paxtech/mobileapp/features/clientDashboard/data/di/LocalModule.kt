@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.room.Room
 import com.paxtech.mobileapp.features.clientDashboard.data.local.dao.SalonDao
 import com.paxtech.mobileapp.features.clientDashboard.data.local.database.SalonDatabase
+import com.paxtech.mobileapp.features.reservations.data.local.dao.ReservationDao
+import com.paxtech.mobileapp.features.reservations.data.local.database.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,5 +30,11 @@ object LocalModule {
     @Singleton
     fun provideSalonDao(salonDatabase: SalonDatabase): SalonDao {
         return salonDatabase.salonDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReservationDao(appDatabase: AppDatabase): ReservationDao {
+        return appDatabase.reservationDao()
     }
 }
