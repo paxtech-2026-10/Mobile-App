@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.clientDashboard.domain.domain.ReviewRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.domain.SalonRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +16,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class SalonDetailViewModel @Inject constructor(private val salonRepository: SalonRepository, private val serviceRepository: ServiceRepository) : ViewModel() {
-
+class SalonDetailViewModel @Inject constructor(
+    private val salonRepository: SalonRepository,
+    private val serviceRepository: ServiceRepository,
+    private val reviewRepository: ReviewRepository
+) : ViewModel() {
     private val _salon = MutableStateFlow<Salon?>(null)
     val salon: StateFlow<Salon?> = _salon
 
@@ -86,10 +90,16 @@ class SalonDetailViewModel @Inject constructor(private val salonRepository: Salo
                     )
                 }
 
-                _reviews.value = listOf(
-                    ReviewUi("María González", 5, "Excelente servicio, muy profesionales"),
-                    ReviewUi("Carlos López", 4, "Buen atención, volveré pronto")
-                )
+                try {
+                    val salonReviews = reviewRepository.getReviewsByProviderId(salonId)
+                    _reviews.value = salonReviews
+                } catch (e: Exception) {
+                    println("🔍 SalonDetailViewModel: Error loading reviews for salon $salonId: ${e.message}")
+                    // Mantener reseñas mockeadas en caso de error
+                    _reviews.value = listOf(
+                        ReviewUi("Cliente", 5, "No hay reseñas disponibles")
+                    )
+                }
 
             } catch (e: Exception) {
                 println("🔍 SalonDetailViewModel: Error loading salon $salonId: ${e.message}")
