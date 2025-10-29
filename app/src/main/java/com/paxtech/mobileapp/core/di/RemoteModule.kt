@@ -30,6 +30,9 @@ object RemoteModule {
         loggingInterceptor: LoggingInterceptor
     ): Retrofit {
         val okHttpClient = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)  // Increased from default 10s
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)     // Increased from default 10s
+            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .build()
