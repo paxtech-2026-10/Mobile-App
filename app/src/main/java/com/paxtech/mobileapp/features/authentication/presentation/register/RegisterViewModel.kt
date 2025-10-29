@@ -61,7 +61,7 @@ class RegisterViewModel @Inject constructor(
                     putString("user_first_name", firstName)
                     putString("user_last_name", lastName)
                     putString("user_full_name", "$firstName $lastName")
-                }.apply()
+                }.commit()
                 println("🔍 RegisterViewModel: Token and user data saved to SharedPreferences")
             }
             
