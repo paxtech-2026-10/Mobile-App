@@ -8,6 +8,9 @@ data class ReservationData(
     val salonImageUrl: String,        // <-- NUEVO: imagen real del salón
     val service: ServiceData,
     val selectedProfessional: String = "",
+    val selectedProfessionalId: Long = 0L,
+    val clientId: Long = 0L,
+    val providerId: Long = 0L,
     val selectedDate: String = "",
     val selectedTime: String = "",
     val formattedDate: String = "",

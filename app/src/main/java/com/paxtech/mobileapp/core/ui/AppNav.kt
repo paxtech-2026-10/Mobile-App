@@ -26,12 +26,17 @@ import com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail.S
 import com.paxtech.mobileapp.features.clientDashboard.presentation.shared.ReservationData
 import com.paxtech.mobileapp.features.clientDashboard.presentation.shared.ServiceData
 import com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection.TimeSelectionScreen
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.compose.ui.platform.LocalContext
 
 @Preview
 @Composable
 fun AppNav() {
     val navController = rememberNavController()
     val reservationData = remember { mutableStateOf<ReservationData?>(null) }
+    val context = LocalContext.current
+    val authPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
     NavHost(navController, startDestination = Route.Splash.route) {
 
@@ -157,6 +162,8 @@ fun AppNav() {
                         salonAddress = salonAddress,
                         salonRating = salonRating,
                         salonImageUrl = salonImageUrl,
+                        clientId = authPrefs.getInt("user_id", 0).toLong(),
+                        providerId = salonId.toLong(),
                         service = ServiceData(
                             id = service.id,
                             title = service.title,
@@ -193,8 +200,11 @@ fun AppNav() {
                     durationMins = current.service.durationMins
                 ),
                 onBack = { navController.popBackStack() },
-                onContinue = { selectedProfessional ->
-                    reservationData.value = current.copy(selectedProfessional = selectedProfessional)
+                onContinue = { selectedProfessional, workerId ->
+                    reservationData.value = current.copy(
+                        selectedProfessional = selectedProfessional,
+                        selectedProfessionalId = workerId
+                    )
                     navController.navigate("${Route.TimeSelection.route}/${current.service.id}") {
                         launchSingleTop = true
                     }
@@ -219,6 +229,9 @@ fun AppNav() {
                 servicePrice = current.service.price,
                 serviceDuration = current.service.durationMins,
                 selectedProfessional = current.selectedProfessional,
+                clientId = authPrefs.getInt("user_id", 0).toLong(),
+                providerId = current.salonId.toLong(),
+                workerId = current.selectedProfessionalId,
                 salonName = current.salonName,
                 salonAddress = current.salonAddress,
                 onBack = { navController.popBackStack() },
