@@ -29,7 +29,7 @@ import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 @Composable
 fun ReservationConfirmedScreen(
     reservationData: ReservationData,
-    onCancel: () -> Unit,          // ← NUEVO: callback para volver atrás
+    onCancel: () -> Unit,
     onBackToHome: () -> Unit
 ) {
     Scaffold(
@@ -370,3 +370,4 @@ private fun extractPriceValue(priceString: String): Double {
         0.0
     }
 }
+

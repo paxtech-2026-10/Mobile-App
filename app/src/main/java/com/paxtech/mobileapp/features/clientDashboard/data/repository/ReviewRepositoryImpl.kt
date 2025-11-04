@@ -1,7 +1,7 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.repositories
+package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReviewService
-import com.paxtech.mobileapp.features.clientDashboard.domain.domain.ReviewRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.ReviewRepository
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

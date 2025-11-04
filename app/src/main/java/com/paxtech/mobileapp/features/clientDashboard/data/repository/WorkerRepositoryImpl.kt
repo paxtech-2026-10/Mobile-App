@@ -1,9 +1,9 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.repositories
+package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.WorkerDto
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.WorkerService
-import com.paxtech.mobileapp.features.clientDashboard.domain.Worker
-import com.paxtech.mobileapp.features.clientDashboard.domain.domain.WorkerRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.models.Worker
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.WorkerRepository
 import javax.inject.Inject
 
 class WorkerRepositoryImpl @Inject constructor(
@@ -32,5 +32,4 @@ private fun WorkerDto.toDomain(): Worker = Worker(
     photoUrl = photoUrl,
     providerId = providerId
 )
-
 

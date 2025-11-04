@@ -2,9 +2,9 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.timeselectio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.paxtech.mobileapp.features.clientDashboard.data.repositories.ReservationRepository
-import com.paxtech.mobileapp.features.clientDashboard.data.repositories.TimeSlot
-import com.paxtech.mobileapp.features.clientDashboard.data.repositories.TimeSlotRepository
+import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReservationRepository
+import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlot
+import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlotRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.CreateReservationRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -117,6 +117,4 @@ class TimeSelectionViewModel @Inject constructor(
         }
     }
 }
-
-
 

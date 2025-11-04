@@ -2,8 +2,8 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.professional
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.paxtech.mobileapp.features.clientDashboard.domain.domain.WorkerRepository
-import com.paxtech.mobileapp.features.clientDashboard.domain.Worker
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.WorkerRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.models.Worker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow

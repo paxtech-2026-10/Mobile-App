@@ -424,3 +424,4 @@ private fun isSameDay(a: Calendar, b: Calendar): Boolean =
 
 private fun capFirst(s: String, locale: Locale): String =
     s.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+

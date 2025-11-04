@@ -5,7 +5,7 @@ data class ReservationData(
     val salonName: String,
     val salonAddress: String,
     val salonRating: Double,
-    val salonImageUrl: String,        // <-- NUEVO: imagen real del salón
+    val salonImageUrl: String,
     val service: ServiceData,
     val selectedProfessional: String = "",
     val selectedProfessionalId: Long = 0L,
@@ -24,3 +24,4 @@ data class ServiceData(
     val price: String,
     val durationMins: Int
 )
+

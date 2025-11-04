@@ -480,3 +480,4 @@ data class ReservationDetails(
     val totalPrice: String,
     val salonImageUrl: String = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000"
 )
+

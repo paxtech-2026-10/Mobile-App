@@ -6,3 +6,4 @@ data class AboutUi(
     val address: String,
     val phone: String
 )
+

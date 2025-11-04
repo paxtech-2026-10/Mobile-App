@@ -2,8 +2,8 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.paxtech.mobileapp.features.clientDashboard.domain.domain.ReviewRepository
-import com.paxtech.mobileapp.features.clientDashboard.domain.domain.SalonRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.ReviewRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.SalonRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

@@ -1,8 +1,8 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.repositories
+package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.local.dao.SalonDao
 import com.paxtech.mobileapp.features.clientDashboard.data.local.models.SalonEntity
-import com.paxtech.mobileapp.features.clientDashboard.domain.domain.LocalSalonRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.shared.model.Salon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -59,3 +59,4 @@ class LocalSalonRepositoryImpl @Inject constructor(
         salonDao.isFavorite(salonId)
     }
 }
+

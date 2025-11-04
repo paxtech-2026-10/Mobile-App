@@ -1,7 +1,7 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.repositories
+package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.SalonService
-import com.paxtech.mobileapp.features.clientDashboard.domain.domain.SalonRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.SalonRepository
 import com.paxtech.mobileapp.shared.model.Salon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,3 +69,4 @@ class SalonRepositoryImpl @Inject constructor(
 
 
 }
+

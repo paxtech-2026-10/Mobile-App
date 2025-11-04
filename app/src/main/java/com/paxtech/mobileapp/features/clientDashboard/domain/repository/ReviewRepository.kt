@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.domain.domain
+package com.paxtech.mobileapp.features.clientDashboard.domain.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi
 

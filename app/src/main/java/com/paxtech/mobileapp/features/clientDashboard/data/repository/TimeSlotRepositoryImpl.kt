@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.repositories
+package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.TimeSlotDto
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.TimeSlotService
@@ -32,6 +32,4 @@ private fun TimeSlotDto.toDomain() = TimeSlot(
     startTime = startTime,
     endTime = endTime
 )
-
-
 

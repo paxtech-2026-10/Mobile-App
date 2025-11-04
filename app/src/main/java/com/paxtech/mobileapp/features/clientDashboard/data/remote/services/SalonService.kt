@@ -1,6 +1,6 @@
 package com.paxtech.mobileapp.features.clientDashboard.data.remote.services
 
-import com.paxtech.mobileapp.features.clientDashboard.data.remote.model.SalonDto
+import com.paxtech.mobileapp.features.clientDashboard.data.remote.models.SalonDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path

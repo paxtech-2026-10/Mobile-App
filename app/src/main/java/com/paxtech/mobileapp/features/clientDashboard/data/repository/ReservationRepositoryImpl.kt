@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.repositories
+package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.CreateReservationRequest
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationService
@@ -28,6 +28,4 @@ class ReservationRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 }
-
-
 

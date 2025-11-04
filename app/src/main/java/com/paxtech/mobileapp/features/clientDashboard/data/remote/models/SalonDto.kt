@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.remote.model
+package com.paxtech.mobileapp.features.clientDashboard.data.remote.models
 
 data class SalonDto (
     val id: Int?,
@@ -9,3 +9,4 @@ data class SalonDto (
     val profileImageUrl: String?,
     val coverImageUrl: String?
 )
+

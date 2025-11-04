@@ -5,3 +5,4 @@ data class ReviewUi(
     val rating: Int,
     val comment: String
 )
+

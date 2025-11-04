@@ -7,3 +7,4 @@ data class ServiceUi(
     val price: String,
     val durationMins: Int
 )
+

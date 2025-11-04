@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.domain
+package com.paxtech.mobileapp.features.clientDashboard.domain.models
 
 data class Worker(
     val id: Long,
@@ -7,6 +7,4 @@ data class Worker(
     val photoUrl: String?,
     val providerId: Long
 )
-
-
 
