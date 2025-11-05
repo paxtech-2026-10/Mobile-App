@@ -140,7 +140,7 @@ fun SalonDetailScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            about.address,
+                            about.ubicacion,
                             fontSize = 13.sp,
                             color = TextSecondary
                         )
@@ -358,21 +358,16 @@ private fun AboutBlock(about: AboutUi) {
     Column(Modifier.padding(16.dp)) {
         Text("Sobre nosotros", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
         Spacer(Modifier.height(8.dp))
-        Text(about.description, fontSize = 14.sp, color = TextSecondary)
+        Text(about.email, fontSize = 14.sp, color = TextSecondary)
 
         Spacer(Modifier.height(16.dp))
         Text("Horario", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
         Spacer(Modifier.height(4.dp))
-        about.schedule.forEach { Text("• $it", fontSize = 14.sp, color = TextSecondary) }
+        about.socials.forEach { Text("• $it", fontSize = 14.sp, color = TextSecondary) }
 
         Spacer(Modifier.height(16.dp))
         Text("Ubicación", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
         Spacer(Modifier.height(4.dp))
-        Text(about.address, fontSize = 14.sp, color = TextSecondary)
-
-        Spacer(Modifier.height(16.dp))
-        Text("Teléfono", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
-        Spacer(Modifier.height(4.dp))
-        Text(about.phone, fontSize = 14.sp, color = TextSecondary)
+        Text(about.ubicacion, fontSize = 14.sp, color = TextSecondary)
     }
 }

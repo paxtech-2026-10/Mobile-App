@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.paxtech.mobileapp.features.clientDashboard.presentation.professionalselection.ProfessionalSelectionViewModel
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
 import com.paxtech.mobileapp.ui.theme.*
 
@@ -27,20 +29,25 @@ import com.paxtech.mobileapp.ui.theme.*
 fun ProfessionalSelectionScreen(
     service: ServiceUi,
     onBack: () -> Unit,
-    onContinue: (selectedProfessional: String) -> Unit
+    onContinue: (selectedProfessional: String, workerId: Long) -> Unit,
+    viewModel: ProfessionalSelectionViewModel = hiltViewModel()
 ) {
-    var selectedProfessional by remember { mutableStateOf("Pedro") }
+    var selectedProfessional by remember { mutableStateOf("") }
+    var selectedWorkerId by remember { mutableStateOf(0L) }
 
-    // URLs estáticas de ejemplo (placeholders) — estables y sin backend
-    val professionals = listOf(
-        Professional("Pedro",  "https://randomuser.me/api/portraits/men/32.jpg",   false, Color(0xFFD6F0FF)),
-        Professional("Ana",    "https://randomuser.me/api/portraits/women/44.jpg", false, Color(0xFFFFE0E6)),
-        Professional("Jose",   "https://randomuser.me/api/portraits/men/64.jpg",   false, Color(0xFFD6F0FF)),
-        Professional("Carla",  "https://randomuser.me/api/portraits/women/68.jpg", false, Color(0xFFFFE0E6)),
-        Professional("Miguel", "https://randomuser.me/api/portraits/men/58.jpg",   false, Color(0xFFD6F0FF)),
-        Professional("Sofia",  "https://randomuser.me/api/portraits/women/90.jpg", false, Color(0xFFFFE0E6)),
-        Professional("Cualquier profesional", null, true, Color(0xFFEDE7F6))
-    )
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val loadedProfessionals by viewModel.professionals.collectAsState()
+
+    val professionals = remember(loadedProfessionals) {
+        val mapped = loadedProfessionals.map { p ->
+            // Detectar género basándose en el photoUrl: /men/ = hombre (azul), /women/ = mujer (rosa)
+            val isMale = p.imageUrl?.contains("/men/") == true
+            val background = if (isMale) Color(0xFFD6F0FF) else Color(0xFFFFE0E6) // Azul para hombres, rosa para mujeres
+            Professional(name = p.name, imageUrl = p.imageUrl, isAnyProfessional = false, backgroundColor = background, workerId = p.id)
+        }
+        mapped + Professional("Cualquier profesional", null, true, Color(0xFFEDE7F6), workerId = 0L)
+    }
 
     Scaffold(
         topBar = {
@@ -74,7 +81,7 @@ fun ProfessionalSelectionScreen(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Button(
-                    onClick = { onContinue(selectedProfessional) },
+                    onClick = { onContinue(selectedProfessional, selectedWorkerId) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -97,7 +104,16 @@ fun ProfessionalSelectionScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            androidx.compose.foundation.lazy.LazyColumn(
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = PrimaryPurple)
+                }
+            } else if (errorMessage != null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = errorMessage ?: "", color = Color.Red)
+                }
+            } else {
+                androidx.compose.foundation.lazy.LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -124,7 +140,10 @@ fun ProfessionalSelectionScreen(
                                     ProfessionalCard(
                                         professional = professional,
                                         isSelected = selectedProfessional == professional.name,
-                                        onSelect = { selectedProfessional = professional.name }
+                                        onSelect = { 
+                                            selectedProfessional = professional.name
+                                            selectedWorkerId = professional.workerId
+                                        }
                                     )
                                 }
                             } else {
@@ -133,7 +152,10 @@ fun ProfessionalSelectionScreen(
                                     ProfessionalCard(
                                         professional = professional,
                                         isSelected = selectedProfessional == professional.name,
-                                        onSelect = { selectedProfessional = professional.name }
+                                        onSelect = { 
+                                            selectedProfessional = professional.name
+                                            selectedWorkerId = professional.workerId
+                                        }
                                     )
                                 }
                             }
@@ -146,6 +168,7 @@ fun ProfessionalSelectionScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
+            }
         }
     }
 }
@@ -154,7 +177,8 @@ data class Professional(
     val name: String,
     val imageUrl: String?,
     val isAnyProfessional: Boolean,
-    val backgroundColor: Color
+    val backgroundColor: Color,
+    val workerId: Long = 0L
 )
 
 @Composable
@@ -258,3 +282,4 @@ private fun ProfessionalCard(
         }
     }
 }
+

@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection.TimeSelectionViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -39,10 +41,14 @@ fun TimeSelectionScreen(
     servicePrice: String,
     serviceDuration: Int,
     selectedProfessional: String,
+    clientId: Long,
+    providerId: Long,
+    workerId: Long,
     salonName: String = "Glow & Go Hair Studio",
     salonAddress: String = "Av. Primavera 123, Santiago de Surco, Lima – Perú",
     onBack: () -> Unit,
-    onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String) -> Unit
+    onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String) -> Unit,
+    viewModel: TimeSelectionViewModel = hiltViewModel()
 ) {
     val localeEn = Locale.ENGLISH
     val localeEs = Locale("es", "ES")
@@ -59,6 +65,7 @@ fun TimeSelectionScreen(
         capFirst(SimpleDateFormat("MMMM yyyy", localeEn).format(currentWeekStart.time), localeEn)
     }
 
+    // Horarios hardcodeados (no se toman del backend)
     val timeSlots = listOf(
         listOf("10:00 AM", "10:15 AM", "10:30 AM", "10:45 AM"),
         listOf("11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM"),
@@ -68,13 +75,11 @@ fun TimeSelectionScreen(
         listOf("03:00 PM", "03:15 PM", "03:30 PM", "03:45 PM")
     )
 
-    val timeStatuses = remember {
-        mutableMapOf(
-            "12:00 PM" to TimeStatus.BOOKED,
-            "12:45 PM" to TimeStatus.BOOKED,
-            "01:30 PM" to TimeStatus.BOOKED
-        ).withDefault { TimeStatus.AVAILABLE }
-    }
+    // Cargar reservas del backend para marcar horarios ocupados
+    LaunchedEffect(Unit) { viewModel.load(workerId, providerId) }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val bookedTimeSlots by viewModel.bookedTimeSlots.collectAsState()
 
     Scaffold(
         topBar = {
@@ -211,6 +216,7 @@ fun TimeSelectionScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Mostrar horarios hardcodeados en filas de 4
                         timeSlots.forEach { row ->
                             Row(
                                 modifier = Modifier
@@ -221,7 +227,7 @@ fun TimeSelectionScreen(
                                 row.forEach { time ->
                                     val status = when {
                                         time == selectedTime -> TimeStatus.SELECTED
-                                        timeStatuses[time] == TimeStatus.BOOKED -> TimeStatus.BOOKED
+                                        bookedTimeSlots.contains(time) -> TimeStatus.BOOKED
                                         else -> TimeStatus.AVAILABLE
                                     }
                                     TimeSlotButton(
@@ -256,12 +262,29 @@ fun TimeSelectionScreen(
                         onClick = {
                             val sdfEs = SimpleDateFormat("EEE d 'de' MMMM", localeEs)
                             val formatted = capFirst(sdfEs.format(selectedDate.time), localeEs)
+                            
+                            // Navegar primero para no bloquear la UI
                             onContinue(
                                 selectedDate.get(Calendar.DAY_OF_MONTH).toString(),
                                 selectedTime,
                                 formatted,
                                 selectedTime
                             )
+                            
+                            // Intentar crear la reserva en background (no bloquea navegación)
+                            val selectedId = viewModel.getTimeSlotId(selectedTime)
+                            if (selectedId != null) {
+                                viewModel.createReservation(clientId, providerId, workerId, selectedId) { ok, error ->
+                                    if (ok) {
+                                        println("🔍 TimeSelectionScreen: Reserva creada exitosamente")
+                                    } else {
+                                        println("🔍 TimeSelectionScreen: Error al crear reserva: $error")
+                                        // Aquí podrías mostrar un snackbar o mensaje si lo necesitas
+                                    }
+                                }
+                            } else {
+                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime")
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -401,3 +424,4 @@ private fun isSameDay(a: Calendar, b: Calendar): Boolean =
 
 private fun capFirst(s: String, locale: Locale): String =
     s.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+

@@ -2,6 +2,9 @@ package com.paxtech.mobileapp.features.clientDashboard.data.di
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.SalonService
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReviewService
+import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.WorkerService
+import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.TimeSlotService
+import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,5 +26,23 @@ object RemoteModule {
     @Singleton
     fun provideReviewService(retrofit: Retrofit): ReviewService{
         return retrofit.create(ReviewService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkerService(retrofit: Retrofit): WorkerService{
+        return retrofit.create(WorkerService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTimeSlotService(retrofit: Retrofit): TimeSlotService{
+        return retrofit.create(TimeSlotService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReservationService(retrofit: Retrofit): ReservationService{
+        return retrofit.create(ReservationService::class.java)
     }
 }

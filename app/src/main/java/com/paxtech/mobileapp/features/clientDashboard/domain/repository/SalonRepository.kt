@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.domain.domain
+package com.paxtech.mobileapp.features.clientDashboard.domain.repository
 
 import com.paxtech.mobileapp.shared.model.Salon
 
@@ -7,3 +7,4 @@ interface SalonRepository {
 
     suspend fun getSalonById(id: Int): Salon?
 }
+

@@ -46,7 +46,7 @@ fun SalonDetailRoute(
             onReserveService(
                 service,
                 salon?.companyName ?: "Salón",
-                about.address,
+                about.ubicacion,
                 4.7,
                 salon?.coverImageUrl.orEmpty()
             )

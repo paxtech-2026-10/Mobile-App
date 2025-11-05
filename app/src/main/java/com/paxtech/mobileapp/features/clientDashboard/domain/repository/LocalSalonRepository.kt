@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.domain.domain
+package com.paxtech.mobileapp.features.clientDashboard.domain.repository
 
 import com.paxtech.mobileapp.shared.model.Salon
 
@@ -9,3 +9,4 @@ interface LocalSalonRepository {
     suspend fun toggleFavorite(salon: Salon): Boolean
     suspend fun isFavorite(salonId: Int): Boolean
 }
+

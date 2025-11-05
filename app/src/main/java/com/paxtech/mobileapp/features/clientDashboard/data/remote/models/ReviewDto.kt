@@ -1,4 +1,4 @@
-package com.paxtech.mobileapp.features.clientDashboard.data.remote.model
+package com.paxtech.mobileapp.features.clientDashboard.data.remote.models
 
 data class ReviewDto(
     val id: Int,
