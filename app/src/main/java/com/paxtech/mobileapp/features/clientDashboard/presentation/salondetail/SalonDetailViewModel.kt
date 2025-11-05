@@ -32,10 +32,9 @@ class SalonDetailViewModel @Inject constructor(
 
     private val _about = MutableStateFlow<AboutUi>(
         AboutUi(
-            description = "Cargando información...",
-            schedule = listOf("Cargando horario..."),
-            address = "Cargando dirección...",
-            phone = "Cargando teléfono..."
+            email = "Cargando información...",
+            socials = listOf("Cargando horario..."),
+            ubicacion = "Cargando dirección..."
         )
     )
     val about: StateFlow<AboutUi> = _about
@@ -51,17 +50,19 @@ class SalonDetailViewModel @Inject constructor(
 
                     // Actualizar la información "About" con datos reales del salón
                     _about.value = AboutUi(
-                        description = "Salón de belleza especializado en cortes modernos y tratamientos capilares.",
-                        schedule = listOf("Lunes a Viernes: 9:00 - 19:00", "Sábados: 9:00 - 17:00"),
-                        address = salonData.companyName,
-                        phone = "+51 987 654 321"
+                        email = salonData.email,
+                        socials = salonData.socials,
+                        ubicacion = salonData.location,
                     )
                 } else {
                     // Si no se encuentra el salón en el API, usar datos mockeados
                     _salon.value = Salon(
                         id = salonId,
                         companyName = "Salón $salonId",
-                        coverImageUrl = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000"
+                        coverImageUrl = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000",
+                        location = "",
+                        email = " ",
+                        socials = listOf()
                     )
                 }
 
@@ -107,7 +108,10 @@ class SalonDetailViewModel @Inject constructor(
                 _salon.value = Salon(
                     id = salonId,
                     companyName = "Salón $salonId",
-                    coverImageUrl = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000"
+                    coverImageUrl = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000",
+                    location = "",
+                    email = " ",
+                    socials = listOf()
                 )
             }
         }

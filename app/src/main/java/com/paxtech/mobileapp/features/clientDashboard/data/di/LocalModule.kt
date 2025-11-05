@@ -21,7 +21,9 @@ object LocalModule {
             application.applicationContext,
             SalonDatabase::class.java,
             "salon-db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
     
     @Provides

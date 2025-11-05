@@ -14,13 +14,13 @@ class LocalSalonRepositoryImpl @Inject constructor(
     
     override suspend fun getAllFavorites(): List<Salon> = withContext(Dispatchers.IO) {
         salonDao.getAllFavorites().map { entity ->
-            Salon(entity.id, entity.companyName, entity.coverImageUrl)
+            Salon(entity.id, entity.companyName, entity.coverImageUrl, entity.location, entity.email, entity.socials)
         }
     }
     
     override suspend fun getRecentVisits(): List<Salon> = withContext(Dispatchers.IO) {
         salonDao.getRecentVisits().map { entity ->
-            Salon(entity.id, entity.companyName, entity.coverImageUrl)
+            Salon(entity.id, entity.companyName, entity.coverImageUrl, entity.location, entity.email, entity.socials)
         }
     }
     
@@ -30,7 +30,10 @@ class LocalSalonRepositoryImpl @Inject constructor(
             companyName = salon.companyName,
             coverImageUrl = salon.coverImageUrl,
             isVisited = true,
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            location = salon.location,
+            email = salon.email,
+            socials = salon.socials
         )
         salonDao.insertSalon(entity)
     }
@@ -45,7 +48,10 @@ class LocalSalonRepositoryImpl @Inject constructor(
             companyName = salon.companyName,
             coverImageUrl = salon.coverImageUrl,
             isFavorite = newFavoriteStatus,
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            location = salon.location,
+            email = salon.email,
+            socials = salon.socials
         )
         salonDao.insertSalon(entity)
         

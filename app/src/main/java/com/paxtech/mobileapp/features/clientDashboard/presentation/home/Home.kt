@@ -286,7 +286,7 @@ private fun TrendingSalonCard(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
+                    /*Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = "Location",
                         tint = Color(0xFF4CAF50),
@@ -297,7 +297,8 @@ private fun TrendingSalonCard(
                         text = "5 km",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    )*/
+
                     Spacer(modifier = Modifier.width(16.dp))
                     Icon(
                         imageVector = Icons.Default.Star,

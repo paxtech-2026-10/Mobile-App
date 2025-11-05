@@ -30,9 +30,12 @@ class SalonRepositoryImpl @Inject constructor(
                 
                 val salons = bodyList.map { dto ->
                     val salon = Salon(
-                        dto.id ?: 0,
-                        dto.companyName.orEmpty(),
-                        dto.coverImageUrl.orEmpty()
+                        id = dto.id ?: 0,
+                        companyName = dto.companyName.orEmpty(),
+                        coverImageUrl = dto.coverImageUrl.orEmpty(),
+                        location = dto.location.orEmpty(),
+                        email = dto.email.orEmpty(),
+                        socials = emptyList() // TODO: Add socials field to DTO if needed
                     )
                     println("🔍 SalonRepositoryImpl: Mapped salon: $salon")
                     salon
@@ -59,7 +62,10 @@ class SalonRepositoryImpl @Inject constructor(
                 Salon(
                     id = dto.id ?: 0,
                     companyName = dto.companyName.orEmpty(),
-                    coverImageUrl = dto.coverImageUrl.orEmpty()
+                    coverImageUrl = dto.coverImageUrl.orEmpty(),
+                    location = dto.location.orEmpty(),
+                    email = dto.email.orEmpty(),
+                    socials = emptyList() // TODO: Add socials field to DTO if needed
                 )
             }
         } catch (e: Exception) {
