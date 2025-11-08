@@ -327,9 +327,12 @@ sealed class Route(val route: String) {
     object SuccessBusiness : Route("success_business")
 
     object Home : Route("home")
-    object Cart : Route("cart")
+    object Location : Route("location")
+    object Booking : Route("booking")
+    object Message : Route("message")
     object Profile : Route("profile")
     object Services : Route("services")
+    object Cart : Route("cart")
 
     object SalonDetails : Route("salon_detail") {
         const val routeWithArgument = "salon_detail/{id}"

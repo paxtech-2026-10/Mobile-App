@@ -3,19 +3,25 @@ package com.paxtech.mobileapp.core.ui
 import android.net.http.SslCertificate.restoreState
 import android.net.http.SslCertificate.saveState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,20 +51,32 @@ fun Main(onClick: (Int) -> Unit) {
     // map each tab to its route + icon (use your sealed routes)
     val tabs = listOf(
         Route.Home to Icons.Default.Home,
-        Route.Services to Icons.Default.Search,      // your magnifier icon
-        Route.Cart to Icons.Default.CalendarToday,    // your calendar icon
+        Route.Location to Icons.Default.LocationOn,
+        Route.Booking to Icons.Default.CalendarToday,
+        Route.Message to Icons.Default.Message,
         Route.Profile to Icons.Default.Person
     )
 
     Scaffold(
         bottomBar = {
-            BottomAppBar {
+            NavigationBar {
                 val currentRoute = tabNav.currentBackStackEntryAsState().value?.destination?.route
                 tabs.forEach { (route, icon) ->
                     NavigationBarItem(
                         selected = currentRoute == route.route,
-                        icon = { Icon(icon, contentDescription = route.route) },
-                        label = { Text(route.route.replaceFirstChar { it.titlecase() }) },
+                        icon = { 
+                            Icon(
+                                icon, 
+                                contentDescription = route.route,
+                                tint = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
+                            ) 
+                        },
+                        label = { 
+                            Text(
+                                text = route.route.replaceFirstChar { it.titlecase() },
+                                color = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
+                            ) 
+                        },
                         onClick = {
                             tabNav.navigate(route.route) {
                                 popUpTo(tabNav.graph.startDestinationId) { saveState = true }
@@ -78,13 +96,68 @@ fun Main(onClick: (Int) -> Unit) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
-            composable(Route.Services.route) { SearchServiceView() }
-            composable(Route.Cart.route)     { ApiDebugScreen() }
+            composable(Route.Location.route) { LocationPlaceholder() }
+            composable(Route.Booking.route)  { BookingPlaceholder() }
+            composable(Route.Message.route)  { MessagePlaceholder() }
             composable(Route.Profile.route)  { ProfileNav() }
         }
     }
 }
 
+
+@Composable
+fun LocationPlaceholder() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Location",
+            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
+        )
+        Text(
+            text = "Location screen coming soon...",
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+fun BookingPlaceholder() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Booking",
+            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
+        )
+        Text(
+            text = "Booking screen coming soon...",
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+fun MessagePlaceholder() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Messages",
+            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
+        )
+        Text(
+            text = "Messages screen coming soon...",
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
