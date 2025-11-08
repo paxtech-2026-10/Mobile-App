@@ -90,7 +90,7 @@ fun WelcomeScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFCDB4DB) // Color rosa
+                    containerColor = Color(0xFF7209B7) // Color púrpura
                 ),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
             ) {

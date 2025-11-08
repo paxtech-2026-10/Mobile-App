@@ -3,6 +3,8 @@ package com.paxtech.mobileapp.features.authentication.presentation.register
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -159,17 +161,12 @@ fun RegisterScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp)
                 ) {
-                    // Contenido principal
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                    
                     // Campos del formulario
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // First Name
                         Column {
@@ -294,64 +291,64 @@ fun RegisterScreen(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    viewModel.signUp(email, password, firstName.trim(), lastName.trim())
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryPurple
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            enabled = !isLoading && firstName.trim().isNotEmpty() && lastName.trim().isNotEmpty() && email.trim().isNotEmpty() && password.isNotEmpty()
-                        ) {
-                            if (isLoading) {
-                                Text("Registrando...", color = Color.White)
-                            } else {
-                                Text(
-                                    text = "Sign Up",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Medium
-                                )
+                    // Botón Sign Up
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                viewModel.signUp(email, password, firstName.trim(), lastName.trim())
                             }
-                        }
-
-                        // Mostrar error si existe
-                        if (error != null) {
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryPurple
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !isLoading && firstName.trim().isNotEmpty() && lastName.trim().isNotEmpty() && email.trim().isNotEmpty() && password.isNotEmpty()
+                    ) {
+                        if (isLoading) {
+                            Text("Registrando...", color = Color.White)
+                        } else {
                             Text(
-                                text = error ?: "",
-                                color = Color.Red,
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                text = "Sign Up",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
                             )
                         }
-
-                        // Observar el éxito del registro
-                        val user by viewModel.user.collectAsState()
-                        val client by viewModel.client.collectAsState()
-
-                        LaunchedEffect(user, client) {
-                            if (user != null && client != null) {
-                                // Cuando el usuario y cliente se crean exitosamente, navegar
-                                onRegisterClick(RegisterType.CLIENT)
-                            }
-                        }
-                    
-                        Spacer(modifier = Modifier.height(32.dp))
                     }
+
+                    // Mostrar error si existe
+                    if (error != null) {
+                        Text(
+                            text = error ?: "",
+                            color = Color.Red,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
+                    // Observar el éxito del registro
+                    val user by viewModel.user.collectAsState()
+                    val client by viewModel.client.collectAsState()
+
+                    LaunchedEffect(user, client) {
+                        if (user != null && client != null) {
+                            // Cuando el usuario y cliente se crean exitosamente, navegar
+                            onRegisterClick(RegisterType.CLIENT)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     // Login Link
                     TextButton(
                         onClick = onLoginClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 32.dp)
+                            .padding(bottom = 16.dp)
                     ) {
                         Text(
                             text = "Have an account? ",
