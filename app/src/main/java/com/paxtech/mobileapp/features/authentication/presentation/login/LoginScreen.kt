@@ -1,5 +1,6 @@
 package com.paxtech.mobileapp.features.authentication.presentation.login
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
