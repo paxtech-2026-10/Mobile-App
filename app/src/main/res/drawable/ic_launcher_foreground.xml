@@ -3,6 +3,6 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/utime_icon" />
+            android:src="@drawable/utimee" />
     </item>
 </layer-list>

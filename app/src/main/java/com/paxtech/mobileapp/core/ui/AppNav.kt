@@ -58,7 +58,10 @@ fun AppNav() {
                     navController.navigate(Route.Login.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
                     }
-                }
+                },
+                onPage1Click = { /* Ya estamos en la página 1 */ },
+                onPage2Click = { navController.navigate(Route.Onboarding2.route) },
+                onPage3Click = { navController.navigate(Route.Onboarding3.route) }
             )
         }
 
@@ -69,7 +72,10 @@ fun AppNav() {
                     navController.navigate(Route.Login.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
                     }
-                }
+                },
+                onPage1Click = { navController.navigate(Route.Onboarding1.route) },
+                onPage2Click = { /* Ya estamos en la página 2 */ },
+                onPage3Click = { navController.navigate(Route.Onboarding3.route) }
             )
         }
 
@@ -84,7 +90,10 @@ fun AppNav() {
                     navController.navigate(Route.Login.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
                     }
-                }
+                },
+                onPage1Click = { navController.navigate(Route.Onboarding1.route) },
+                onPage2Click = { navController.navigate(Route.Onboarding2.route) },
+                onPage3Click = { /* Ya estamos en la página 3 */ }
             )
         }
 
@@ -95,8 +104,7 @@ fun AppNav() {
                         popUpTo(Route.Splash.route) { inclusive = true }
                     }
                 },
-                onRegisterClick = { navController.navigate(Route.Register.route) },
-                onBackClick = { navController.popBackStack() }
+                onRegisterClick = { navController.navigate(Route.Register.route) }
             )
         }
 

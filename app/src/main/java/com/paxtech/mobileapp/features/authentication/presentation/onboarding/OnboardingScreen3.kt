@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.authentication.presentation.onboarding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,14 +44,84 @@ import com.paxtech.mobileapp.ui.theme.TextSecondary
 @Composable
 fun OnboardingScreen3(
     onStartClick: () -> Unit = {},
-    onSkipClick: () -> Unit = {}
+    onSkipClick: () -> Unit = {},
+    onPage1Click: () -> Unit = {},
+    onPage2Click: () -> Unit = {},
+    onPage3Click: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundWhite)
             .statusBarsPadding()
     ) {
+        // Fondo blanco base
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundWhite)
+        )
+        
+        // Degradados difuminados superpuestos
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFE9D5FF).copy(alpha = 0.3f), // Púrpura pastel muy suave
+                            Color.Transparent
+                        ),
+                        radius = 600f
+                    )
+                )
+        )
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFF3E8FF).copy(alpha = 0.25f), // Rosa púrpura pastel
+                            Color.Transparent
+                        ),
+                        center = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        radius = 500f
+                    )
+                )
+        )
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFFCE7F3).copy(alpha = 0.2f), // Rosa pastel
+                            Color.Transparent
+                        ),
+                        center = androidx.compose.ui.geometry.Offset(1000f, 1500f),
+                        radius = 700f
+                    )
+                )
+        )
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFE9D5FF).copy(alpha = 0.15f), // Púrpura pastel
+                            Color.Transparent
+                        ),
+                        center = androidx.compose.ui.geometry.Offset(800f, 2000f),
+                        radius = 600f
+                    )
+                )
+        )
+        
+        // Contenido principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,7 +154,7 @@ fun OnboardingScreen3(
                 Box(
                     modifier = Modifier
                         .size(280.dp)
-                        .clip(RoundedCornerShape(16.dp)),
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -89,7 +162,8 @@ fun OnboardingScreen3(
                         contentDescription = "Transforma tu look",
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
                     )
                 }
                 
@@ -126,33 +200,37 @@ fun OnboardingScreen3(
                 // Indicadores de progreso
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    // Puntos inactivos
+                    // Punto inactivo (Página 1)
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(12.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFE5E7EB))
+                            .clickable { onPage1Click() }
                     )
                     
                     Spacer(modifier = Modifier.width(8.dp))
                     
+                    // Punto inactivo (Página 2)
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(12.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFE5E7EB))
+                            .clickable { onPage2Click() }
                     )
                     
                     Spacer(modifier = Modifier.width(8.dp))
                     
-                    // Punto activo
+                    // Punto activo (Página 3)
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(12.dp)
                             .clip(CircleShape)
                             .background(PrimaryPurple)
+                            .clickable { onPage3Click() }
                     )
                 }
                 

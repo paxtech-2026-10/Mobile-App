@@ -20,16 +20,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,7 +48,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,7 +64,6 @@ enum class RegisterType {
     CLIENT, BUSINESS
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel = hiltViewModel(),
@@ -78,22 +71,16 @@ fun RegisterScreen(
     onLoginClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    var fullName by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var selectedGender by remember { mutableStateOf("Male") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var genderExpanded by remember { mutableStateOf(false) }
 
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    val firstName = fullName.trim()
-    val lastName = phoneNumber.trim() // phoneNumber ahora contiene el lastName del usuario
     val scope = rememberCoroutineScope()
-    
-    val genderOptions = listOf("Male", "Female", "Other")
 
     Box(
         modifier = Modifier
@@ -184,21 +171,49 @@ fun RegisterScreen(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Full Name
+                        // First Name
                         Column {
                             Text(
-                                text = "Full Name",
+                                text = "First Name",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
-                                value = fullName,
-                                onValueChange = { fullName = it },
+                                value = firstName,
+                                onValueChange = { firstName = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your full name.",
+                                        "Enter your first name",
+                                        color = TextSecondary
+                                    ) 
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = PrimaryPurple,
+                                    unfocusedBorderColor = DividerGray
+                                )
+                            )
+                        }
+                        
+                        // Last Name
+                        Column {
+                            Text(
+                                text = "Last Name",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = lastName,
+                                onValueChange = { lastName = it },
+                                placeholder = { 
+                                    Text(
+                                        "Enter your last name",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -226,7 +241,7 @@ fun RegisterScreen(
                                 onValueChange = { email = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your Email.",
+                                        "Enter your email",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -238,80 +253,6 @@ fun RegisterScreen(
                                     unfocusedBorderColor = DividerGray
                                 )
                             )
-                        }
-                        
-                        // Last Name
-                        Column {
-                            Text(
-                                text = "Last Name",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = phoneNumber, // Reutilizando phoneNumber como lastName
-                                onValueChange = { phoneNumber = it },
-                                placeholder = { 
-                                    Text(
-                                        "Enter your last name.",
-                                        color = TextSecondary
-                                    ) 
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryPurple,
-                                    unfocusedBorderColor = DividerGray
-                                )
-                            )
-                        }
-                        
-                        // Select Gender
-                        Column {
-                            Text(
-                                text = "Select Gender",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            ExposedDropdownMenuBox(
-                                expanded = genderExpanded,
-                                onExpandedChange = { genderExpanded = !genderExpanded }
-                            ) {
-                                OutlinedTextField(
-                                    value = selectedGender,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded)
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = PrimaryPurple,
-                                        unfocusedBorderColor = DividerGray
-                                    )
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = genderExpanded,
-                                    onDismissRequest = { genderExpanded = false }
-                                ) {
-                                    genderOptions.forEach { option ->
-                                        DropdownMenuItem(
-                                            text = { Text(option) },
-                                            onClick = {
-                                                selectedGender = option
-                                                genderExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
                         }
                         
                         // Password
@@ -358,7 +299,7 @@ fun RegisterScreen(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    viewModel.signUp(email, password, firstName, lastName)
+                                    viewModel.signUp(email, password, firstName.trim(), lastName.trim())
                                 }
                             },
                             modifier = Modifier
@@ -368,7 +309,7 @@ fun RegisterScreen(
                                 containerColor = PrimaryPurple
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            enabled = !isLoading && firstName.isNotEmpty() && lastName.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()
+                            enabled = !isLoading && firstName.trim().isNotEmpty() && lastName.trim().isNotEmpty() && email.trim().isNotEmpty() && password.isNotEmpty()
                         ) {
                             if (isLoading) {
                                 Text("Registrando...", color = Color.White)

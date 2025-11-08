@@ -1,7 +1,6 @@
 package com.paxtech.mobileapp.features.authentication.presentation.login
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,22 +14,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -63,15 +57,13 @@ import com.paxtech.mobileapp.ui.theme.TextSecondary
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
     onLoginClick: () -> Unit = {},
-    onRegisterClick: () -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onRegisterClick: () -> Unit = {}
 ) {
     var emailPhone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
-    var saveMe by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -82,42 +74,20 @@ fun LoginScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header con botón de regreso y título
-            Row(
+            // Header con título centrado
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                IconButton(onClick = onBackClick) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.White, CircleShape)
-                            .border(1.dp, DividerGray, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
                 Text(
                     text = "Log in",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
-                    modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
-                
-                Spacer(modifier = Modifier.width(48.dp)) // Balancear el espacio del botón
             }
             
             // Banner púrpura con bordes redondeados superiores
@@ -223,46 +193,7 @@ fun LoginScreen(
                             )
                         }
                         
-                        // Options Row: Save Me toggle y Forgot Password
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Save Me toggle
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Switch(
-                                    checked = saveMe,
-                                    onCheckedChange = { saveMe = it },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = PrimaryPurple,
-                                        checkedTrackColor = PrimaryPurple.copy(alpha = 0.3f),
-                                        uncheckedThumbColor = Color.Gray,
-                                        uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
-                                    )
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Save Me",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextPrimary
-                                )
-                            }
-                            
-                            // Forgot Password link
-                            TextButton(onClick = { /* TODO: Implement forgot password */ }) {
-                                Text(
-                                    text = "Forgot Password?",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = PrimaryPurple,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
                         
                         // Log In Button
                         // Log In Button
