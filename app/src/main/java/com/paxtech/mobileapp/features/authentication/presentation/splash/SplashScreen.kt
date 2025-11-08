@@ -62,13 +62,14 @@ fun SplashScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Silueta de persona (usando emoji como placeholder)
-                        Text(
-                            text = "👨‍💼",
-                            fontSize = 60.sp
+                        // Logo de uTime
+                        Image(
+                            painter = painterResource(id = R.drawable.utime_icon),
+                            contentDescription = "uTime Logo",
+                            modifier = Modifier.size(120.dp)
                         )
                         
-                        // Texto "uTIME" en púrpura
+                        // Texto "uTIME" en rosa
                         Text(
                             text = "uTIME",
                             fontSize = 24.sp,

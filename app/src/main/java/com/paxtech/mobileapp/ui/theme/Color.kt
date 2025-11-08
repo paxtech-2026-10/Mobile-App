@@ -3,11 +3,11 @@ package com.paxtech.mobileapp.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Colores principales basados en el diseño de las imágenes
-val PrimaryPurple = Color(0xFF8B5CF6) // Púrpura principal para botones
-val DarkPurple = Color(0xFF7C3AED) // Púrpura más oscuro para splash
-val LightPurple = Color(0xFFA855F7) // Púrpura claro para acentos
-val PurpleGradient = Color(0xFFE9D5FF) // Púrpura muy claro para gradientes
-val BackgroundPurpleLight = Color(0xFFDAD6FF) // Fondo morado clarito suave
+val PrimaryPurple = Color(0xFFF1C0E8) // Rosa principal para botones
+val DarkPurple = Color(0xFFF1C0E8) // Rosa para splash
+val LightPurple = Color(0xFFF1C0E8) // Rosa claro para acentos
+val PurpleGradient = Color(0xFFF1C0E8) // Rosa muy claro para gradientes
+val BackgroundPurpleLight = Color(0xFFF1C0E8) // Fondo rosa clarito suave
 
 // Colores de texto
 val TextPrimary = Color(0xFF1F2937) // Negro para títulos
