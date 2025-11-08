@@ -2,9 +2,15 @@ package com.paxtech.mobileapp.core.ui
 
 import android.net.http.SslCertificate.restoreState
 import android.net.http.SslCertificate.saveState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Favorite
@@ -59,32 +65,50 @@ fun Main(onClick: (Int) -> Unit) {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val currentRoute = tabNav.currentBackStackEntryAsState().value?.destination?.route
-                tabs.forEach { (route, icon) ->
-                    NavigationBarItem(
-                        selected = currentRoute == route.route,
-                        icon = { 
-                            Icon(
-                                icon, 
-                                contentDescription = route.route,
-                                tint = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
-                            ) 
-                        },
-                        label = { 
-                            Text(
-                                text = route.route.replaceFirstChar { it.titlecase() },
-                                color = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
-                            ) 
-                        },
-                        onClick = {
-                            tabNav.navigate(route.route) {
-                                popUpTo(tabNav.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                        spotColor = Color.Black.copy(alpha = 0.1f),
+                        ambientColor = Color.Black.copy(alpha = 0.05f)
                     )
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                    )
+            ) {
+                NavigationBar(
+                    containerColor = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val currentRoute = tabNav.currentBackStackEntryAsState().value?.destination?.route
+                    tabs.forEach { (route, icon) ->
+                        NavigationBarItem(
+                            selected = currentRoute == route.route,
+                            icon = { 
+                                Icon(
+                                    icon, 
+                                    contentDescription = route.route,
+                                    tint = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
+                                ) 
+                            },
+                            label = { 
+                                Text(
+                                    text = route.route.replaceFirstChar { it.titlecase() },
+                                    color = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
+                                ) 
+                            },
+                            onClick = {
+                                tabNav.navigate(route.route) {
+                                    popUpTo(tabNav.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
