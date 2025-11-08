@@ -64,7 +64,7 @@ fun WelcomeScreen(
                 
                 // Logo
                 Image(
-                    painter = painterResource(id = R.drawable.utime_logo),
+                    painter = painterResource(id = R.drawable.utimemain),
                     contentDescription = "uTime Logo",
                     modifier = Modifier.size(120.dp, 40.dp)
                 )
