@@ -162,7 +162,7 @@ fun RegisterScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(24.dp)
+                        .padding(horizontal = 24.dp, vertical = 24.dp)
                 ) {
                     // Campos del formulario
                     Column(
@@ -291,7 +291,7 @@ fun RegisterScreen(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Botón Sign Up
                     Button(
@@ -316,7 +316,7 @@ fun RegisterScreen(
                                 text = "Sign Up",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -326,7 +326,9 @@ fun RegisterScreen(
                         Text(
                             text = error ?: "",
                             color = Color.Red,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .fillMaxWidth()
                         )
                     }
 
@@ -341,14 +343,14 @@ fun RegisterScreen(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     // Login Link
                     TextButton(
                         onClick = onLoginClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp)
+                            .padding(bottom = 24.dp)
                     ) {
                         Text(
                             text = "Have an account? ",

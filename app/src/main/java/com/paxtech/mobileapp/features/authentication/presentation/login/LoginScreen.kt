@@ -83,7 +83,7 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Log in",
+                    text = "Sign In",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -219,7 +219,7 @@ fun LoginScreen(
                                 Text("Cargando...", color = Color.White)
                             } else {
                                 Text(
-                                    text = "Log In",
+                                    text = "Sign In",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold
