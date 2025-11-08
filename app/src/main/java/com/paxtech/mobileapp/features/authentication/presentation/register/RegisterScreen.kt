@@ -318,7 +318,7 @@ fun RegisterScreen(
                             disabledContentColor = Color.White
                         ),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = !isLoading && firstName.trim().isNotEmpty() && lastName.trim().isNotEmpty() && email.trim().isNotEmpty() && password.isNotEmpty()
+                        enabled = !isLoading && firstName.trim().isNotEmpty() && lastName.trim().isNotEmpty() && email.trim().isNotEmpty() && email.contains("@") && password.isNotEmpty()
                     ) {
                         if (isLoading) {
                             Text("Registrando...", color = Color.White)

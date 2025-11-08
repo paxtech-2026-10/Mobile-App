@@ -128,10 +128,10 @@ fun LoginScreen(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        // Email / Phone Number
+                        // Email
                         Column {
                             Text(
-                                text = "Email / Phone Number",
+                                text = "Email",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
@@ -142,12 +142,12 @@ fun LoginScreen(
                                 onValueChange = { emailPhone = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter email/phone number",
+                                        "Enter your email",
                                         color = TextSecondary
                                     ) 
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
@@ -200,8 +200,7 @@ fun LoginScreen(
                         
                         Spacer(modifier = Modifier.height(24.dp))
                         
-                        // Log In Button
-                        // Log In Button
+                        // Sign In Button
                         Button(
                             onClick = {
                                 viewModel.signIn(emailPhone, password)
@@ -214,10 +213,13 @@ fun LoginScreen(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryPurple
+                                containerColor = PrimaryPurple,
+                                disabledContainerColor = PrimaryPurple.copy(alpha = 0.6f),
+                                contentColor = Color.White,
+                                disabledContentColor = Color.White
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            enabled = !isLoading
+                            enabled = !isLoading && emailPhone.trim().isNotEmpty() && password.isNotEmpty() && emailPhone.contains("@")
                         ) {
                             if (isLoading) {
                                 Text("Cargando...", color = Color.White)
