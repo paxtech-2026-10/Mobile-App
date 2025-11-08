@@ -141,7 +141,7 @@ fun RegisterScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Sign Up to access all the features in Barber Shop",
+                    text = "Sign Up to access all the features",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     textAlign = TextAlign.Center,
@@ -191,7 +191,9 @@ fun RegisterScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
-                                    unfocusedBorderColor = DividerGray
+                                    unfocusedBorderColor = DividerGray,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
                                 )
                             )
                         }
@@ -219,7 +221,9 @@ fun RegisterScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
-                                    unfocusedBorderColor = DividerGray
+                                    unfocusedBorderColor = DividerGray,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
                                 )
                             )
                         }
@@ -247,7 +251,9 @@ fun RegisterScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
-                                    unfocusedBorderColor = DividerGray
+                                    unfocusedBorderColor = DividerGray,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
                                 )
                             )
                         }
@@ -285,7 +291,9 @@ fun RegisterScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
-                                    unfocusedBorderColor = DividerGray
+                                    unfocusedBorderColor = DividerGray,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
                                 )
                             )
                         }
@@ -304,7 +312,10 @@ fun RegisterScreen(
                             .fillMaxWidth()
                             .height(56.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryPurple
+                            containerColor = PrimaryPurple,
+                            disabledContainerColor = PrimaryPurple.copy(alpha = 0.6f),
+                            contentColor = Color.White,
+                            disabledContentColor = Color.White
                         ),
                         shape = RoundedCornerShape(12.dp),
                         enabled = !isLoading && firstName.trim().isNotEmpty() && lastName.trim().isNotEmpty() && email.trim().isNotEmpty() && password.isNotEmpty()

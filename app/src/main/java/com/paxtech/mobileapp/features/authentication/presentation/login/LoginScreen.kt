@@ -151,7 +151,9 @@ fun LoginScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
-                                    unfocusedBorderColor = DividerGray
+                                    unfocusedBorderColor = DividerGray,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
                                 )
                             )
                         }
@@ -189,7 +191,9 @@ fun LoginScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPurple,
-                                    unfocusedBorderColor = DividerGray
+                                    unfocusedBorderColor = DividerGray,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
                                 )
                             )
                         }
