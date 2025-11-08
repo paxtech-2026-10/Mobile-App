@@ -9,9 +9,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 
 @Composable
 fun SuccessClientScreen(
@@ -39,6 +45,26 @@ fun SuccessClientScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Icono de check
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(
+                        color = PrimaryPurple.copy(alpha = 0.1f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircle,
+                    contentDescription = "Check",
+                    modifier = Modifier.size(48.dp),
+                    tint = PrimaryPurple
+                )
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
             // Título
             Text(
                 text = "¡Tu cuenta ha sido creada!",
@@ -72,7 +98,7 @@ fun SuccessClientScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF8B5CF6) // Púrpura
+                    containerColor = PrimaryPurple
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
