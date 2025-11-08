@@ -1,5 +1,6 @@
 package com.paxtech.mobileapp.features.authentication.presentation.onboarding
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,11 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paxtech.mobileapp.R
 import com.paxtech.mobileapp.ui.theme.BackgroundWhite
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import com.paxtech.mobileapp.ui.theme.TextPrimary
@@ -74,28 +77,20 @@ fun OnboardingScreen2(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Ilustración placeholder (manicura)
+                // Ilustración (manicura)
                 Box(
                     modifier = Modifier
                         .size(280.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF3F4F6)),
+                        .clip(RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "💅",
-                            fontSize = 80.sp
-                        )
-                        Text(
-                            text = "Manicura",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = TextSecondary
-                        )
-                    }
+                    Image(
+                        painter = painterResource(id = R.drawable.onboarding_2),
+                        contentDescription = "Reserva tu estilista",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(16.dp))
+                    )
                 }
                 
                 Spacer(modifier = Modifier.height(40.dp))

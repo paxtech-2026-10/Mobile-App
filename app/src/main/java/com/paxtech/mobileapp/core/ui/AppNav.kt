@@ -1,44 +1,46 @@
 package com.paxtech.mobileapp.core.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.paxtech.mobileapp.features.authentication.presentation.splash.SplashScreen
+import com.paxtech.mobileapp.features.authentication.presentation.login.LoginScreen
 import com.paxtech.mobileapp.features.authentication.presentation.onboarding.OnboardingScreen1
 import com.paxtech.mobileapp.features.authentication.presentation.onboarding.OnboardingScreen2
 import com.paxtech.mobileapp.features.authentication.presentation.onboarding.OnboardingScreen3
-import com.paxtech.mobileapp.features.authentication.presentation.login.LoginScreen
 import com.paxtech.mobileapp.features.authentication.presentation.register.RegisterScreen
 import com.paxtech.mobileapp.features.authentication.presentation.register.RegisterType
-import com.paxtech.mobileapp.features.authentication.presentation.register.SuccessClientScreen
 import com.paxtech.mobileapp.features.authentication.presentation.register.SuccessBusinessScreen
-import com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail.SalonDetailRoute
-import com.paxtech.mobileapp.features.clientDashboard.presentation.professionalselection.ProfessionalSelectionScreen
-import com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection.TimeSelectionScreen
+import com.paxtech.mobileapp.features.authentication.presentation.register.SuccessClientScreen
+import com.paxtech.mobileapp.features.authentication.presentation.splash.SplashScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.confirmation.ConfirmationScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.confirmation.ReservationConfirmedScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
+import com.paxtech.mobileapp.features.clientDashboard.presentation.professionalselection.ProfessionalSelectionScreen
+import com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail.SalonDetailRoute
 import com.paxtech.mobileapp.features.clientDashboard.presentation.shared.ReservationData
 import com.paxtech.mobileapp.features.clientDashboard.presentation.shared.ServiceData
+import com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection.TimeSelectionScreen
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.compose.ui.platform.LocalContext
 
 @Preview
 @Composable
-fun AppNav(){
+fun AppNav() {
     val navController = rememberNavController()
-
     val reservationData = remember { mutableStateOf<ReservationData?>(null) }
+    val context = LocalContext.current
+    val authPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
-    NavHost(navController, startDestination = Route.Splash.route){
+    NavHost(navController, startDestination = Route.Splash.route) {
 
+        // Splash / Onboarding / Auth
         composable(Route.Splash.route) {
             SplashScreen(
                 onNavigateToWelcome = {
@@ -51,9 +53,7 @@ fun AppNav(){
 
         composable(Route.Onboarding1.route) {
             OnboardingScreen1(
-                onNextClick = {
-                    navController.navigate(Route.Onboarding2.route)
-                },
+                onNextClick = { navController.navigate(Route.Onboarding2.route) },
                 onSkipClick = {
                     navController.navigate(Route.Login.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
@@ -64,9 +64,7 @@ fun AppNav(){
 
         composable(Route.Onboarding2.route) {
             OnboardingScreen2(
-                onNextClick = {
-                    navController.navigate(Route.Onboarding3.route)
-                },
+                onNextClick = { navController.navigate(Route.Onboarding3.route) },
                 onSkipClick = {
                     navController.navigate(Route.Login.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
@@ -97,12 +95,8 @@ fun AppNav(){
                         popUpTo(Route.Splash.route) { inclusive = true }
                     }
                 },
-                onRegisterClick = {
-                    navController.navigate(Route.Register.route)
-                },
-                onBackClick = {
-                    navController.popBackStack()
-                }
+                onRegisterClick = { navController.navigate(Route.Register.route) },
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -110,20 +104,12 @@ fun AppNav(){
             RegisterScreen(
                 onRegisterClick = { registerType ->
                     when (registerType) {
-                        RegisterType.CLIENT -> {
-                            navController.navigate(Route.SuccessClient.route)
-                        }
-                        RegisterType.BUSINESS -> {
-                            navController.navigate(Route.SuccessBusiness.route)
-                        }
+                        RegisterType.CLIENT -> navController.navigate(Route.SuccessClient.route)
+                        RegisterType.BUSINESS -> navController.navigate(Route.SuccessBusiness.route)
                     }
                 },
-                onLoginClick = {
-                    navController.popBackStack()
-                },
-                onBackClick = {
-                    navController.popBackStack()
-                }
+                onLoginClick = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -147,14 +133,16 @@ fun AppNav(){
             )
         }
 
-        composable(Route.Home.route){
+        // Home
+        composable(Route.Home.route) {
             Main(
-                onClick = {id ->
+                onClick = { id ->
                     navController.navigate("${Route.SalonDetails.route}/$id")
                 }
             )
         }
 
+        // Detalle del salón
         composable(
             route = Route.SalonDetails.routeWithArgument,
             arguments = listOf(navArgument(Route.SalonDetails.argument) {
@@ -166,13 +154,16 @@ fun AppNav(){
             SalonDetailRoute(
                 salonId = salonId,
                 onBack = { navController.popBackStack() },
-                onReserveService = { service, salonName, salonAddress, salonRating ->
-
+                onReserveService = { service: ServiceUi, salonName: String, salonAddress: String, salonRating: Double, salonImageUrl: String ->
+                    // Guardamos TODOS los datos reales, incluida la imagen
                     reservationData.value = ReservationData(
                         salonId = salonId,
                         salonName = salonName,
                         salonAddress = salonAddress,
                         salonRating = salonRating,
+                        salonImageUrl = salonImageUrl,
+                        clientId = authPrefs.getInt("user_id", 0).toLong(),
+                        providerId = salonId.toLong(),
                         service = ServiceData(
                             id = service.id,
                             title = service.title,
@@ -181,7 +172,6 @@ fun AppNav(){
                             durationMins = service.durationMins
                         )
                     )
-
                     navController.navigate("${Route.ProfessionalSelection.route}/${service.id}") {
                         launchSingleTop = true
                     }
@@ -189,131 +179,119 @@ fun AppNav(){
             )
         }
 
+        // Selección de profesional
         composable(
             route = Route.ProfessionalSelection.routeWithArgument,
             arguments = listOf(navArgument(Route.ProfessionalSelection.argument) {
                 type = NavType.StringType
             })
-        ) { backStack ->
-            val currentData = reservationData.value
-            if (currentData == null) {
+        ) {
+            val current = reservationData.value ?: run {
                 navController.popBackStack()
                 return@composable
             }
 
             ProfessionalSelectionScreen(
                 service = ServiceUi(
-                    id = currentData.service.id,
-                    title = currentData.service.title,
-                    subtitle = currentData.service.subtitle,
-                    price = currentData.service.price,
-                    durationMins = currentData.service.durationMins
+                    id = current.service.id,
+                    title = current.service.title,
+                    subtitle = current.service.subtitle,
+                    price = current.service.price,
+                    durationMins = current.service.durationMins
                 ),
-                onBack = {
-                    navController.popBackStack()
-                },
-                onContinue = { selectedProfessional ->
-                    reservationData.value = currentData.copy(
-                        selectedProfessional = selectedProfessional
+                onBack = { navController.popBackStack() },
+                onContinue = { selectedProfessional, workerId ->
+                    reservationData.value = current.copy(
+                        selectedProfessional = selectedProfessional,
+                        selectedProfessionalId = workerId
                     )
-
-                    navController.navigate("${Route.TimeSelection.route}/${currentData.service.id}") {
+                    navController.navigate("${Route.TimeSelection.route}/${current.service.id}") {
                         launchSingleTop = true
                     }
                 }
             )
         }
 
+        // Selección de hora
         composable(
             route = Route.TimeSelection.routeWithArgument,
             arguments = listOf(navArgument(Route.TimeSelection.argument) {
                 type = NavType.StringType
             })
-        ) { backStack ->
-            val currentData = reservationData.value
-            if (currentData == null) {
+        ) {
+            val current = reservationData.value ?: run {
                 navController.popBackStack()
                 return@composable
             }
 
             TimeSelectionScreen(
-                serviceName = currentData.service.title,
-                servicePrice = currentData.service.price,
-                serviceDuration = currentData.service.durationMins,
-                selectedProfessional = currentData.selectedProfessional,
-                salonName = currentData.salonName,
-                salonAddress = currentData.salonAddress,
-                onBack = {
-                    navController.popBackStack()
-                },
+                serviceName = current.service.title,
+                servicePrice = current.service.price,
+                serviceDuration = current.service.durationMins,
+                selectedProfessional = current.selectedProfessional,
+                clientId = authPrefs.getInt("user_id", 0).toLong(),
+                providerId = current.salonId.toLong(),
+                workerId = current.selectedProfessionalId,
+                salonName = current.salonName,
+                salonAddress = current.salonAddress,
+                onBack = { navController.popBackStack() },
                 onContinue = { selectedDate, selectedTime, formattedDate, formattedTime ->
-
-                    reservationData.value = currentData.copy(
+                    reservationData.value = current.copy(
                         selectedDate = selectedDate,
                         selectedTime = selectedTime,
                         formattedDate = formattedDate,
                         formattedTime = formattedTime
                     )
-
-                    navController.navigate("${Route.Confirmation.route}/${currentData.service.id}") {
+                    navController.navigate("${Route.Confirmation.route}/${current.service.id}") {
                         launchSingleTop = true
                     }
                 }
             )
         }
 
+        // Confirmación
         composable(
             route = Route.Confirmation.routeWithArgument,
             arguments = listOf(navArgument(Route.Confirmation.argument) {
                 type = NavType.StringType
             })
-        ) { backStack ->
-            val currentData = reservationData.value
-            if (currentData == null) {
+        ) {
+            val current = reservationData.value ?: run {
                 navController.popBackStack()
                 return@composable
             }
 
             ConfirmationScreen(
                 reservationDetails = com.paxtech.mobileapp.features.clientDashboard.presentation.confirmation.ReservationDetails(
-                    salonName = currentData.salonName,
-                    rating = currentData.salonRating,
-                    address = currentData.salonAddress,
-                    serviceName = currentData.service.title,
-                    date = currentData.formattedDate,
-                    time = currentData.formattedTime,
-                    duration = currentData.service.durationMins,
-                    professional = currentData.selectedProfessional,
-                    totalPrice = currentData.service.price
+                    salonName = current.salonName,
+                    rating = current.salonRating,
+                    address = current.salonAddress,
+                    serviceName = current.service.title,
+                    date = current.formattedDate,
+                    time = current.formattedTime,
+                    duration = current.service.durationMins,
+                    professional = current.selectedProfessional,
+                    totalPrice = current.service.price,
+                    salonImageUrl = current.salonImageUrl // <-- imagen real en la tarjeta
                 ),
-                onBack = {
-                    navController.popBackStack()
-                },
+                onBack = { navController.popBackStack() },
                 onConfirm = {
-                    println("✅ RESERVA CONFIRMADA CON DATOS REALES:")
-                    println("✅ Salón: ${currentData.salonName}")
-                    println("✅ Dirección: ${currentData.salonAddress}")
-                    println("✅ Servicio: ${currentData.service.title}")
-                    println("✅ Precio: ${currentData.service.price}")
-                    println("✅ Duración: ${currentData.service.durationMins} min")
-                    println("✅ Profesional: ${currentData.selectedProfessional}")
-                    println("✅ Fecha: ${currentData.formattedDate}")
-                    println("✅ Hora: ${currentData.formattedTime}")
-
-
                     navController.navigate(Route.ReservationConfirmed.route) {
-
                         popUpTo(Route.Home.route) { inclusive = false }
                     }
                 }
             )
         }
 
+        // Pantalla final
         composable(Route.ReservationConfirmed.route) {
-            val currentData = reservationData.value
-            if (currentData != null) {
+            val current = reservationData.value
+            if (current != null) {
                 ReservationConfirmedScreen(
-                    reservationData = currentData,
+                    reservationData = current,
+                    onCancel = {                       // ← agregado: volver a la pantalla anterior
+                        navController.popBackStack()
+                    },
                     onBackToHome = {
                         navController.navigate(Route.Home.route) {
                             popUpTo(Route.Home.route) { inclusive = true }
@@ -321,7 +299,6 @@ fun AppNav(){
                     }
                 )
             } else {
-
                 navController.navigate(Route.Home.route) {
                     popUpTo(Route.Home.route) { inclusive = true }
                 }
@@ -330,16 +307,16 @@ fun AppNav(){
     }
 }
 
+// -------- Rutas ----------
 sealed class Route(val route: String) {
-
-    object Splash: Route("splash")
-    object Onboarding1: Route("onboarding1")
-    object Onboarding2: Route("onboarding2")
-    object Onboarding3: Route("onboarding3")
-    object Login: Route("login")
-    object Register: Route("register")
-    object SuccessClient: Route("success_client")
-    object SuccessBusiness: Route("success_business")
+    object Splash : Route("splash")
+    object Onboarding1 : Route("onboarding1")
+    object Onboarding2 : Route("onboarding2")
+    object Onboarding3 : Route("onboarding3")
+    object Login : Route("login")
+    object Register : Route("register")
+    object SuccessClient : Route("success_client")
+    object SuccessBusiness : Route("success_business")
 
     object Home : Route("home")
     object Cart : Route("cart")
