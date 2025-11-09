@@ -61,7 +61,7 @@ fun SuccessClientScreen(
                     modifier = Modifier.size(48.dp),
                     tint = PrimaryPurple
                 )
-            )
+
             
             Spacer(modifier = Modifier.height(24.dp))
             
@@ -113,7 +113,7 @@ fun SuccessClientScreen(
         }
     }
 }
-
+}
 @Preview(showBackground = true)
 @Composable
 fun SuccessClientScreenPreview() {

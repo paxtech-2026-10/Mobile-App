@@ -6,6 +6,9 @@ plugins {
     //Plugins ksp y hilt (sin apply false)
     alias(libs.plugins.ksp) //KSP
     alias(libs.plugins.hilt) //HILT
+
+    //id("com.android.application") //firebase
+    id("com.google.gms.google-services") //firebase
 }
 
 android {
@@ -93,4 +96,10 @@ dependencies {
     
     // Google Fonts
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
+
+    //firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
 }
