@@ -19,8 +19,16 @@ android {
         applicationId = "com.paxtech.mobileapp"
         minSdk = 24
         targetSdk = 36
+        /*
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0"*/
+        // Obtener número de commits de Git automáticamente
+        val gitCommitCount = providers.exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+        }.standardOutput.asText.get().trim().toIntOrNull() ?: 1
+
+        versionCode = gitCommitCount
+        versionName = "1.0.$gitCommitCount"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
