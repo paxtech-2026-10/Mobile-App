@@ -1,6 +1,5 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,21 +63,19 @@ fun Home(
     viewModel: HomeViewModel = hiltViewModel(),
     onSalonClick: (Int) -> Unit = {}
 ) {
-    val context = LocalContext.current
     val recommendedSalons by viewModel.recommendedSalons.collectAsState()
     val favoriteSalons by viewModel.favoriteSalons.collectAsState()
     val recentVisits by viewModel.recentVisits.collectAsState()
+    val userName by viewModel.userName.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadAllData()
+        // Asegurar que el nombre se carga cuando se muestra la pantalla
+        viewModel.loadUserName()
     }
 
-    // Obtener el nombre del usuario desde SharedPreferences
-    val userName = remember {
-        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        prefs.getString("user_full_name", "Usuario") ?: "Usuario"
-    }
-    val userInitials = remember {
+    // Calcular iniciales del nombre del usuario
+    val userInitials = remember(userName) {
         userName.split(" ").mapNotNull { it.firstOrNull() }.joinToString("").uppercase().take(2)
     }
 

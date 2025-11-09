@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.SalonRepository
+import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.paxtech.mobileapp.shared.model.Salon
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: SalonRepository,
-    private val localRepository: LocalSalonRepository
+    private val localRepository: LocalSalonRepository,
+    private val userDataRepository: UserDataRepository
 ): ViewModel() {
     
     private val _recommendedSalons = MutableStateFlow<List<Salon>>(emptyList())
@@ -26,6 +28,9 @@ class HomeViewModel @Inject constructor(
     
     private val _recentVisits = MutableStateFlow<List<Salon>>(emptyList())
     val recentVisits: StateFlow<List<Salon>> = _recentVisits.asStateFlow()
+    
+    private val _userName = MutableStateFlow<String>("Usuario")
+    val userName: StateFlow<String> = _userName.asStateFlow()
 
     fun loadAllData(){
         viewModelScope.launch {
@@ -45,7 +50,14 @@ class HomeViewModel @Inject constructor(
             val recent = localRepository.getRecentVisits()
             println("🔍 HomeViewModel: Received ${recent.size} recent visits")
             _recentVisits.value = recent
+            
+            // Cargar nombre del usuario
+            loadUserName()
         }
+    }
+    
+    fun loadUserName() {
+        _userName.value = userDataRepository.getUserName()
     }
     
     fun saveVisit(salon: Salon) {
@@ -66,5 +78,6 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadAllData()
+        loadUserName()
     }
 }

@@ -348,7 +348,8 @@ fun RegisterScreen(
                     val client by viewModel.client.collectAsState()
 
                     LaunchedEffect(user, client) {
-                        if (user != null && client != null) {
+                        // Verificar que el usuario tenga token válido antes de navegar
+                        if (user != null && user?.token != null && client != null) {
                             // Cuando el usuario y cliente se crean exitosamente, navegar
                             onRegisterClick(RegisterType.CLIENT)
                         }

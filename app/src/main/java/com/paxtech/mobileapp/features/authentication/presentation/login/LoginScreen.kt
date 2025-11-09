@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,7 +65,15 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val user by viewModel.user.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // ✅ Navegar solo cuando el login sea exitoso
+    LaunchedEffect(user) {
+        if (user != null && user?.token != null) {
+            onLoginClick()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -205,9 +214,6 @@ fun LoginScreen(
                             onClick = {
                                 viewModel.signIn(emailPhone, password)
                                 // Llamar onLoginClick cuando el usuario se loguea exitosamente
-                                if (!isLoading && error == null) {
-                                    onLoginClick()
-                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()

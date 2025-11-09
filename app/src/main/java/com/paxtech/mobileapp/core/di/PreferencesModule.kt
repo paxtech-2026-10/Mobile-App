@@ -21,3 +21,4 @@ object PreferencesModule {
         return context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
     }
 }
+

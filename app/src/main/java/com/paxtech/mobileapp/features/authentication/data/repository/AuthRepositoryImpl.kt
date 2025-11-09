@@ -1,8 +1,10 @@
 package com.paxtech.mobileapp.features.authentication.data.repository
 
+import com.paxtech.mobileapp.core.network.TokenStorage
 import com.paxtech.mobileapp.features.authentication.data.remote.models.CreateClientRequestDto
 import com.paxtech.mobileapp.features.authentication.data.remote.models.SignInRequestDto
 import com.paxtech.mobileapp.features.authentication.data.remote.models.SignUpRequestDto
+import com.paxtech.mobileapp.features.authentication.data.remote.models.SignUpResponseDto
 import com.paxtech.mobileapp.features.authentication.data.remote.services.AuthService
 import com.paxtech.mobileapp.features.authentication.domain.models.Client
 import com.paxtech.mobileapp.features.authentication.domain.models.User
@@ -12,7 +14,8 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val tokenStorage: TokenStorage
 ) : AuthRepository {
 
     override suspend fun signUp(email: String, password: String): User = withContext(Dispatchers.IO) {
@@ -49,6 +52,11 @@ class AuthRepositoryImpl @Inject constructor(
                 val body = resp.body()
                 println("🔍 AuthRepositoryImpl: Sign-in response: $body")
                 body?.let {
+                    // Guardar el token en TokenStorage
+                    if (!it.token.isNullOrBlank()) {
+                        tokenStorage.save(it.token)
+                        println("🔍 AuthRepositoryImpl: Token saved to TokenStorage")
+                    }
                     User(it.id, it.email, it.token)
                 } ?: throw Exception("Sign-in response body is null")
             } else {
@@ -84,3 +92,4 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 }
+

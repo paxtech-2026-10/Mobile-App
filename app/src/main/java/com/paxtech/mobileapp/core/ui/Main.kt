@@ -43,6 +43,7 @@ import com.paxtech.mobileapp.features.clientDashboard.presentation.home.Home
 import com.paxtech.mobileapp.features.clientDashboard.presentation.home.ApiDebugScreen
 import com.paxtech.mobileapp.features.profile.presentation.ProfileNav
 import com.paxtech.mobileapp.features.services.presentation.SearchServiceView
+import com.paxtech.mobileapp.features.testBooking.TestBookingScreen
 
 data class NavigationItem(
     val icon: ImageVector,
@@ -122,7 +123,7 @@ fun Main(onClick: (Int) -> Unit) {
         ) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
             composable(Route.Location.route) { LocationPlaceholder() }
-            composable(Route.Booking.route)  { BookingPlaceholder() }
+            composable(Route.Booking.route)  { TestBookingScreen() }
             composable(Route.Message.route)  { MessagePlaceholder() }
             composable(Route.Profile.route)  { ProfileNav() }
         }
