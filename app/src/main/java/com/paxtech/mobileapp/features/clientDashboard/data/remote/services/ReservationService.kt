@@ -8,7 +8,7 @@ import retrofit2.http.POST
 data class CreateReservationRequest(
     val clientId: Long,
     val providerId: Long,
-    val paymentId: Long,
+    val serviceId: Long,
     val timeSlotId: Long,
     val workerId: Long
 )

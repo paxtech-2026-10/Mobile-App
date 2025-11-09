@@ -40,6 +40,7 @@ fun TimeSelectionScreen(
     serviceName: String,
     servicePrice: String,
     serviceDuration: Int,
+    serviceId: String,
     selectedProfessional: String,
     clientId: Long,
     providerId: Long,
@@ -47,7 +48,7 @@ fun TimeSelectionScreen(
     salonName: String = "Glow & Go Hair Studio",
     salonAddress: String = "Av. Primavera 123, Santiago de Surco, Lima – Perú",
     onBack: () -> Unit,
-    onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String) -> Unit,
+    onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String, timeSlotId: Long, selectedDateCalendar: String) -> Unit,
     viewModel: TimeSelectionViewModel = hiltViewModel()
 ) {
     val localeEn = Locale.ENGLISH
@@ -76,10 +77,19 @@ fun TimeSelectionScreen(
     )
 
     // Cargar reservas del backend para marcar horarios ocupados
-    LaunchedEffect(Unit) { viewModel.load(workerId, providerId) }
+    // Recargar cuando cambie el workerId, providerId o cuando se monte la pantalla
+    // Esto asegura que los horarios ocupados se actualicen cuando el usuario vuelve a la pantalla
+    LaunchedEffect(workerId, providerId) { 
+        viewModel.load(workerId, providerId) 
+    }
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val bookedTimeSlots by viewModel.bookedTimeSlots.collectAsState()
+    
+    // Debug: mostrar horarios reservados
+    LaunchedEffect(bookedTimeSlots) {
+        println("🔍 TimeSelectionScreen: Horarios reservados actualizados: $bookedTimeSlots (total: ${bookedTimeSlots.size})")
+    }
 
     Scaffold(
         topBar = {
@@ -260,32 +270,38 @@ fun TimeSelectionScreen(
                 ) {
                     Button(
                         onClick = {
+                            // Verificar que el horario no esté ya reservado
+                            if (bookedTimeSlots.contains(selectedTime)) {
+                                println("🔍 TimeSelectionScreen: El horario $selectedTime ya está reservado, no se puede continuar")
+                                return@Button
+                            }
+                            
                             val sdfEs = SimpleDateFormat("EEE d 'de' MMMM", localeEs)
                             val formatted = capFirst(sdfEs.format(selectedDate.time), localeEs)
                             
-                            // Navegar primero para no bloquear la UI
-                            onContinue(
-                                selectedDate.get(Calendar.DAY_OF_MONTH).toString(),
-                                selectedTime,
-                                formatted,
-                                selectedTime
-                            )
-                            
-                            // Intentar crear la reserva en background (no bloquea navegación)
-                            val selectedId = viewModel.getTimeSlotId(selectedTime)
-                            if (selectedId != null) {
-                                viewModel.createReservation(clientId, providerId, workerId, selectedId) { ok, error ->
-                                    if (ok) {
-                                        println("🔍 TimeSelectionScreen: Reserva creada exitosamente")
-                                    } else {
-                                        println("🔍 TimeSelectionScreen: Error al crear reserva: $error")
-                                        // Aquí podrías mostrar un snackbar o mensaje si lo necesitas
-                                    }
+                            // Solo crear el time slot, la reserva se creará en la pantalla de confirmación
+                            viewModel.createTimeSlot(selectedDate, selectedTime, serviceDuration) { timeSlotResult ->
+                                timeSlotResult.onSuccess { timeSlot ->
+                                    println("🔍 TimeSelectionScreen: Time slot creado exitosamente con ID: ${timeSlot.id}")
+                                    
+                                    // Guardar el timeSlotId y la fecha para crear la reserva después
+                                    // Navegar a la pantalla de confirmación
+                                    onContinue(
+                                        selectedDate.get(Calendar.DAY_OF_MONTH).toString(),
+                                        selectedTime,
+                                        formatted,
+                                        selectedTime,
+                                        timeSlot.id, // Pasar el timeSlotId
+                                        SimpleDateFormat("yyyy-MM-dd", Locale.US).format(selectedDate.time) // Fecha para recrear Calendar
+                                    )
+                                }.onFailure { error ->
+                                    println("🔍 TimeSelectionScreen: Error al crear time slot: ${error.message}")
+                                    // No navegar si falla la creación del time slot
+                                    // TODO: Mostrar snackbar o mensaje de error al usuario
                                 }
-                            } else {
-                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime")
                             }
                         },
+                        enabled = !bookedTimeSlots.contains(selectedTime), // Deshabilitar si el horario ya está reservado
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),

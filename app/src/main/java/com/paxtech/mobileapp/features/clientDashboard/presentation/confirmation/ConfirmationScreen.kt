@@ -21,13 +21,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection.TimeSelectionViewModel
+import com.paxtech.mobileapp.features.clientDashboard.presentation.shared.ReservationData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfirmationScreen(
     reservationDetails: ReservationDetails,
+    reservationData: ReservationData,
     onBack: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    viewModel: TimeSelectionViewModel = hiltViewModel()
 ) {
     var couponCode by remember { mutableStateOf("") }
     var appliedDiscount by remember { mutableStateOf(0.0) }
@@ -403,7 +408,33 @@ fun ConfirmationScreen(
                     }
 
                     Button(
-                        onClick = onConfirm,
+                        onClick = {
+                            // Crear la reserva cuando se confirma
+                            val serviceIdLong = try {
+                                reservationData.service.id.toLong()
+                            } catch (e: Exception) {
+                                println("🔍 ConfirmationScreen: Error al convertir serviceId: ${e.message}")
+                                0L
+                            }
+                            
+                            viewModel.createReservation(
+                                clientId = reservationData.clientId,
+                                providerId = reservationData.providerId,
+                                workerId = reservationData.selectedProfessionalId,
+                                timeSlotId = reservationData.timeSlotId,
+                                serviceId = serviceIdLong,
+                                selectedTime = reservationData.selectedTime
+                            ) { ok, error ->
+                                if (ok) {
+                                    println("🔍 ConfirmationScreen: Reserva creada exitosamente")
+                                    // Navegar a la pantalla de confirmación exitosa
+                                    onConfirm()
+                                } else {
+                                    println("🔍 ConfirmationScreen: Error al crear reserva: $error")
+                                    // TODO: Mostrar snackbar o mensaje de error al usuario
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .width(180.dp)
                             .height(54.dp),
