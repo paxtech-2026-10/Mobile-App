@@ -114,6 +114,7 @@ fun SuccessClientScreen(
     }
 }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun SuccessClientScreenPreview() {
