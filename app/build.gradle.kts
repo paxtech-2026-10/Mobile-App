@@ -50,7 +50,7 @@ firebaseAppDistribution {
     appId = "1:926361378609:android:a84ac4062d1a098abfda10"
     releaseNotes = "Test Android Release"
     // Opcional: grupos de testers
-    // groups = "testers"
+    groups = "profesores, grupo"
     // Opcional: testers individuales
     // testers = "correo@profesor.com"
 }
