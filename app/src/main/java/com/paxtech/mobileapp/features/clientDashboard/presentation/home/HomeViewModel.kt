@@ -2,6 +2,8 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.SalonRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.ReviewRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
 import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,14 +15,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: SalonRepository,
     private val localRepository: LocalSalonRepository,
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val reviewRepository: ReviewRepository
 ): ViewModel() {
     
     private val _recommendedSalons = MutableStateFlow<List<Salon>>(emptyList())
@@ -44,6 +46,9 @@ class HomeViewModel @Inject constructor(
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
     private var searchJob: Job? = null
 
+    // Ratings de salones
+    private val _salonRatings = MutableStateFlow<Map<Int, RatingSummary>>(emptyMap())
+    val salonRatings: StateFlow<Map<Int, RatingSummary>> = _salonRatings.asStateFlow()
 
     fun loadAllData(){
         viewModelScope.launch {
@@ -53,6 +58,9 @@ class HomeViewModel @Inject constructor(
             val salons = repository.getAllSalons()
             println("🔍 HomeViewModel: Received ${salons.size} recommended salons")
             _recommendedSalons.value = salons
+            
+            // Cargar ratings para todos los salones
+            loadSalonRatings(salons)
             
             // Cargar favoritos locales
             val favorites = localRepository.getAllFavorites()
@@ -67,6 +75,25 @@ class HomeViewModel @Inject constructor(
             // Cargar nombre del usuario
             loadUserName()
         }
+    }
+    
+    private suspend fun loadSalonRatings(salons: List<Salon>) {
+        val ratingsMap = mutableMapOf<Int, RatingSummary>()
+        
+        salons.forEach { salon ->
+            try {
+                val ratingSummary = reviewRepository.getRatingSummary(salon.id)
+                if (ratingSummary != null) {
+                    ratingsMap[salon.id] = ratingSummary
+                    println("🔍 HomeViewModel: Loaded rating for salon ${salon.id}: ${ratingSummary.averageRating} (${ratingSummary.reviewCount} reviews)")
+                }
+            } catch (e: Exception) {
+                println("🔍 HomeViewModel: Error loading rating for salon ${salon.id}: ${e.message}")
+            }
+        }
+        
+        _salonRatings.value = ratingsMap
+        println("🔍 HomeViewModel: Loaded ratings for ${ratingsMap.size} salons")
     }
     
     fun loadUserName() {

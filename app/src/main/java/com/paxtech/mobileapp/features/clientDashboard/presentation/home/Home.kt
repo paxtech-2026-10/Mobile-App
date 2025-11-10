@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.paxtech.mobileapp.shared.model.Salon
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import com.paxtech.mobileapp.ui.theme.TextPrimary
 import com.paxtech.mobileapp.ui.theme.TextSecondary
@@ -77,6 +78,9 @@ fun Home(
     // Estados del buscador
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
+    
+    // Ratings de salones
+    val salonRatings by viewModel.salonRatings.collectAsState()
     
     // Estado local para el TextField
     var searchText by remember { mutableStateOf("") }
@@ -445,7 +449,8 @@ fun Home(
                             onSalonClick(salon.id)
                         },
                         isFavorite = favoriteSalons.any { it.id == salon.id },
-                        onFavoriteClick = { viewModel.toggleFavorite(salon) }
+                        onFavoriteClick = { viewModel.toggleFavorite(salon) },
+                        ratingSummary = salonRatings[salon.id]
                     )
                 }
             }
@@ -484,7 +489,8 @@ fun Home(
                 onClick = { onSalonClick(salon.id) },
                 isFavorite = favoriteSalons.any { it.id == salon.id },
                 onFavoriteClick = { viewModel.toggleFavorite(salon) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                ratingSummary = salonRatings[salon.id]
             )
         }
 
@@ -544,7 +550,8 @@ fun NearbySalonCard(
     salon: Salon,
     onClick: () -> Unit,
     isFavorite: Boolean = false,
-    onFavoriteClick: () -> Unit = {}
+    onFavoriteClick: () -> Unit = {},
+    ratingSummary: RatingSummary? = null
 ) {
     Card(
         modifier = Modifier
@@ -638,7 +645,11 @@ fun NearbySalonCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "4.9 (27)",
+                        text = if (ratingSummary != null) {
+                            "%.1f (%d)".format(ratingSummary.averageRating, ratingSummary.reviewCount)
+                        } else {
+                            "Sin calificar"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -672,7 +683,8 @@ fun PopularSalonCard(
     onClick: () -> Unit,
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ratingSummary: RatingSummary? = null
 ) {
     Card(
         modifier = modifier
@@ -772,7 +784,11 @@ fun PopularSalonCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "4.9 (36)",
+                        text = if (ratingSummary != null) {
+                            "%.1f (%d)".format(ratingSummary.averageRating, ratingSummary.reviewCount)
+                        } else {
+                            "Sin calificar"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
