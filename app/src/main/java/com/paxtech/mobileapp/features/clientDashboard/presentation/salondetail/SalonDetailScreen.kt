@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.AboutUi
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
@@ -35,6 +36,7 @@ fun SalonDetailScreen(
     services: List<ServiceUi>,
     reviews: List<ReviewUi>,
     about: AboutUi,
+    ratingSummary: RatingSummary? = null,
     onBack: () -> Unit,
     onReserveService: (ServiceUi) -> Unit
 ) {
@@ -95,9 +97,26 @@ fun SalonDetailScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text("4.7", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text(
+                                if (ratingSummary != null) {
+                                    "%.1f".format(ratingSummary.averageRating)
+                                } else {
+                                    "N/A"
+                                },
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
                             Spacer(Modifier.width(6.dp))
-                            Text("100 reviews", fontSize = 11.sp, color = TextSecondary)
+                            Text(
+                                if (ratingSummary != null) {
+                                    "${ratingSummary.reviewCount} ${if (ratingSummary.reviewCount == 1) "review" else "reviews"}"
+                                } else {
+                                    "Sin calificar"
+                                },
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
                         }
                     }
                 }

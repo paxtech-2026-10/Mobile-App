@@ -27,6 +27,7 @@ fun SalonDetailRoute(
     val services by viewModel.services.collectAsState()
     val reviews by viewModel.reviews.collectAsState()
     val about by viewModel.about.collectAsState()
+    val ratingSummary by viewModel.ratingSummary.collectAsState()
 
     val defaultServices = if (services.isEmpty())
         listOf(ServiceUi("0", "Servicio no disponible", "Descripción no disponible", "s/0.00", 0))
@@ -41,13 +42,14 @@ fun SalonDetailRoute(
         services = defaultServices,
         reviews = defaultReviews,
         about = about,
+        ratingSummary = ratingSummary,
         onBack = onBack,
         onReserveService = { service ->
             onReserveService(
                 service,
                 salon?.companyName ?: "Salón",
                 about.ubicacion,
-                4.7,
+                ratingSummary?.averageRating ?: 0.0,
                 salon?.coverImageUrl.orEmpty()
             )
         }
