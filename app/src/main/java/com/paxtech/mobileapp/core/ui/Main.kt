@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -47,7 +49,8 @@ import com.paxtech.mobileapp.features.testBooking.TestBookingScreen
 
 data class NavigationItem(
     val icon: ImageVector,
-    val route: String
+    val route: String,
+    val label: String
 )
 
 
@@ -58,11 +61,10 @@ fun Main(onClick: (Int) -> Unit) {
 
     // map each tab to its route + icon (use your sealed routes)
     val tabs = listOf(
-        Route.Home to Icons.Default.Home,
-        Route.Location to Icons.Default.LocationOn,
-        Route.Booking to Icons.Default.CalendarToday,
-        Route.Message to Icons.Default.Message,
-        Route.Profile to Icons.Default.Person
+        NavigationItem(Icons.Default.Home, Route.Home.route, "Inicio"),
+        NavigationItem(Icons.Default.Search, Route.Services.route, "Buscador"),
+        NavigationItem(Icons.Default.CalendarToday, Route.Booking.route, "Reservación"),
+        NavigationItem(Icons.Default.Person, Route.Profile.route, "Perfil")
     )
 
     Scaffold(
@@ -70,15 +72,16 @@ fun Main(onClick: (Int) -> Unit) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                        spotColor = Color.Black.copy(alpha = 0.1f),
-                        ambientColor = Color.Black.copy(alpha = 0.05f)
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        spotColor = Color.Black.copy(alpha = 0.15f),
+                        ambientColor = Color.Black.copy(alpha = 0.1f)
                     )
                     .background(
                         color = Color.White,
-                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                        shape = RoundedCornerShape(24.dp)
                     )
             ) {
                 NavigationBar(
@@ -86,24 +89,34 @@ fun Main(onClick: (Int) -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     val currentRoute = tabNav.currentBackStackEntryAsState().value?.destination?.route
-                    tabs.forEach { (route, icon) ->
+                    tabs.forEach { item ->
+                        val isSelected = currentRoute == item.route
                         NavigationBarItem(
-                            selected = currentRoute == route.route,
+                            selected = isSelected,
                             icon = { 
                                 Icon(
-                                    icon, 
-                                    contentDescription = route.route,
-                                    tint = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
+                                    item.icon,
+                                    contentDescription = item.label,
+                                    tint = if (isSelected) PrimaryPurple else Color(0xFF6B7280),
+                                    modifier = Modifier.size(24.dp)
                                 ) 
                             },
                             label = { 
                                 Text(
-                                    text = route.route.replaceFirstChar { it.titlecase() },
-                                    color = if (currentRoute == route.route) PrimaryPurple else Color(0xFF6B7280)
+                                    text = item.label,
+                                    color = if (isSelected) PrimaryPurple else Color(0xFF6B7280),
+                                    style = MaterialTheme.typography.labelSmall
                                 ) 
                             },
+                            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                selectedIconColor = PrimaryPurple,
+                                selectedTextColor = PrimaryPurple,
+                                indicatorColor = Color.Transparent,
+                                unselectedIconColor = Color(0xFF6B7280),
+                                unselectedTextColor = Color(0xFF6B7280)
+                            ),
                             onClick = {
-                                tabNav.navigate(route.route) {
+                                tabNav.navigate(item.route) {
                                     popUpTo(tabNav.graph.startDestinationId) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
@@ -122,32 +135,13 @@ fun Main(onClick: (Int) -> Unit) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
-            composable(Route.Location.route) { LocationPlaceholder() }
-            composable(Route.Booking.route)  { TestBookingScreen() }
-            composable(Route.Message.route)  { MessagePlaceholder() }
+            composable(Route.Services.route) { SearchServiceView() }
+            composable(Route.Booking.route)  { BookingPlaceholder() }
             composable(Route.Profile.route)  { ProfileNav() }
         }
     }
 }
 
-
-@Composable
-fun LocationPlaceholder() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Location",
-            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
-        )
-        Text(
-            text = "Location screen coming soon...",
-            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-        )
-    }
-}
 
 @Composable
 fun BookingPlaceholder() {
@@ -157,29 +151,11 @@ fun BookingPlaceholder() {
             .padding(16.dp)
     ) {
         Text(
-            text = "Booking",
+            text = "Reservaciones",
             style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
         )
         Text(
-            text = "Booking screen coming soon...",
-            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-        )
-    }
-}
-
-@Composable
-fun MessagePlaceholder() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Messages",
-            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
-        )
-        Text(
-            text = "Messages screen coming soon...",
+            text = "Pantalla de reservaciones próximamente...",
             style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
         )
     }

@@ -92,7 +92,7 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Sign In",
+                    text = "Iniciar Sesión",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -110,7 +110,7 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Login to your account to access all the features in uTime",
+                    text = "Logueate y encuentra el salón de belleza que más te guste",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     textAlign = TextAlign.Center,
@@ -140,7 +140,7 @@ fun LoginScreen(
                         // Email
                         Column {
                             Text(
-                                text = "Email",
+                                text = "Correo electrónico",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
@@ -151,7 +151,7 @@ fun LoginScreen(
                                 onValueChange = { emailPhone = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your email",
+                                        "Ingresa tu correo electrónico",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -170,7 +170,7 @@ fun LoginScreen(
                         // Password
                         Column {
                             Text(
-                                text = "Password",
+                                text = "Contraseña",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
@@ -181,7 +181,7 @@ fun LoginScreen(
                                 onValueChange = { password = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your password",
+                                        "Ingresa tu contraseña",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -192,7 +192,7 @@ fun LoginScreen(
                                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                         Icon(
                                             imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                            contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
                                             tint = TextSecondary
                                         )
                                     }
@@ -231,7 +231,7 @@ fun LoginScreen(
                                 Text("Cargando...", color = Color.White)
                             } else {
                                 Text(
-                                    text = "Sign In",
+                                    text = "Iniciar Sesión",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold
@@ -259,12 +259,12 @@ fun LoginScreen(
                             .padding(bottom = 32.dp)
                     ) {
                         Text(
-                            text = "Don't have an account? ",
+                            text = "¿No tienes una cuenta? ",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimary
                         )
                         Text(
-                            text = "SIGN UP",
+                            text = "REGÍSTRATE",
                             style = MaterialTheme.typography.bodyMedium,
                             color = PrimaryPurple,
                             fontWeight = FontWeight.Bold

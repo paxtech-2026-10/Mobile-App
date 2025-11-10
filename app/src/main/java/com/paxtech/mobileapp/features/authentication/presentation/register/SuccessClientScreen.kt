@@ -57,11 +57,11 @@ fun SuccessClientScreen(
             ) {
                 Icon(
                     imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = "Check",
+                    contentDescription = "Verificado",
                     modifier = Modifier.size(48.dp),
                     tint = PrimaryPurple
                 )
-
+            }
             
             Spacer(modifier = Modifier.height(24.dp))
             

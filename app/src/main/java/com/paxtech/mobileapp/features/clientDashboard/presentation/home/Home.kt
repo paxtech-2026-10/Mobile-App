@@ -187,13 +187,13 @@ fun Home(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
+                            contentDescription = "Buscar",
                             tint = TextSecondary,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Search",
+                            text = "Buscar",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextSecondary
                         )
@@ -210,7 +210,7 @@ fun Home(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Tune,
-                        contentDescription = "Filter",
+                        contentDescription = "Filtro",
                         tint = TextPrimary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -240,20 +240,20 @@ fun Home(
                             .padding(20.dp)
                     ) {
                         Text(
-                            text = "30% Off",
+                            text = "30% Descuento",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Wedding Package",
+                            text = "Paquete de Boda",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White
                         )
                         Text(
-                            text = "Hair-styling & treatment",
+                            text = "Peinado y tratamiento",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -267,7 +267,7 @@ fun Home(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "Explore",
+                                text = "Explorar",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -287,13 +287,13 @@ fun Home(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Categories",
+                    text = "Categorías",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "View All",
+                    text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryPurple,
                     fontWeight = FontWeight.Medium,
@@ -322,13 +322,13 @@ fun Home(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Nearby Salons",
+                    text = "Salones Cercanos",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "View All",
+                    text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryPurple,
                     fontWeight = FontWeight.Medium,
@@ -365,13 +365,13 @@ fun Home(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Popular Salons",
+                    text = "Salones Populares",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "View All",
+                    text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryPurple,
                     fontWeight = FontWeight.Medium,
@@ -433,11 +433,11 @@ fun CategoryItem(category: Category) {
 }
 
 fun getCategories(): List<Category> = listOf(
-    Category("Hair Cut", "✂️", Color(0xFFFFB6C1)),
-    Category("Shaves", "🪒", Color(0xFFE1BEE7)),
-    Category("Makeup", "💄", Color(0xFFFFB74D)),
-    Category("Nail Cut", "💅", Color(0xFFE1BEE7)),
-    Category("Hair Styling", "💇", Color(0xFFB2DFDB))
+    Category("Corte de Cabello", "✂️", Color(0xFFFFB6C1)),
+    Category("Afeitado", "🪒", Color(0xFFE1BEE7)),
+    Category("Maquillaje", "💄", Color(0xFFFFB74D)),
+    Category("Manicure", "💅", Color(0xFFE1BEE7)),
+    Category("Peinado", "💇", Color(0xFFB2DFDB))
 )
 
 @Composable
@@ -473,7 +473,7 @@ fun NearbySalonCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
                         tint = if (isFavorite) Color(0xFFF44336) else Color.White,
                         modifier = Modifier.size(24.dp)
                     )
@@ -511,7 +511,7 @@ fun NearbySalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
+                        contentDescription = "Ubicación",
                         tint = Color(0xFF4CAF50),
                         modifier = Modifier.size(14.dp)
                     )
@@ -533,7 +533,7 @@ fun NearbySalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
+                        contentDescription = "Calificación",
                         tint = Color(0xFFFFC107),
                         modifier = Modifier.size(14.dp)
                     )
@@ -556,7 +556,7 @@ fun NearbySalonCard(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Book Now",
+                        text = "Reservar Ahora",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
@@ -604,7 +604,7 @@ fun PopularSalonCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
                         tint = if (isFavorite) Color(0xFFF44336) else Color.White,
                         modifier = Modifier.size(20.dp)
                     )
@@ -645,7 +645,7 @@ fun PopularSalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
+                        contentDescription = "Ubicación",
                         tint = Color(0xFF4CAF50),
                         modifier = Modifier.size(14.dp)
                     )
@@ -667,7 +667,7 @@ fun PopularSalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
+                        contentDescription = "Calificación",
                         tint = Color(0xFFFFC107),
                         modifier = Modifier.size(14.dp)
                     )
@@ -689,7 +689,7 @@ fun PopularSalonCard(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Book Now",
+                        text = "Reservar Ahora",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
