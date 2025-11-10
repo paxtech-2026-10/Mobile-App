@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
@@ -35,14 +36,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -67,11 +73,23 @@ fun Home(
     val favoriteSalons by viewModel.favoriteSalons.collectAsState()
     val recentVisits by viewModel.recentVisits.collectAsState()
     val userName by viewModel.userName.collectAsState()
+    
+    // Estados del buscador
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
+    
+    // Estado local para el TextField
+    var searchText by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.loadAllData()
         // Asegurar que el nombre se carga cuando se muestra la pantalla
         viewModel.loadUserName()
+    }
+
+    // Sincronizar el texto del TextField con el ViewModel
+    LaunchedEffect(searchText) {
+        viewModel.updateSearchQuery(searchText)
     }
 
     // Calcular iniciales del nombre del usuario
@@ -124,13 +142,7 @@ fun Home(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Location",
-                                tint = Color(0xFF4CAF50),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
+
                         }
                     }
 
@@ -156,57 +168,143 @@ fun Home(
             }
         }
 
-        // Search Bar
+        // Search Bar con Dropdown
         item {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .zIndex(1f) // Asegurar que el dropdown esté por encima
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(BackgroundGray),
-                    contentAlignment = Alignment.CenterStart
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
+                    // Search TextField
+                    Box(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        TextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            placeholder = {
+                                Text(
+                                    text = "Buscar salones...",
+                                    color = TextSecondary
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Buscar",
+                                    tint = TextSecondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchText.isNotEmpty()) {
+                                    IconButton(onClick = { 
+                                        searchText = ""
+                                        viewModel.clearSearch()
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Limpiar",
+                                            tint = TextSecondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = BackgroundGray,
+                                unfocusedContainerColor = BackgroundGray,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true
+                        )
+                        
+                        // Dropdown de resultados
+                        if (searchResults.isNotEmpty() && searchText.isNotEmpty()) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 60.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = BackgroundWhite
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp)
+                                ) {
+                                    searchResults.take(5).forEach { salon ->
+                                        SearchResultItem(
+                                            salon = salon,
+                                            onClick = {
+                                                viewModel.saveVisit(salon)
+                                                viewModel.clearSearch()
+                                                searchText = ""
+                                                onSalonClick(salon.id)
+                                            },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                            }
+                        } else if (isSearching && searchText.length >= 2) {
+                            // Mostrar indicador de carga
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 60.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = BackgroundWhite
+                                )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Buscando...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    // Filter button
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BackgroundGray),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Buscar",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Buscar",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Filtro",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                // Filter button
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(BackgroundGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = "Filtro",
-                        tint = TextPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
                 }
             }
         }
@@ -270,7 +368,8 @@ fun Home(
             }
         }
 
-        // Categories Section
+        // Categories Section - COMENTADO: Sección de categorías deshabilitada temporalmente
+        /*
         item {
             Row(
                 modifier = Modifier
@@ -304,6 +403,7 @@ fun Home(
                 }
             }
         }
+        */
 
         // Nearby Salons Section
         item {
@@ -320,6 +420,8 @@ fun Home(
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
+                // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
+                /*
                 Text(
                     text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
@@ -327,6 +429,7 @@ fun Home(
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
                 )
+                */
             }
         }
         item {
@@ -363,6 +466,8 @@ fun Home(
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
+                // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
+                /*
                 Text(
                     text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
@@ -370,6 +475,7 @@ fun Home(
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
                 )
+                */
             }
         }
         items(recentVisits.ifEmpty { recommendedSalons.take(3) }) { salon ->
@@ -689,6 +795,51 @@ fun PopularSalonCard(
                     )
                 }
             }
+        }
+    }
+}
+
+// Componente para cada item del dropdown
+@Composable
+fun SearchResultItem(
+    salon: Salon,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Icono de salón
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = null,
+            tint = PrimaryPurple,
+            modifier = Modifier.size(24.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        // Información del salón
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = salon.companyName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = salon.location,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
