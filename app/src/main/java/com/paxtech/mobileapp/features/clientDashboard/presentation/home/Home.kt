@@ -203,7 +203,7 @@ fun Home(
                         }
                     }
 
-                    // Notifications
+                    /* Notifications
                     Box {
                         IconButton(onClick = { /* TODO: Navigate to notifications */ }) {
                             Icon(
@@ -220,7 +220,7 @@ fun Home(
                                 .clip(CircleShape)
                                 .background(Color(0xFFF44336))
                         )
-                    }
+                    }*/
                 }
             }
         }
@@ -347,7 +347,7 @@ fun Home(
                     
                     Spacer(modifier = Modifier.width(12.dp))
                     
-                    // Filter button
+                    /* Filter button
                     Box(
                         modifier = Modifier
                             .size(48.dp)
@@ -361,7 +361,7 @@ fun Home(
                             tint = TextPrimary,
                             modifier = Modifier.size(24.dp)
                         )
-                    }
+                    }*/
                 }
             }
         }
@@ -511,7 +511,7 @@ fun Home(
             }
         }
 
-        // Popular Salons Section
+        // Recent Salons Section
         item {
             Row(
                 modifier = Modifier
@@ -521,7 +521,7 @@ fun Home(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Salones Populares",
+                    text = "Salones Recientes",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -551,6 +551,40 @@ fun Home(
                 distanceKm = distance,
                 address = salonAddresses[salon.id]
             )
+        }
+
+        // Favorite Salons Section
+        if (favoriteSalons.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Salones Favoritos",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
+            }
+            items(favoriteSalons) { salon ->
+                // Buscar la distancia del salón en la lista ordenada
+                val distance = salonsWithDistance.find { it.first.id == salon.id }?.second
+                PopularSalonCard(
+                    salon = salon,
+                    onClick = { onSalonClick(salon.id) },
+                    isFavorite = true,
+                    onFavoriteClick = { viewModel.toggleFavorite(salon) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    ratingSummary = salonRatings[salon.id],
+                    distanceKm = distance,
+                    address = salonAddresses[salon.id]
+                )
+            }
         }
 
         // Bottom padding
