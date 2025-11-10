@@ -38,6 +38,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +64,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.paxtech.mobileapp.shared.model.Salon
 import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
+import com.paxtech.mobileapp.core.utils.LocationUtils
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import com.paxtech.mobileapp.ui.theme.TextPrimary
 import com.paxtech.mobileapp.ui.theme.TextSecondary
@@ -82,8 +88,26 @@ fun Home(
     // Ratings de salones
     val salonRatings by viewModel.salonRatings.collectAsState()
     
+    // Salones con distancias calculadas
+    val salonsWithDistance by viewModel.salonsWithDistance.collectAsState()
+    
+    // Ubicación del usuario
+    val userLocation by viewModel.userLocation.collectAsState()
+    val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
+    
     // Estado local para el TextField
     var searchText by remember { mutableStateOf("") }
+    
+    // Launcher para solicitar permisos de ubicación
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            viewModel.reloadLocationAndDistances()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadAllData()
@@ -143,10 +167,28 @@ fun Home(
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
+                        Spacer(modifier = Modifier.height(2.dp))
+                        val currentLocation = userLocation
+                        if (hasLocationPermission && currentLocation != null) {
+                            Text(
+                                text = "📍 ${String.format("%.6f", currentLocation.latitude)}, ${String.format("%.6f", currentLocation.longitude)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
+                            )
+                        } else {
+                            Text(
+                                text = "Permitir acceso a ubicación",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary,
+                                modifier = Modifier.clickable {
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                }
+                            )
                         }
                     }
 
@@ -441,7 +483,7 @@ fun Home(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(recommendedSalons) { salon ->
+                items(salonsWithDistance) { (salon, distance) ->
                     NearbySalonCard(
                         salon = salon,
                         onClick = {
@@ -450,7 +492,8 @@ fun Home(
                         },
                         isFavorite = favoriteSalons.any { it.id == salon.id },
                         onFavoriteClick = { viewModel.toggleFavorite(salon) },
-                        ratingSummary = salonRatings[salon.id]
+                        ratingSummary = salonRatings[salon.id],
+                        distanceKm = distance
                     )
                 }
             }
@@ -484,13 +527,16 @@ fun Home(
             }
         }
         items(recentVisits.ifEmpty { recommendedSalons.take(3) }) { salon ->
+            // Buscar la distancia del salón en la lista ordenada
+            val distance = salonsWithDistance.find { it.first.id == salon.id }?.second
             PopularSalonCard(
                 salon = salon,
                 onClick = { onSalonClick(salon.id) },
                 isFavorite = favoriteSalons.any { it.id == salon.id },
                 onFavoriteClick = { viewModel.toggleFavorite(salon) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                ratingSummary = salonRatings[salon.id]
+                ratingSummary = salonRatings[salon.id],
+                distanceKm = distance
             )
         }
 
@@ -551,7 +597,8 @@ fun NearbySalonCard(
     onClick: () -> Unit,
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
-    ratingSummary: RatingSummary? = null
+    ratingSummary: RatingSummary? = null,
+    distanceKm: Float? = null
 ) {
     Card(
         modifier = Modifier
@@ -604,7 +651,11 @@ fun NearbySalonCard(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "→ 5 km",
+                        text = if (distanceKm != null && distanceKm != Float.MAX_VALUE) {
+                            "→ ${LocationUtils.formatDistance(distanceKm)}"
+                        } else {
+                            "→ ? km"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -623,7 +674,7 @@ fun NearbySalonCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = salon.location,
+                        text = LocationUtils.extractAddress(salon.location),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         maxLines = 1,
@@ -684,7 +735,8 @@ fun PopularSalonCard(
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
     modifier: Modifier = Modifier,
-    ratingSummary: RatingSummary? = null
+    ratingSummary: RatingSummary? = null,
+    distanceKm: Float? = null
 ) {
     Card(
         modifier = modifier
@@ -743,7 +795,11 @@ fun PopularSalonCard(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "→ 5 km",
+                        text = if (distanceKm != null && distanceKm != Float.MAX_VALUE) {
+                            "→ ${LocationUtils.formatDistance(distanceKm)}"
+                        } else {
+                            "→ ? km"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -762,7 +818,7 @@ fun PopularSalonCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = salon.location,
+                        text = LocationUtils.extractAddress(salon.location),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         maxLines = 1,
@@ -850,7 +906,7 @@ fun SearchResultItem(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = salon.location,
+                text = LocationUtils.extractAddress(salon.location),
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary,
                 maxLines = 1,

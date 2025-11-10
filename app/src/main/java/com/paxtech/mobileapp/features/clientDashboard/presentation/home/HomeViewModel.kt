@@ -5,6 +5,9 @@ import com.paxtech.mobileapp.features.clientDashboard.domain.repository.SalonRep
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.ReviewRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
 import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
+import com.paxtech.mobileapp.core.location.LocationManager
+import com.paxtech.mobileapp.core.utils.LocationUtils
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.paxtech.mobileapp.shared.model.Salon
@@ -22,7 +25,8 @@ class HomeViewModel @Inject constructor(
     private val repository: SalonRepository,
     private val localRepository: LocalSalonRepository,
     private val userDataRepository: UserDataRepository,
-    private val reviewRepository: ReviewRepository
+    private val reviewRepository: ReviewRepository,
+    private val locationManager: LocationManager
 ): ViewModel() {
     
     private val _recommendedSalons = MutableStateFlow<List<Salon>>(emptyList())
@@ -49,10 +53,25 @@ class HomeViewModel @Inject constructor(
     // Ratings de salones
     private val _salonRatings = MutableStateFlow<Map<Int, RatingSummary>>(emptyMap())
     val salonRatings: StateFlow<Map<Int, RatingSummary>> = _salonRatings.asStateFlow()
+    
+    // Ubicación del usuario
+    private val _userLocation = MutableStateFlow<Location?>(null)
+    val userLocation: StateFlow<Location?> = _userLocation.asStateFlow()
+    
+    // Estado de permisos de ubicación
+    private val _hasLocationPermission = MutableStateFlow<Boolean>(false)
+    val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
+    
+    // Salones con distancias calculadas y ordenados
+    private val _salonsWithDistance = MutableStateFlow<List<Pair<Salon, Float>>>(emptyList())
+    val salonsWithDistance: StateFlow<List<Pair<Salon, Float>>> = _salonsWithDistance.asStateFlow()
 
     fun loadAllData(){
         viewModelScope.launch {
             println("🔍 HomeViewModel: Loading all data...")
+            
+            // Verificar permisos de ubicación
+            checkLocationPermission()
             
             // Cargar salones recomendados del API
             val salons = repository.getAllSalons()
@@ -61,6 +80,12 @@ class HomeViewModel @Inject constructor(
             
             // Cargar ratings para todos los salones
             loadSalonRatings(salons)
+            
+            // Obtener ubicación del usuario
+            loadUserLocation()
+            
+            // Calcular distancias y ordenar salones
+            calculateSalonDistances(salons)
             
             // Cargar favoritos locales
             val favorites = localRepository.getAllFavorites()
@@ -74,6 +99,74 @@ class HomeViewModel @Inject constructor(
             
             // Cargar nombre del usuario
             loadUserName()
+        }
+    }
+    
+    fun checkLocationPermission() {
+        _hasLocationPermission.value = locationManager.hasLocationPermission()
+    }
+    
+    fun reloadLocationAndDistances() {
+        viewModelScope.launch {
+            checkLocationPermission()
+            if (locationManager.hasLocationPermission()) {
+                loadUserLocation()
+                // Recalcular distancias con los salones actuales
+                calculateSalonDistances(_recommendedSalons.value)
+            }
+        }
+    }
+    
+    private suspend fun loadUserLocation() {
+        try {
+            if (!locationManager.hasLocationPermission()) {
+                println("🔍 HomeViewModel: No location permission, skipping location load")
+                return
+            }
+            
+            val location = locationManager.getCurrentLocation()
+            _userLocation.value = location
+            if (location != null) {
+                println("🔍 HomeViewModel: User location loaded: ${location.latitude}, ${location.longitude}")
+            } else {
+                println("🔍 HomeViewModel: Could not get user location")
+            }
+        } catch (e: Exception) {
+            println("🔍 HomeViewModel: Error loading user location: ${e.message}")
+        }
+    }
+    
+    private suspend fun calculateSalonDistances(salons: List<Salon>) {
+        val userLocation = _userLocation.value
+        
+        if (userLocation != null) {
+            println("🔍 HomeViewModel: Calculating distances from user location: ${userLocation.latitude}, ${userLocation.longitude}")
+            val salonsWithDist = salons.mapNotNull { salon ->
+                println("🔍 HomeViewModel: Processing salon '${salon.companyName}' with location string: '${salon.location}'")
+                val coordinates = LocationUtils.parseCoordinates(salon.location)
+                if (coordinates != null) {
+                    println("🔍 HomeViewModel: Parsed coordinates for '${salon.companyName}': lat=${coordinates.first}, lng=${coordinates.second}")
+                    val distance = LocationUtils.calculateDistance(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        coordinates.first,
+                        coordinates.second
+                    )
+                    println("🔍 HomeViewModel: Distance for '${salon.companyName}': ${distance}km")
+                    salon to distance
+                } else {
+                    println("🔍 HomeViewModel: Could not parse coordinates for '${salon.companyName}' from: '${salon.location}'")
+                    // Si no se pueden parsear coordenadas, incluir con distancia máxima para que aparezca al final
+                    salon to Float.MAX_VALUE
+                }
+            }.sortedBy { it.second } // Ordenar por distancia (más cercanos primero)
+            
+            _salonsWithDistance.value = salonsWithDist
+            println("🔍 HomeViewModel: Calculated distances for ${salonsWithDist.size} salons")
+        } else {
+            // Si no hay ubicación, mostrar salones sin distancia
+            _salonsWithDistance.value = salons.map { it to Float.MAX_VALUE }
+            println("🔍 HomeViewModel: No user location, salons shown without distance")
         }
     }
     
