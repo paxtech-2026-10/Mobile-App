@@ -7,6 +7,7 @@ import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
 import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.core.location.LocationManager
 import com.paxtech.mobileapp.core.utils.LocationUtils
+import com.paxtech.mobileapp.core.geocoding.GeocodingRepository
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,7 +27,8 @@ class HomeViewModel @Inject constructor(
     private val localRepository: LocalSalonRepository,
     private val userDataRepository: UserDataRepository,
     private val reviewRepository: ReviewRepository,
-    private val locationManager: LocationManager
+    private val locationManager: LocationManager,
+    private val geocodingRepository: GeocodingRepository
 ): ViewModel() {
     
     private val _recommendedSalons = MutableStateFlow<List<Salon>>(emptyList())
@@ -58,6 +60,10 @@ class HomeViewModel @Inject constructor(
     private val _userLocation = MutableStateFlow<Location?>(null)
     val userLocation: StateFlow<Location?> = _userLocation.asStateFlow()
     
+    // Dirección del usuario
+    private val _userAddress = MutableStateFlow<String?>(null)
+    val userAddress: StateFlow<String?> = _userAddress.asStateFlow()
+    
     // Estado de permisos de ubicación
     private val _hasLocationPermission = MutableStateFlow<Boolean>(false)
     val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
@@ -65,6 +71,10 @@ class HomeViewModel @Inject constructor(
     // Salones con distancias calculadas y ordenados
     private val _salonsWithDistance = MutableStateFlow<List<Pair<Salon, Float>>>(emptyList())
     val salonsWithDistance: StateFlow<List<Pair<Salon, Float>>> = _salonsWithDistance.asStateFlow()
+    
+    // Direcciones de los salones (mapeadas por ID)
+    private val _salonAddresses = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val salonAddresses: StateFlow<Map<Int, String>> = _salonAddresses.asStateFlow()
 
     fun loadAllData(){
         viewModelScope.launch {
@@ -128,11 +138,32 @@ class HomeViewModel @Inject constructor(
             _userLocation.value = location
             if (location != null) {
                 println("🔍 HomeViewModel: User location loaded: ${location.latitude}, ${location.longitude}")
+                // Cargar dirección del usuario de forma asíncrona
+                viewModelScope.launch {
+                    loadUserAddress(location.latitude, location.longitude)
+                }
             } else {
                 println("🔍 HomeViewModel: Could not get user location")
             }
         } catch (e: Exception) {
             println("🔍 HomeViewModel: Error loading user location: ${e.message}")
+        }
+    }
+    
+    /**
+     * Carga la dirección del usuario basada en sus coordenadas
+     */
+    private suspend fun loadUserAddress(latitude: Double, longitude: Double) {
+        try {
+            val address = geocodingRepository.reverseGeocode(latitude, longitude)
+            if (address != null) {
+                _userAddress.value = address
+                println("🔍 HomeViewModel: User address loaded: $address")
+            } else {
+                println("🔍 HomeViewModel: Could not load user address")
+            }
+        } catch (e: Exception) {
+            println("🔍 HomeViewModel: Error loading user address: ${e.message}")
         }
     }
     
@@ -167,6 +198,47 @@ class HomeViewModel @Inject constructor(
             // Si no hay ubicación, mostrar salones sin distancia
             _salonsWithDistance.value = salons.map { it to Float.MAX_VALUE }
             println("🔍 HomeViewModel: No user location, salons shown without distance")
+        }
+        
+        // Cargar direcciones para todos los salones de forma asíncrona (no bloquea)
+        viewModelScope.launch {
+            loadAllSalonAddresses(salons)
+        }
+    }
+    
+    /**
+     * Carga las direcciones de todos los salones
+     */
+    private suspend fun loadAllSalonAddresses(salons: List<Salon>) {
+        salons.forEach { salon ->
+            val coordinates = LocationUtils.parseCoordinates(salon.location)
+            if (coordinates != null) {
+                loadSalonAddress(salon.id, coordinates.first, coordinates.second)
+            }
+        }
+    }
+    
+    /**
+     * Carga la dirección de un salón específico
+     */
+    private suspend fun loadSalonAddress(salonId: Int, latitude: Double, longitude: Double) {
+        try {
+            // Verificar si ya tenemos la dirección en caché
+            if (_salonAddresses.value.containsKey(salonId)) {
+                return
+            }
+            
+            val address = geocodingRepository.reverseGeocode(latitude, longitude)
+            if (address != null) {
+                _salonAddresses.value = _salonAddresses.value.toMutableMap().apply {
+                    put(salonId, address)
+                }
+                println("🔍 HomeViewModel: Loaded address for salon $salonId: $address")
+            } else {
+                println("🔍 HomeViewModel: Could not load address for salon $salonId")
+            }
+        } catch (e: Exception) {
+            println("🔍 HomeViewModel: Error loading address for salon $salonId: ${e.message}")
         }
     }
     

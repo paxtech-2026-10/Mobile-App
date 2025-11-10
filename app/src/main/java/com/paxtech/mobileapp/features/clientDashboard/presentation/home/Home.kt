@@ -91,8 +91,12 @@ fun Home(
     // Salones con distancias calculadas
     val salonsWithDistance by viewModel.salonsWithDistance.collectAsState()
     
+    // Direcciones de los salones
+    val salonAddresses by viewModel.salonAddresses.collectAsState()
+    
     // Ubicación del usuario
     val userLocation by viewModel.userLocation.collectAsState()
+    val userAddress by viewModel.userAddress.collectAsState()
     val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
     
     // Estado local para el TextField
@@ -170,10 +174,17 @@ fun Home(
                         Spacer(modifier = Modifier.height(2.dp))
                         val currentLocation = userLocation
                         if (hasLocationPermission && currentLocation != null) {
+                            // Mostrar dirección si está disponible, sino mostrar coordenadas como fallback
                             Text(
-                                text = "📍 ${String.format("%.6f", currentLocation.latitude)}, ${String.format("%.6f", currentLocation.longitude)}",
+                                text = if (userAddress != null) {
+                                    "📍 $userAddress"
+                                } else {
+                                    "📍 ${String.format("%.6f", currentLocation.latitude)}, ${String.format("%.6f", currentLocation.longitude)}"
+                                },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = TextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         } else {
                             Text(
@@ -493,7 +504,8 @@ fun Home(
                         isFavorite = favoriteSalons.any { it.id == salon.id },
                         onFavoriteClick = { viewModel.toggleFavorite(salon) },
                         ratingSummary = salonRatings[salon.id],
-                        distanceKm = distance
+                        distanceKm = distance,
+                        address = salonAddresses[salon.id]
                     )
                 }
             }
@@ -536,7 +548,8 @@ fun Home(
                 onFavoriteClick = { viewModel.toggleFavorite(salon) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 ratingSummary = salonRatings[salon.id],
-                distanceKm = distance
+                distanceKm = distance,
+                address = salonAddresses[salon.id]
             )
         }
 
@@ -598,7 +611,8 @@ fun NearbySalonCard(
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
     ratingSummary: RatingSummary? = null,
-    distanceKm: Float? = null
+    distanceKm: Float? = null,
+    address: String? = null
 ) {
     Card(
         modifier = Modifier
@@ -674,7 +688,7 @@ fun NearbySalonCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = LocationUtils.extractAddress(salon.location),
+                        text = address ?: LocationUtils.extractAddress(salon.location),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         maxLines = 1,
@@ -736,7 +750,8 @@ fun PopularSalonCard(
     onFavoriteClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     ratingSummary: RatingSummary? = null,
-    distanceKm: Float? = null
+    distanceKm: Float? = null,
+    address: String? = null
 ) {
     Card(
         modifier = modifier
@@ -818,7 +833,7 @@ fun PopularSalonCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = LocationUtils.extractAddress(salon.location),
+                        text = address ?: LocationUtils.extractAddress(salon.location),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         maxLines = 1,

@@ -79,5 +79,12 @@ object LocationUtils {
             else -> "%.1f km".format(distanceKm)
         }
     }
+    
+    /**
+     * Formatea una dirección para mostrar (puede ser llamada desde el ViewModel)
+     */
+    fun formatAddressForDisplay(address: String?): String {
+        return address ?: "Dirección no disponible"
+    }
 }
 
