@@ -65,7 +65,7 @@ fun SplashScreen(
                         // Logo de uTime
                         Image(
                             painter = painterResource(id = R.drawable.utimemain),
-                            contentDescription = "uTime Logo",
+                            contentDescription = "Logo de uTime",
                             modifier = Modifier.size(120.dp)
                         )
                         
