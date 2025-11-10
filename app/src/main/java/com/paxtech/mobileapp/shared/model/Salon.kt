@@ -8,5 +8,5 @@ data class Salon(
     val coverImageUrl: String,
     val location: String,
     val email: String,
-    val socials: List<String>
+    val socials: Map<String, String> = emptyMap()
 )

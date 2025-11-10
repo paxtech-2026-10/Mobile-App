@@ -112,7 +112,7 @@ fun MockSalon() = Salon(
     coverImageUrl = "https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=1200",
     location = "San José, Costa Rica",
     email = "contact@tijeras.com",
-    socials = listOf("https://instagram.com/tijeras", "https://facebook.com/tijeras")
+    socials = mapOf("Instagram" to "https://instagram.com/tijeras", "Facebook" to "https://facebook.com/tijeras")
 )
 @Preview(showBackground = true)
 @Composable

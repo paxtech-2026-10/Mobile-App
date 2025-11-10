@@ -3,10 +3,10 @@ package com.paxtech.mobileapp.features.clientDashboard.data.local.models
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.paxtech.mobileapp.features.clientDashboard.data.local.converters.ListStringConverter
+import com.paxtech.mobileapp.features.clientDashboard.data.local.converters.MapStringConverter
 
 @Entity(tableName = "salons")
-@TypeConverters(ListStringConverter::class)
+@TypeConverters(MapStringConverter::class)
 data class SalonEntity(
     @PrimaryKey val id: Int,
     val companyName: String,
@@ -16,5 +16,5 @@ data class SalonEntity(
     val timestamp: Long = System.currentTimeMillis(),
     val location: String,
     val email: String,
-    val socials: List<String>
+    val socials: Map<String, String>
 )

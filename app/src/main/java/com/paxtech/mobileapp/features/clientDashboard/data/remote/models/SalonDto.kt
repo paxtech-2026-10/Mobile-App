@@ -7,6 +7,7 @@ data class SalonDto (
     val location: String?,
     val email: String?,
     val profileImageUrl: String?,
-    val coverImageUrl: String?
+    val coverImageUrl: String?,
+    val socials: Map<String, String>? = null
 )
 

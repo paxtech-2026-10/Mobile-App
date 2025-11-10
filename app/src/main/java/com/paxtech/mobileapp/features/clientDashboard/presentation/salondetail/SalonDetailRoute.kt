@@ -28,6 +28,7 @@ fun SalonDetailRoute(
     val reviews by viewModel.reviews.collectAsState()
     val about by viewModel.about.collectAsState()
     val ratingSummary by viewModel.ratingSummary.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
 
     val defaultServices = if (services.isEmpty())
         listOf(ServiceUi("0", "Servicio no disponible", "Descripción no disponible", "s/0.00", 0))
@@ -43,7 +44,9 @@ fun SalonDetailRoute(
         reviews = defaultReviews,
         about = about,
         ratingSummary = ratingSummary,
+        isFavorite = isFavorite,
         onBack = onBack,
+        onFavoriteClick = { viewModel.toggleFavorite() },
         onReserveService = { service ->
             onReserveService(
                 service,

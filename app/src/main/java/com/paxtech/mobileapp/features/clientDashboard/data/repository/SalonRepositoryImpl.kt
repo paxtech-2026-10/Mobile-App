@@ -35,7 +35,7 @@ class SalonRepositoryImpl @Inject constructor(
                         coverImageUrl = dto.coverImageUrl.orEmpty(),
                         location = dto.location.orEmpty(),
                         email = dto.email.orEmpty(),
-                        socials = emptyList() // TODO: Add socials field to DTO if needed
+                        socials = dto.socials ?: emptyMap()
                     )
                     println("🔍 SalonRepositoryImpl: Mapped salon: $salon")
                     salon
@@ -65,7 +65,7 @@ class SalonRepositoryImpl @Inject constructor(
                     coverImageUrl = dto.coverImageUrl.orEmpty(),
                     location = dto.location.orEmpty(),
                     email = dto.email.orEmpty(),
-                    socials = emptyList() // TODO: Add socials field to DTO if needed
+                    socials = dto.socials ?: emptyMap()
                 )
             }
         } catch (e: Exception) {
@@ -94,7 +94,7 @@ class SalonRepositoryImpl @Inject constructor(
                         coverImageUrl = dto.coverImageUrl.orEmpty(),
                         location = dto.location.orEmpty(),
                         email = dto.email.orEmpty(),
-                        socials = emptyList() // TODO: Add socials field to DTO if needed
+                        socials = dto.socials ?: emptyMap()
                     )
                 }
                 return@withContext salons

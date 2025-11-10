@@ -1,5 +1,7 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,13 +9,15 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,14 +41,17 @@ fun SalonDetailScreen(
     reviews: List<ReviewUi>,
     about: AboutUi,
     ratingSummary: RatingSummary? = null,
+    isFavorite: Boolean = false,
     onBack: () -> Unit,
+    onFavoriteClick: () -> Unit = {},
     onReserveService: (ServiceUi) -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Servicios", "Reseña", "Acerca de")
 
-    var selectedCategory by remember { mutableStateOf("Destacados") }
-    val categories = listOf("Destacados", "Cabello", "Barba", "Skin Care", "Prom")
+    // Categorías comentadas por ahora
+    // var selectedCategory by remember { mutableStateOf("Destacados") }
+    // val categories = listOf("Destacados", "Cabello", "Barba", "Skin Care", "Prom")
 
     Scaffold { padding ->
         LazyColumn(
@@ -141,11 +148,13 @@ fun SalonDetailScreen(
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
-                        Icon(
-                            Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Favorite",
-                            tint = TextSecondary
-                        )
+                        IconButton(onClick = onFavoriteClick) {
+                            Icon(
+                                if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
+                                tint = if (isFavorite) PrimaryPurple else TextSecondary
+                            )
+                        }
                     }
 
                     Spacer(Modifier.height(4.dp))
@@ -167,21 +176,28 @@ fun SalonDetailScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        AssistChip(
-                            onClick = {},
-                            label = { Text("Instagram", fontSize = 12.sp) },
-                            colors = AssistChipDefaults.assistChipColors(
-                                labelColor = PrimaryPurple
-                            )
-                        )
-                        AssistChip(
-                            onClick = {},
-                            label = { Text("TikTok", fontSize = 12.sp) },
-                            colors = AssistChipDefaults.assistChipColors(
-                                labelColor = PrimaryPurple
-                            )
-                        )
+                    // Chips de redes sociales dinámicos
+                    if (about.socials.isNotEmpty()) {
+                        val context = LocalContext.current
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            about.socials.forEach { (platform, url) ->
+                                AssistChip(
+                                    onClick = {
+                                        try {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            // Si la URL no es válida o no se puede abrir, no hacer nada
+                                            println("🔍 SalonDetailScreen: Error opening URL $url: ${e.message}")
+                                        }
+                                    },
+                                    label = { Text(platform, fontSize = 12.sp) },
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        labelColor = PrimaryPurple
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -228,8 +244,8 @@ fun SalonDetailScreen(
             // Contenido según tab
             when (selectedTab) {
                 0 -> {
-                    // Categorías
-                    item {
+                    // Categorías comentadas por ahora
+                    /* item {
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -262,7 +278,7 @@ fun SalonDetailScreen(
                                 )
                             }
                         }
-                    }
+                    } */
 
                     // Servicios
                     items(services) { svc ->
@@ -319,7 +335,9 @@ private fun ServiceCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(svc.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = TextPrimary)
-                    Text(svc.subtitle, fontSize = 12.sp, color = TextSecondary)
+                    if (svc.subtitle.isNotEmpty()) {
+                        Text(svc.subtitle, fontSize = 12.sp, color = TextSecondary)
+                    }
                 }
 
                 Row(
@@ -379,10 +397,8 @@ private fun AboutBlock(about: AboutUi) {
         Spacer(Modifier.height(8.dp))
         Text(about.email, fontSize = 14.sp, color = TextSecondary)
 
-        Spacer(Modifier.height(16.dp))
-        Text("Horario", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
-        Spacer(Modifier.height(4.dp))
-        about.socials.forEach { Text("• $it", fontSize = 14.sp, color = TextSecondary) }
+        // Nota: El horario no está disponible en el modelo actual
+        // Si se necesita, debe agregarse al modelo AboutUi o Salon
 
         Spacer(Modifier.height(16.dp))
         Text("Ubicación", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
