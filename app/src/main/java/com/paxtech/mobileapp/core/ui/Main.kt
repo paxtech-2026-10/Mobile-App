@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -53,7 +54,10 @@ data class NavigationItem(
 
 
 @Composable
-fun Main(onClick: (Int) -> Unit) {
+fun Main(
+    onClick: (Int) -> Unit,
+    onLogout: () -> Unit
+) {
 
     val tabNav = rememberNavController()
 
@@ -135,7 +139,7 @@ fun Main(onClick: (Int) -> Unit) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
             composable(Route.Services.route) { SearchServiceView() }
             composable(Route.Booking.route)  { BookingPlaceholder() }
-            composable(Route.Profile.route)  { ProfileNav() }
+            composable(Route.Profile.route)  { ProfileNav(onLogout = onLogout) }
         }
     }
 }
@@ -162,5 +166,5 @@ fun BookingPlaceholder() {
 @Preview(showBackground = true)
 @Composable
 fun MainPreview(){
-    Main {}
+    Main(onClick = {}, onLogout = {})
 }

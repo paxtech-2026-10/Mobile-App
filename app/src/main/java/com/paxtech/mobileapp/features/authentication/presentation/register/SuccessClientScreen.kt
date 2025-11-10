@@ -62,9 +62,9 @@ fun SuccessClientScreen(
                     tint = PrimaryPurple
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Título
             Text(
                 text = "¡Tu cuenta ha sido creada!",
@@ -75,9 +75,9 @@ fun SuccessClientScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Descripción
             Text(
                 text = "Bienvenido/a a uTime. Ahora puedes explorar servicios, reservar citas y disfrutar tu tiempo sin complicaciones",
@@ -88,9 +88,9 @@ fun SuccessClientScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             // Botón Comenzar ahora
             Button(
                 onClick = onStartNowClick,
@@ -113,7 +113,7 @@ fun SuccessClientScreen(
         }
     }
 }
-}
+
 
 @Preview(showBackground = true)
 @Composable
