@@ -1,6 +1,7 @@
 package com.paxtech.mobileapp.features.authentication.data.repository
 
 import com.paxtech.mobileapp.core.network.TokenStorage
+import com.paxtech.mobileapp.features.authentication.data.remote.models.ClientDto
 import com.paxtech.mobileapp.features.authentication.data.remote.models.CreateClientRequestDto
 import com.paxtech.mobileapp.features.authentication.data.remote.models.SignInRequestDto
 import com.paxtech.mobileapp.features.authentication.data.remote.models.SignUpRequestDto
@@ -89,6 +90,31 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             println("🔍 AuthRepositoryImpl: Exception in create client: ${e.message}")
             throw e
+        }
+    }
+    
+    override suspend fun getClientByUserId(userId: Int): Client? = withContext(Dispatchers.IO) {
+        try {
+            println("🔍 AuthRepositoryImpl: Getting client for userId: $userId")
+            val resp = authService.getAllClients()
+            
+            if (resp.isSuccessful) {
+                val clients = resp.body()
+                val clientDto = clients?.firstOrNull { it.userId == userId }
+                if (clientDto != null) {
+                    println("🔍 AuthRepositoryImpl: Client found: ${clientDto.firstName} ${clientDto.lastName}")
+                    Client(clientDto.firstName, clientDto.lastName, clientDto.userId)
+                } else {
+                    println("🔍 AuthRepositoryImpl: Client not found for userId: $userId")
+                    null
+                }
+            } else {
+                println("🔍 AuthRepositoryImpl: Get clients failed: ${resp.code()}")
+                null
+            }
+        } catch (e: Exception) {
+            println("🔍 AuthRepositoryImpl: Exception getting client: ${e.message}")
+            null
         }
     }
 }
