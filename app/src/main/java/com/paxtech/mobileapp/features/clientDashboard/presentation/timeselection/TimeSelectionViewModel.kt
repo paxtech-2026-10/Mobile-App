@@ -1,5 +1,6 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReservationRepository
@@ -9,6 +10,7 @@ import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.Creat
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.CreateTimeSlotRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import javax.inject.Named
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -20,7 +22,8 @@ import java.util.TimeZone
 @HiltViewModel
 class TimeSelectionViewModel @Inject constructor(
     private val reservationRepository: ReservationRepository,
-    private val timeSlotRepository: TimeSlotRepository
+    private val timeSlotRepository: TimeSlotRepository,
+    @Named("auth_prefs") private val authPrefs: SharedPreferences
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -31,26 +34,38 @@ class TimeSelectionViewModel @Inject constructor(
 
     private val _timeSlotMap = MutableStateFlow<Map<String, Long>>(emptyMap())
     val timeSlotMap: StateFlow<Map<String, Long>> = _timeSlotMap
+    
+    // Mapa inverso: timeSlotId -> timeString para poder marcar horarios reservados
+    private val _timeSlotIdToTimeMap = MutableStateFlow<Map<Long, String>>(emptyMap())
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
     // Soporta múltiples formatos de fecha del backend
     private val inputFormats = listOf(
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US), // Formato del backend: 2025-11-02T16:30:00
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US), // Formato ISO con milisegundos
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US) // Formato ISO sin milisegundos
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US), // Formato del backend: 2025-11-06T12:30:00
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US), // Formato ISO con milisegundos y Z
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US), // Formato ISO sin milisegundos con Z
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US) // Formato ISO con milisegundos sin Z
     )
     private val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
     
     private fun parseTime(timeString: String): java.util.Date? {
+        println("🔍 TimeSelectionViewModel: Intentando parsear tiempo: $timeString")
         for (format in inputFormats) {
             try {
-                return format.parse(timeString)
+                val parsed = format.parse(timeString)
+                if (parsed != null) {
+                    val formatted = outputFormat.format(parsed)
+                    println("🔍 TimeSelectionViewModel: Parseado exitosamente con formato ${format.toPattern()} -> $formatted")
+                    return parsed
+                }
             } catch (e: Exception) {
+                // Continuar con el siguiente formato
                 continue
             }
         }
+        println("🔍 TimeSelectionViewModel: No se pudo parsear el tiempo: $timeString")
         return null
     }
 
@@ -59,19 +74,35 @@ class TimeSelectionViewModel @Inject constructor(
             _isLoading.value = true
             _errorMessage.value = null
 
-            // Cargar time slots del backend para mapear horarios a IDs
+            // PRIMERO: Cargar time slots del backend para mapear horarios a IDs
             val slots = timeSlotRepository.getAll()
             slots.onSuccess { list ->
                 val map = list.mapNotNull { slot ->
                     parseTime(slot.startTime)?.let { 
-                        outputFormat.format(it) to slot.id
+                        val formatted = outputFormat.format(it)
+                        println("🔍 TimeSelectionViewModel: Mapeando time slot - id=${slot.id}, startTime=${slot.startTime} -> $formatted")
+                        formatted to slot.id
                     }
                 }.toMap()
                 _timeSlotMap.value = map
-                println("🔍 TimeSelectionViewModel: Mapped ${map.size} time slots: $map")
-            }.onFailure { _errorMessage.value = it.message }
+                
+                // Crear mapa inverso: timeSlotId -> timeString
+                val inverseMap = map.entries.associate { it.value to it.key }
+                _timeSlotIdToTimeMap.value = inverseMap
+                println("🔍 TimeSelectionViewModel: ✅ Mapped ${map.size} time slots: $map")
+                println("🔍 TimeSelectionViewModel: ✅ Mapa inverso creado con ${inverseMap.size} entradas")
+                
+                // Cargar timeSlotIds reservados guardados localmente y marcarlos
+                loadPersistedBookedTimeSlots(inverseMap)
+            }.onFailure { 
+                println("🔍 TimeSelectionViewModel: ❌ Error cargando time slots: ${it.message}")
+                _errorMessage.value = it.message 
+            }
 
-            // Cargar reservas del backend para marcar horarios ocupados
+            // SEGUNDO: Cargar reservas del backend para marcar horarios ocupados
+            // Guardar el estado actual antes de intentar cargar del backend
+            val currentBookedTimes = _bookedTimeSlots.value.toMutableSet()
+            
             val reservations = reservationRepository.getAllDetails()
             reservations.onSuccess { details ->
                 println("🔍 TimeSelectionViewModel: Loaded ${details.size} reservations from backend")
@@ -82,31 +113,62 @@ class TimeSelectionViewModel @Inject constructor(
                     val matchesProvider = providerId == null || reservation.provider.id == providerId
                     val matches = matchesWorker && matchesProvider
                     if (matches) {
-                        println("🔍 TimeSelectionViewModel: Reserva coincide - workerId=${reservation.workerId.id}, providerId=${reservation.provider.id}")
+                        println("🔍 TimeSelectionViewModel: Reserva coincide - workerId=${reservation.workerId.id}, providerId=${reservation.provider.id}, timeSlotId=${reservation.timeSlot.id}")
                     }
                     matches
                 }
                 
                 println("🔍 TimeSelectionViewModel: Filtered ${filteredReservations.size} reservations for workerId=$workerId, providerId=$providerId")
                 
-                // Convertir horarios a formato "hh:mm a"
-                val bookedTimes = filteredReservations.mapNotNull { reservation ->
+                // Convertir horarios a formato "hh:mm a" usando el timeSlotMap como respaldo
+                val bookedTimesFromBackend = filteredReservations.mapNotNull { reservation ->
+                    val timeSlotId = reservation.timeSlot.id
                     val timeString = reservation.timeSlot.startTime
+                    println("🔍 TimeSelectionViewModel: Procesando reserva - timeSlotId=$timeSlotId, startTime=$timeString")
+                    
+                    // Primero intentar parsear directamente
                     val parsed = parseTime(timeString)
                     val formatted = parsed?.let { outputFormat.format(it) }
+                    
                     if (formatted != null) {
-                        println("🔍 TimeSelectionViewModel: Booked time: $timeString -> $formatted")
+                        println("🔍 TimeSelectionViewModel: ✅ Booked time convertido: $timeString -> $formatted")
+                        formatted
                     } else {
-                        println("🔍 TimeSelectionViewModel: No se pudo parsear el tiempo: $timeString")
+                        // Si no se puede parsear, usar el timeSlotIdToTimeMap como respaldo
+                        val foundTime = _timeSlotIdToTimeMap.value[timeSlotId]
+                        if (foundTime != null) {
+                            println("🔍 TimeSelectionViewModel: ✅ Encontrado en timeSlotIdToTimeMap: $foundTime (timeSlotId=$timeSlotId)")
+                            foundTime
+                        } else {
+                            // También intentar buscar en el timeSlotMap original
+                            val foundInOriginal = _timeSlotMap.value.entries.find { it.value == timeSlotId }?.key
+                            if (foundInOriginal != null) {
+                                println("🔍 TimeSelectionViewModel: ✅ Encontrado en timeSlotMap original: $foundInOriginal")
+                                foundInOriginal
+                            } else {
+                                println("🔍 TimeSelectionViewModel: ❌ No se pudo convertir ni encontrar en map para timeSlotId=$timeSlotId")
+                                null
+                            }
+                        }
                     }
-                    formatted
                 }.toSet()
                 
-                println("🔍 TimeSelectionViewModel: Final booked times (${bookedTimes.size}): $bookedTimes")
-                _bookedTimeSlots.value = bookedTimes
-            }.onFailure { 
-                println("🔍 TimeSelectionViewModel: Error loading reservations: ${it.message}")
-                _errorMessage.value = it.message
+                // Combinar los horarios del backend con los que ya están marcados localmente
+                val combinedBookedTimes = currentBookedTimes.apply {
+                    addAll(bookedTimesFromBackend)
+                }
+                
+                println("🔍 TimeSelectionViewModel: ✅ Final booked times (${combinedBookedTimes.size}): $combinedBookedTimes")
+                println("🔍 TimeSelectionViewModel: - Del backend: ${bookedTimesFromBackend.size}")
+                println("🔍 TimeSelectionViewModel: - Locales previos: ${currentBookedTimes.size}")
+                println("🔍 TimeSelectionViewModel: TimeSlotMap tiene ${_timeSlotMap.value.size} entradas")
+                _bookedTimeSlots.value = combinedBookedTimes
+            }.onFailure { error ->
+                println("🔍 TimeSelectionViewModel: ❌ Error loading reservations: ${error.message}")
+                // NO sobrescribir el estado local si falla la carga del backend
+                // Mantener los horarios que ya están marcados localmente
+                println("🔍 TimeSelectionViewModel: ⚠️ Manteniendo horarios reservados locales: ${currentBookedTimes.size}")
+                _errorMessage.value = error.message
             }
 
             _isLoading.value = false
@@ -124,13 +186,71 @@ class TimeSelectionViewModel @Inject constructor(
                 CreateReservationRequest(clientId, providerId, serviceId, timeSlotId, workerId)
             )
             result.onSuccess {
-                // Marcar el horario como reservado localmente
-                markTimeSlotAsBooked(selectedTime)
-                println("🔍 TimeSelectionViewModel: Reserva creada exitosamente, horario marcado como reservado: $selectedTime")
+                // Asegurarse de que tenemos el horario correcto usando el timeSlotId como respaldo
+                val timeToMark = selectedTime.ifEmpty { 
+                    // Si no hay selectedTime, buscar en el mapa inverso
+                    _timeSlotIdToTimeMap.value[timeSlotId] ?: selectedTime
+                }
+                
+                // Marcar el horario como reservado localmente inmediatamente
+                markTimeSlotAsBooked(timeToMark)
+                println("🔍 TimeSelectionViewModel: ✅ Reserva creada exitosamente, horario marcado como reservado: $timeToMark (timeSlotId=$timeSlotId)")
+                
+                // También marcar usando el timeSlotId como respaldo adicional
+                _timeSlotIdToTimeMap.value[timeSlotId]?.let { mappedTime ->
+                    if (mappedTime != timeToMark) {
+                        markTimeSlotAsBooked(mappedTime)
+                        println("🔍 TimeSelectionViewModel: ✅ También marcado usando mapa inverso: $mappedTime")
+                    }
+                }
+                
+                // Guardar el timeSlotId en SharedPreferences para persistencia
+                persistBookedTimeSlotId(timeSlotId)
+                
+                // Recargar los horarios ocupados del backend para asegurar sincronización
+                // Pero si falla, mantener el estado local
+                refreshBookedTimeSlots(workerId, providerId)
+                
                 onDone(true, null)
             }.onFailure { error ->
-                println("🔍 TimeSelectionViewModel: Error al crear reserva: ${error.message}")
+                println("🔍 TimeSelectionViewModel: ❌ Error al crear reserva: ${error.message}")
                 onDone(false, error.message)
+            }
+        }
+    }
+    
+    private fun persistBookedTimeSlotId(timeSlotId: Long) {
+        val bookedIds = getPersistedBookedTimeSlotIds().toMutableSet()
+        bookedIds.add(timeSlotId)
+        val idsString = bookedIds.joinToString(",")
+        authPrefs.edit().putString("booked_time_slot_ids", idsString).apply()
+        println("🔍 TimeSelectionViewModel: ✅ Guardado timeSlotId=$timeSlotId en SharedPreferences. Total: ${bookedIds.size}")
+    }
+    
+    private fun getPersistedBookedTimeSlotIds(): Set<Long> {
+        val idsString = authPrefs.getString("booked_time_slot_ids", "") ?: ""
+        return if (idsString.isNotEmpty()) {
+            idsString.split(",").mapNotNull { it.toLongOrNull() }.toSet()
+        } else {
+            emptySet()
+        }
+    }
+    
+    private fun loadPersistedBookedTimeSlots(timeSlotIdToTimeMap: Map<Long, String>) {
+        val bookedIds = getPersistedBookedTimeSlotIds()
+        if (bookedIds.isNotEmpty()) {
+            println("🔍 TimeSelectionViewModel: Cargando ${bookedIds.size} timeSlotIds guardados localmente")
+            val bookedTimes = bookedIds.mapNotNull { timeSlotId ->
+                timeSlotIdToTimeMap[timeSlotId]?.also { time ->
+                    println("🔍 TimeSelectionViewModel: ✅ Marcando horario reservado desde persistencia: $time (timeSlotId=$timeSlotId)")
+                }
+            }.toSet()
+            
+            if (bookedTimes.isNotEmpty()) {
+                val currentBooked = _bookedTimeSlots.value.toMutableSet()
+                currentBooked.addAll(bookedTimes)
+                _bookedTimeSlots.value = currentBooked
+                println("🔍 TimeSelectionViewModel: ✅ Horarios reservados cargados desde persistencia: $bookedTimes")
             }
         }
     }
@@ -145,8 +265,16 @@ class TimeSelectionViewModel @Inject constructor(
 
     fun refreshBookedTimeSlots(workerId: Long, providerId: Long? = null) {
         viewModelScope.launch {
+            println("🔍 TimeSelectionViewModel: Refrescando horarios ocupados para workerId=$workerId, providerId=$providerId")
+            
+            // Guardar el estado actual antes de intentar refrescar
+            val currentBookedTimes = _bookedTimeSlots.value.toMutableSet()
+            println("🔍 TimeSelectionViewModel: Horarios reservados actuales antes de refrescar: $currentBookedTimes")
+            
             val reservations = reservationRepository.getAllDetails()
             reservations.onSuccess { details ->
+                println("🔍 TimeSelectionViewModel: Cargadas ${details.size} reservas del backend")
+                
                 // Filtrar reservas del workerId (y providerId si está disponible)
                 val filteredReservations = details.filter { reservation ->
                     val matchesWorker = reservation.workerId.id == workerId
@@ -154,17 +282,51 @@ class TimeSelectionViewModel @Inject constructor(
                     matchesWorker && matchesProvider
                 }
                 
+                println("🔍 TimeSelectionViewModel: ${filteredReservations.size} reservas filtradas")
+                
                 // Convertir horarios a formato "hh:mm a"
-                val bookedTimes = filteredReservations.mapNotNull { reservation ->
+                val bookedTimesFromBackend = filteredReservations.mapNotNull { reservation ->
                     val timeString = reservation.timeSlot.startTime
+                    val timeSlotId = reservation.timeSlot.id
+                    println("🔍 TimeSelectionViewModel: Procesando - timeSlotId=$timeSlotId, startTime=$timeString")
+                    
                     val parsed = parseTime(timeString)
-                    parsed?.let { outputFormat.format(it) }
+                    val formatted = parsed?.let { outputFormat.format(it) }
+                    
+                    if (formatted != null) {
+                        println("🔍 TimeSelectionViewModel: ✅ Convertido: $timeString -> $formatted")
+                        formatted
+                    } else {
+                        // Si no se puede parsear, usar el timeSlotIdToTimeMap como respaldo
+                        val foundTime = _timeSlotIdToTimeMap.value[timeSlotId]
+                        if (foundTime != null) {
+                            println("🔍 TimeSelectionViewModel: ✅ Encontrado en timeSlotIdToTimeMap: $foundTime")
+                            foundTime
+                        } else {
+                            // También intentar buscar en el timeSlotMap original
+                            val foundInOriginal = _timeSlotMap.value.entries.find { it.value == timeSlotId }?.key
+                            if (foundInOriginal != null) {
+                                println("🔍 TimeSelectionViewModel: ✅ Encontrado en timeSlotMap original: $foundInOriginal")
+                                foundInOriginal
+                            } else {
+                                println("🔍 TimeSelectionViewModel: ❌ No se pudo convertir ni encontrar en map")
+                                null
+                            }
+                        }
+                    }
                 }.toSet()
                 
-                _bookedTimeSlots.value = bookedTimes
-                println("🔍 TimeSelectionViewModel: Horarios ocupados actualizados: $bookedTimes")
-            }.onFailure { 
-                println("🔍 TimeSelectionViewModel: Error al actualizar horarios ocupados: ${it.message}")
+                // Combinar los horarios del backend con los locales
+                val combinedBookedTimes = currentBookedTimes.apply {
+                    addAll(bookedTimesFromBackend)
+                }
+                
+                println("🔍 TimeSelectionViewModel: Horarios ocupados actualizados (${combinedBookedTimes.size}): $combinedBookedTimes")
+                _bookedTimeSlots.value = combinedBookedTimes
+            }.onFailure { error ->
+                println("🔍 TimeSelectionViewModel: ❌ Error al actualizar horarios ocupados: ${error.message}")
+                // NO sobrescribir el estado local si falla - mantener los horarios locales
+                println("🔍 TimeSelectionViewModel: ⚠️ Manteniendo horarios reservados locales: ${currentBookedTimes.size}")
             }
         }
     }

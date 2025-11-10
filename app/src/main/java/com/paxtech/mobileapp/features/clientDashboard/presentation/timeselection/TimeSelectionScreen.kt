@@ -80,8 +80,16 @@ fun TimeSelectionScreen(
     // Recargar cuando cambie el workerId, providerId o cuando se monte la pantalla
     // Esto asegura que los horarios ocupados se actualicen cuando el usuario vuelve a la pantalla
     LaunchedEffect(workerId, providerId) { 
+        println("🔍 TimeSelectionScreen: Cargando horarios ocupados para workerId=$workerId, providerId=$providerId")
         viewModel.load(workerId, providerId) 
     }
+    
+    // Recargar horarios cuando el composable se monta (cuando se vuelve a la pantalla)
+    LaunchedEffect(Unit) {
+        println("🔍 TimeSelectionScreen: Pantalla montada, recargando horarios ocupados")
+        viewModel.refreshBookedTimeSlots(workerId, providerId)
+    }
+    
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val bookedTimeSlots by viewModel.bookedTimeSlots.collectAsState()
@@ -89,6 +97,9 @@ fun TimeSelectionScreen(
     // Debug: mostrar horarios reservados
     LaunchedEffect(bookedTimeSlots) {
         println("🔍 TimeSelectionScreen: Horarios reservados actualizados: $bookedTimeSlots (total: ${bookedTimeSlots.size})")
+        bookedTimeSlots.forEach { time ->
+            println("🔍 TimeSelectionScreen: Horario reservado: $time")
+        }
     }
 
     Scaffold(
@@ -235,16 +246,24 @@ fun TimeSelectionScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 row.forEach { time ->
+                                    val isBooked = bookedTimeSlots.contains(time)
                                     val status = when {
                                         time == selectedTime -> TimeStatus.SELECTED
-                                        bookedTimeSlots.contains(time) -> TimeStatus.BOOKED
+                                        isBooked -> {
+                                            println("🔍 TimeSelectionScreen: Horario $time está RESERVADO")
+                                            TimeStatus.BOOKED
+                                        }
                                         else -> TimeStatus.AVAILABLE
                                     }
                                     TimeSlotButton(
                                         time = time,
                                         status = status,
                                         onSelect = {
-                                            if (status != TimeStatus.BOOKED) selectedTime = time
+                                            if (status != TimeStatus.BOOKED) {
+                                                selectedTime = time
+                                            } else {
+                                                println("🔍 TimeSelectionScreen: Intento de seleccionar horario reservado: $time")
+                                            }
                                         },
                                         modifier = Modifier.weight(1f)
                                     )
@@ -377,19 +396,27 @@ private fun TimeSlotButton(
 ) {
     val backgroundColor = when (status) {
         TimeStatus.SELECTED -> PrimaryPurple
-        TimeStatus.BOOKED -> Color(0xFFE7F1ED)
+        TimeStatus.BOOKED -> Color(0xFFE7F1ED) // Verde claro para reservado
         TimeStatus.AVAILABLE -> Color(0xFFF3EDFF)
     }
     val textColor = when (status) {
         TimeStatus.SELECTED -> Color.White
-        TimeStatus.BOOKED -> Color(0xFF4DD0E1)
+        TimeStatus.BOOKED -> Color(0xFF4DD0E1) // Turquesa para texto reservado
         TimeStatus.AVAILABLE -> Color(0xFF9CA3AF)
     }
+    
+    val isClickable = status != TimeStatus.BOOKED
 
     Surface(
         modifier = modifier
             .height(44.dp)
-            .clickable(enabled = status != TimeStatus.BOOKED) { onSelect() },
+            .clickable(enabled = isClickable) { 
+                if (isClickable) {
+                    onSelect()
+                } else {
+                    println("🔍 TimeSlotButton: Horario $time está reservado, no se puede seleccionar")
+                }
+            },
         shape = RoundedCornerShape(12.dp),
         color = backgroundColor
     ) {
