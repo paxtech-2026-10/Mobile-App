@@ -1,0 +1,476 @@
+# Services Documentation Evidence for Sprint Review
+
+Durante este sprint, se avanzó en el desarrollo del módulo de reservas de la aplicación móvil UTime, enfocada en conectar a clientes con proveedores de servicios de belleza y bienestar. Se implementaron funcionalidades clave de conexión con el backend mediante Retrofit, incluyendo autenticación de usuarios y gestión completa de reservas.
+
+## 1. Configuración Base de Retrofit y Conexión con Backend
+
+Se configuró Retrofit como cliente HTTP principal para todas las comunicaciones con el backend, utilizando inyección de dependencias con Hilt para mantener una arquitectura limpia y modular.
+
+### 1.1. Configuración de Retrofit (RemoteModule)
+
+La configuración base de Retrofit se encuentra en `app/src/main/java/com/paxtech/mobileapp/core/di/RemoteModule.kt`:
+
+**📸 Captura de código recomendada: Líneas 18-44**
+
+```18:44:app/src/main/java/com/paxtech/mobileapp/core/di/RemoteModule.kt
+@Provides
+@Singleton
+@Named("url")
+fun provideApiBaseUrl(): String{
+    return "https://paxtech.azurewebsites.net/"
+}
+
+@Provides
+@Singleton
+fun provideRetrofit(
+    @Named("url") url: String,
+    authInterceptor: com.paxtech.mobileapp.core.network.AuthInterceptor,
+    loggingInterceptor: LoggingInterceptor
+): Retrofit {
+    val okHttpClient = okhttp3.OkHttpClient.Builder()
+        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .addInterceptor(loggingInterceptor)
+        .addInterceptor(authInterceptor)
+        .build()
+
+    return Retrofit.Builder()
+        .baseUrl(url)
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+}
+```
+
+**Características destacadas:**
+- URL base del backend: `https://paxtech.azurewebsites.net/`
+- Timeouts configurados a 30 segundos para operaciones de conexión, lectura y escritura
+- Integración de interceptores para autenticación automática y logging de peticiones
+- Conversor Gson para serialización/deserialización automática de JSON
+
+### 1.2. AuthInterceptor - Inyección Automática de Tokens
+
+Se implementó un interceptor que automáticamente añade el token de autenticación a todas las peticiones HTTP.
+
+**📸 Captura de código recomendada: Líneas 13-26**
+
+```13:26:app/src/main/java/com/paxtech/mobileapp/core/network/AuthInterceptor.kt
+override fun intercept(chain: Interceptor.Chain): Response {
+    val token = authPrefs.getString("auth_token", null)
+
+    println("🔍 AuthInterceptor: Reading token from SharedPreferences: $token")
+
+    val request = chain.request().newBuilder().apply {
+        token?.let {
+            addHeader("Authorization", "Bearer $it")
+            println("🔍 AuthInterceptor: Added Authorization header")
+        } ?: println("🔍 AuthInterceptor: No token found, skipping Authorization header")
+    }.build()
+
+    return chain.proceed(request)
+}
+```
+
+**Características destacadas:**
+- Lee el token de autenticación desde SharedPreferences
+- Añade automáticamente el header `Authorization: Bearer {token}` a todas las peticiones
+- Permite que las peticiones autenticadas se realicen sin necesidad de pasar el token manualmente en cada llamada
+
+## 2. Sistema de Autenticación (Login)
+
+Se implementó un sistema completo de autenticación que permite a los usuarios registrarse, iniciar sesión y crear perfiles de cliente, todo conectado con el backend.
+
+### 2.1. AuthService - Definición de Endpoints de Autenticación
+
+La interfaz que define los endpoints de autenticación se encuentra en `app/src/main/java/com/paxtech/mobileapp/features/authentication/data/remote/services/AuthService.kt`:
+
+**📸 Captura de código recomendada: Líneas 13-22**
+
+```13:22:app/src/main/java/com/paxtech/mobileapp/features/authentication/data/remote/services/AuthService.kt
+interface AuthService {
+    @POST("api/v1/authentication/sign-up")
+    suspend fun signUp(@Body request: SignUpRequestDto): Response<SignUpResponseDto>
+
+    @POST("api/v1/authentication/sign-in")
+    suspend fun signIn(@Body request: SignInRequestDto): Response<SignInResponseDto>
+
+    @POST("api/v1/clients")
+    suspend fun createClient(@Body request: CreateClientRequestDto): Response<Unit>
+}
+```
+
+**Endpoints implementados:**
+- `POST /api/v1/authentication/sign-up` - Registro de nuevos usuarios
+- `POST /api/v1/authentication/sign-in` - Inicio de sesión
+- `POST /api/v1/clients` - Creación de perfil de cliente
+
+### 2.2. AuthRepositoryImpl - Lógica de Negocio de Autenticación
+
+El repositorio implementa la lógica de comunicación con el backend para autenticación:
+
+**📸 Captura de código recomendada: Líneas 42-62 (Sign In)**
+
+```42:62:app/src/main/java/com/paxtech/mobileapp/features/authentication/data/repository/AuthRepositoryImpl.kt
+override suspend fun signIn(email: String, password: String): User = withContext(Dispatchers.IO) {
+    try {
+        println("🔍 AuthRepositoryImpl: Making sign-in call...")
+        val request = SignInRequestDto(email, password)
+        val resp = authService.signIn(request)
+
+        if (resp.isSuccessful) {
+            val body = resp.body()
+            println("🔍 AuthRepositoryImpl: Sign-in response: $body")
+            body?.let {
+                User(it.id, it.email, it.token)
+            } ?: throw Exception("Sign-in response body is null")
+        } else {
+            println("🔍 AuthRepositoryImpl: Sign-in failed: ${resp.errorBody()?.string()}")
+            throw Exception("Sign-in failed: ${resp.code()}")
+        }
+    } catch (e: Exception) {
+        println("🔍 AuthRepositoryImpl: Exception in sign-in: ${e.message}")
+        throw e
+    }
+}
+```
+
+**Características destacadas:**
+- Ejecuta las peticiones en el dispatcher IO para operaciones de red
+- Manejo robusto de errores con logging detallado
+- Extracción y retorno del token de autenticación desde la respuesta del servidor
+- Transformación de DTOs del backend a modelos de dominio
+
+### 2.3. LoginViewModel - Gestión de Estado y Persistencia de Token
+
+El ViewModel maneja el flujo de inicio de sesión y guarda el token en SharedPreferences:
+
+**📸 Captura de código recomendada: Líneas 30-61**
+
+```30:61:app/src/main/java/com/paxtech/mobileapp/features/authentication/presentation/login/LoginViewModel.kt
+fun signIn(email: String, password: String) {
+    viewModelScope.launch {
+        try {
+            _isLoading.value = true
+            _error.value = null
+
+            val user = authRepository.signIn(email, password)
+            _user.value = user
+
+            // Guardar el token y datos del usuario en SharedPreferences
+            if (user.token != null) {
+                val currentName = authPrefs.getString("user_full_name", null)
+                val nameToUse = currentName ?: email.split("@")[0] // Usar el email si no hay nombre guardado
+                
+                authPrefs.edit().apply {
+                    putString("auth_token", user.token)
+                    putInt("user_id", user.id)
+                    putString("user_email", user.email)
+                    putString("user_full_name", nameToUse)
+                }.apply()
+                println("🔍 LoginViewModel: Token and user data saved to SharedPreferences")
+            }
+            println("🔍 LoginViewModel: User signed in successfully with token: ${user.token}")
+
+        } catch (e: Exception) {
+            _error.value = "Error al iniciar sesión: ${e.message}"
+            println("🔍 LoginViewModel: Sign-in error: ${e.message}")
+        } finally {
+            _isLoading.value = false
+        }
+    }
+}
+```
+
+**Características destacadas:**
+- Gestión de estados de carga y error mediante StateFlow
+- Persistencia automática del token y datos del usuario en SharedPreferences
+- El token guardado es utilizado automáticamente por el AuthInterceptor en todas las peticiones subsiguientes
+
+## 3. Sistema de Reservas
+
+Se implementó un sistema completo de gestión de reservas que permite crear nuevas reservas y consultar todas las reservas existentes desde el backend.
+
+### 3.1. ReservationService - Definición de Endpoints de Reservas
+
+La interfaz que define los endpoints de reservas se encuentra en `app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/data/remote/services/ReservationService.kt`:
+
+**📸 Captura de código recomendada: Líneas 44-50**
+
+```44:50:app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/data/remote/services/ReservationService.kt
+interface ReservationService {
+    @GET("api/v1/reservationsDetails/details")
+    suspend fun getAllReservationsDetails(): Response<List<ReservationDetailsDto>>
+
+    @POST("api/v1/reservationsDetails")
+    suspend fun createReservation(@Body body: CreateReservationRequest): Response<Unit>
+}
+```
+
+**Endpoints implementados:**
+- `GET /api/v1/reservationsDetails/details` - Obtener todas las reservas con detalles completos
+- `POST /api/v1/reservationsDetails` - Crear una nueva reserva
+
+**📸 Captura de código recomendada: Líneas 8-42 (DTOs de Reservas)**
+
+```8:42:app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/data/remote/services/ReservationService.kt
+data class CreateReservationRequest(
+    val clientId: Long,
+    val providerId: Long,
+    val serviceId: Long,
+    val timeSlotId: Long,
+    val workerId: Long
+)
+
+data class ProviderDto(
+    val id: Long,
+    val name: String,
+    val companyName: String
+)
+
+data class PaymentDto(
+    val id: Long,
+    val amount: Double,
+    val currency: String,
+    val status: Boolean
+)
+
+data class ReservationWorkerDto(
+    val id: Long,
+    val name: String,
+    val specialization: String
+)
+
+data class ReservationDetailsDto(
+    val id: Long,
+    val clientId: Long,
+    val provider: ProviderDto,
+    val paymentId: PaymentDto,
+    val timeSlot: TimeSlotDto,
+    val workerId: ReservationWorkerDto
+)
+```
+
+### 3.2. ReservationRepositoryImpl - Lógica de Negocio de Reservas
+
+El repositorio implementa la lógica de comunicación con el backend para reservas:
+
+**📸 Captura de código recomendada: Líneas 24-41 (Crear Reserva)**
+
+```24:41:app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/data/repository/ReservationRepositoryImpl.kt
+override suspend fun createReservation(body: CreateReservationRequest): Result<Unit> = try {
+    println("🔍 ReservationRepositoryImpl: Creando reserva con body: $body")
+    val response = reservationService.createReservation(body)
+    println("🔍 ReservationRepositoryImpl: Respuesta del servidor - código: ${response.code()}, exitoso: ${response.isSuccessful}")
+    if (response.isSuccessful) {
+        println("🔍 ReservationRepositoryImpl: Reserva creada exitosamente")
+        Result.success(Unit)
+    } else {
+        val errorBody = response.errorBody()?.string()
+        println("🔍 ReservationRepositoryImpl: Error al crear reserva - código: ${response.code()}, body: $errorBody")
+        Result.failure(IllegalStateException("HTTP ${response.code()}: $errorBody"))
+    }
+} catch (e: Exception) {
+    println("🔍 ReservationRepositoryImpl: Excepción al crear reserva: ${e.message}")
+    e.printStackTrace()
+    Result.failure(e)
+}
+```
+
+**📸 Captura de código recomendada: Líneas 16-22 (Obtener Reservas)**
+
+```16:22:app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/data/repository/ReservationRepositoryImpl.kt
+override suspend fun getAllDetails(): Result<List<ReservationDetailsDto>> = try {
+    val response = reservationService.getAllReservationsDetails()
+    if (response.isSuccessful) Result.success(response.body().orEmpty())
+    else Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
+} catch (e: Exception) {
+    Result.failure(e)
+}
+```
+
+**Características destacadas:**
+- Uso de `Result<T>` para manejo funcional de errores
+- Logging detallado para debugging y seguimiento de operaciones
+- Manejo robusto de errores HTTP y excepciones de red
+
+### 3.3. TimeSelectionViewModel - Integración Completa de Reservas
+
+El ViewModel integra la creación de reservas con la lógica de selección de horarios:
+
+**📸 Captura de código recomendada: Líneas 182-220 (Crear Reserva)**
+
+```182:220:app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/presentation/timeselection/TimeSelectionViewModel.kt
+fun createReservation(clientId: Long, providerId: Long, workerId: Long, timeSlotId: Long, serviceId: Long, selectedTime: String, onDone: (Boolean, String?) -> Unit) {
+    viewModelScope.launch {
+        println("🔍 TimeSelectionViewModel: Creando reserva - clientId=$clientId, providerId=$providerId, workerId=$workerId, timeSlotId=$timeSlotId, serviceId=$serviceId")
+        val result = reservationRepository.createReservation(
+            CreateReservationRequest(clientId, providerId, serviceId, timeSlotId, workerId)
+        )
+        result.onSuccess {
+            // Asegurarse de que tenemos el horario correcto usando el timeSlotId como respaldo
+            val timeToMark = selectedTime.ifEmpty { 
+                // Si no hay selectedTime, buscar en el mapa inverso
+                _timeSlotIdToTimeMap.value[timeSlotId] ?: selectedTime
+            }
+            
+            // Marcar el horario como reservado localmente inmediatamente
+            markTimeSlotAsBooked(timeToMark)
+            println("🔍 TimeSelectionViewModel: ✅ Reserva creada exitosamente, horario marcado como reservado: $timeToMark (timeSlotId=$timeSlotId)")
+            
+            // También marcar usando el timeSlotId como respaldo adicional
+            _timeSlotIdToTimeMap.value[timeSlotId]?.let { mappedTime ->
+                if (mappedTime != timeToMark) {
+                    markTimeSlotAsBooked(mappedTime)
+                    println("🔍 TimeSelectionViewModel: ✅ También marcado usando mapa inverso: $mappedTime")
+                }
+            }
+            
+            // Guardar el timeSlotId en SharedPreferences para persistencia
+            persistBookedTimeSlotId(timeSlotId)
+            
+            // Recargar los horarios ocupados del backend para asegurar sincronización
+            // Pero si falla, mantener el estado local
+            refreshBookedTimeSlots(workerId, providerId)
+            
+            onDone(true, null)
+        }.onFailure { error ->
+            println("🔍 TimeSelectionViewModel: ❌ Error al crear reserva: ${error.message}")
+            onDone(false, error.message)
+        }
+    }
+}
+```
+
+**📸 Captura de código recomendada: Líneas 102-176 (Cargar Reservas del Backend)**
+
+```102:176:app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/presentation/timeselection/TimeSelectionViewModel.kt
+// SEGUNDO: Cargar reservas del backend para marcar horarios ocupados
+// Guardar el estado actual antes de intentar cargar del backend
+val currentBookedTimes = _bookedTimeSlots.value.toMutableSet()
+
+val reservations = reservationRepository.getAllDetails()
+reservations.onSuccess { details ->
+    println("🔍 TimeSelectionViewModel: Loaded ${details.size} reservations from backend")
+    
+    // Filtrar reservas del workerId (y providerId si está disponible)
+    val filteredReservations = details.filter { reservation ->
+        val matchesWorker = reservation.workerId.id == workerId
+        val matchesProvider = providerId == null || reservation.provider.id == providerId
+        val matches = matchesWorker && matchesProvider
+        if (matches) {
+            println("🔍 TimeSelectionViewModel: Reserva coincide - workerId=${reservation.workerId.id}, providerId=${reservation.provider.id}, timeSlotId=${reservation.timeSlot.id}")
+        }
+        matches
+    }
+    
+    println("🔍 TimeSelectionViewModel: Filtered ${filteredReservations.size} reservations for workerId=$workerId, providerId=$providerId")
+    
+    // Convertir horarios a formato "hh:mm a" usando el timeSlotMap como respaldo
+    val bookedTimesFromBackend = filteredReservations.mapNotNull { reservation ->
+        val timeSlotId = reservation.timeSlot.id
+        val timeString = reservation.timeSlot.startTime
+        println("🔍 TimeSelectionViewModel: Procesando reserva - timeSlotId=$timeSlotId, startTime=$timeString")
+        
+        // Primero intentar parsear directamente
+        val parsed = parseTime(timeString)
+        val formatted = parsed?.let { outputFormat.format(it) }
+        
+        if (formatted != null) {
+            println("🔍 TimeSelectionViewModel: ✅ Booked time convertido: $timeString -> $formatted")
+            formatted
+        } else {
+            // Si no se puede parsear, usar el timeSlotIdToTimeMap como respaldo
+            val foundTime = _timeSlotIdToTimeMap.value[timeSlotId]
+            if (foundTime != null) {
+                println("🔍 TimeSelectionViewModel: ✅ Encontrado en timeSlotIdToTimeMap: $foundTime (timeSlotId=$timeSlotId)")
+                foundTime
+            } else {
+                // También intentar buscar en el timeSlotMap original
+                val foundInOriginal = _timeSlotMap.value.entries.find { it.value == timeSlotId }?.key
+                if (foundInOriginal != null) {
+                    println("🔍 TimeSelectionViewModel: ✅ Encontrado en timeSlotMap original: $foundInOriginal")
+                    foundInOriginal
+                } else {
+                    println("🔍 TimeSelectionViewModel: ❌ No se pudo convertir ni encontrar en map para timeSlotId=$timeSlotId")
+                    null
+                }
+            }
+        }
+    }.toSet()
+    
+    // Combinar los horarios del backend con los que ya están marcados localmente
+    val combinedBookedTimes = currentBookedTimes.apply {
+        addAll(bookedTimesFromBackend)
+    }
+    
+    println("🔍 TimeSelectionViewModel: ✅ Final booked times (${combinedBookedTimes.size}): $combinedBookedTimes")
+    println("🔍 TimeSelectionViewModel: - Del backend: ${bookedTimesFromBackend.size}")
+    println("🔍 TimeSelectionViewModel: - Locales previos: ${currentBookedTimes.size}")
+    println("🔍 TimeSelectionViewModel: TimeSlotMap tiene ${_timeSlotMap.value.size} entradas")
+    _bookedTimeSlots.value = combinedBookedTimes
+}.onFailure { error ->
+    println("🔍 TimeSelectionViewModel: ❌ Error loading reservations: ${error.message}")
+    // NO sobrescribir el estado local si falla la carga del backend
+    // Mantener los horarios que ya están marcados localmente
+    println("🔍 TimeSelectionViewModel: ⚠️ Manteniendo horarios reservados locales: ${currentBookedTimes.size}")
+    _errorMessage.value = error.message
+}
+```
+
+**Características destacadas:**
+- Sincronización bidireccional: las reservas creadas se marcan localmente y se sincronizan con el backend
+- Carga de reservas existentes desde el backend para mostrar horarios ocupados
+- Filtrado inteligente de reservas por trabajador y proveedor
+- Manejo robusto de errores: si falla la carga del backend, se mantiene el estado local
+- Persistencia local de horarios reservados en SharedPreferences para resiliencia
+
+## 4. Inyección de Dependencias - Configuración de Servicios
+
+Los servicios de reservas se configuran mediante Hilt en el módulo de dependencias:
+
+**📸 Captura de código recomendada: Líneas 43-47**
+
+```43:47:app/src/main/java/com/paxtech/mobileapp/features/clientDashboard/data/di/RemoteModule.kt
+@Provides
+@Singleton
+fun provideReservationService(retrofit: Retrofit): ReservationService{
+    return retrofit.create(ReservationService::class.java)
+}
+```
+
+## Logros del Sprint
+
+✅ **Configuración completa de Retrofit** con interceptores para autenticación automática y logging
+
+✅ **Sistema de autenticación funcional** con registro, inicio de sesión y persistencia de tokens
+
+✅ **Gestión completa de reservas** con creación y consulta desde el backend
+
+✅ **Arquitectura limpia** utilizando repositorios, servicios y ViewModels siguiendo principios SOLID
+
+✅ **Manejo robusto de errores** con Result types y logging detallado para debugging
+
+✅ **Sincronización bidireccional** entre estado local y backend para una experiencia de usuario fluida
+
+✅ **Persistencia local** de tokens y datos críticos para resiliencia ante fallos de red
+
+---
+
+## Resumen de Archivos Clave para Capturas
+
+### Configuración Base
+1. **RemoteModule.kt** (Líneas 18-44) - Configuración de Retrofit
+2. **AuthInterceptor.kt** (Líneas 13-26) - Interceptor de autenticación
+
+### Autenticación
+3. **AuthService.kt** (Líneas 13-22) - Endpoints de autenticación
+4. **AuthRepositoryImpl.kt** (Líneas 42-62) - Lógica de sign-in
+5. **LoginViewModel.kt** (Líneas 30-61) - Gestión de estado y persistencia
+
+### Reservas
+6. **ReservationService.kt** (Líneas 8-50) - Endpoints y DTOs de reservas
+7. **ReservationRepositoryImpl.kt** (Líneas 16-41) - Lógica de reservas
+8. **TimeSelectionViewModel.kt** (Líneas 102-220) - Integración completa de reservas
+9. **RemoteModule.kt (ClientDashboard)** (Líneas 43-47) - Inyección de ReservationService
+

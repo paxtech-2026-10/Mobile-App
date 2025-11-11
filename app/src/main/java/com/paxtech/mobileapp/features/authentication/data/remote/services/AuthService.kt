@@ -20,3 +20,5 @@ interface AuthService {
     @POST("api/v1/clients")
     suspend fun createClient(@Body request: CreateClientRequestDto): Response<Unit>
 }
+
+

@@ -99,15 +99,10 @@ class TimeSelectionViewModel @Inject constructor(
                 _errorMessage.value = it.message 
             }
 
-            // SEGUNDO: Cargar reservas del backend para marcar horarios ocupados
-            // Guardar el estado actual antes de intentar cargar del backend
             val currentBookedTimes = _bookedTimeSlots.value.toMutableSet()
-            
             val reservations = reservationRepository.getAllDetails()
             reservations.onSuccess { details ->
                 println("🔍 TimeSelectionViewModel: Loaded ${details.size} reservations from backend")
-                
-                // Filtrar reservas del workerId (y providerId si está disponible)
                 val filteredReservations = details.filter { reservation ->
                     val matchesWorker = reservation.workerId.id == workerId
                     val matchesProvider = providerId == null || reservation.provider.id == providerId
@@ -119,14 +114,13 @@ class TimeSelectionViewModel @Inject constructor(
                 }
                 
                 println("🔍 TimeSelectionViewModel: Filtered ${filteredReservations.size} reservations for workerId=$workerId, providerId=$providerId")
-                
-                // Convertir horarios a formato "hh:mm a" usando el timeSlotMap como respaldo
+
                 val bookedTimesFromBackend = filteredReservations.mapNotNull { reservation ->
                     val timeSlotId = reservation.timeSlot.id
                     val timeString = reservation.timeSlot.startTime
                     println("🔍 TimeSelectionViewModel: Procesando reserva - timeSlotId=$timeSlotId, startTime=$timeString")
                     
-                    // Primero intentar parsear directamente
+
                     val parsed = parseTime(timeString)
                     val formatted = parsed?.let { outputFormat.format(it) }
                     
@@ -165,8 +159,6 @@ class TimeSelectionViewModel @Inject constructor(
                 _bookedTimeSlots.value = combinedBookedTimes
             }.onFailure { error ->
                 println("🔍 TimeSelectionViewModel: ❌ Error loading reservations: ${error.message}")
-                // NO sobrescribir el estado local si falla la carga del backend
-                // Mantener los horarios que ya están marcados localmente
                 println("🔍 TimeSelectionViewModel: ⚠️ Manteniendo horarios reservados locales: ${currentBookedTimes.size}")
                 _errorMessage.value = error.message
             }
@@ -187,28 +179,21 @@ class TimeSelectionViewModel @Inject constructor(
             )
             result.onSuccess {
                 // Asegurarse de que tenemos el horario correcto usando el timeSlotId como respaldo
-                val timeToMark = selectedTime.ifEmpty { 
-                    // Si no hay selectedTime, buscar en el mapa inverso
+                val timeToMark = selectedTime.ifEmpty {
                     _timeSlotIdToTimeMap.value[timeSlotId] ?: selectedTime
                 }
-                
-                // Marcar el horario como reservado localmente inmediatamente
                 markTimeSlotAsBooked(timeToMark)
                 println("🔍 TimeSelectionViewModel: ✅ Reserva creada exitosamente, horario marcado como reservado: $timeToMark (timeSlotId=$timeSlotId)")
-                
-                // También marcar usando el timeSlotId como respaldo adicional
+
                 _timeSlotIdToTimeMap.value[timeSlotId]?.let { mappedTime ->
                     if (mappedTime != timeToMark) {
                         markTimeSlotAsBooked(mappedTime)
                         println("🔍 TimeSelectionViewModel: ✅ También marcado usando mapa inverso: $mappedTime")
                     }
                 }
-                
-                // Guardar el timeSlotId en SharedPreferences para persistencia
+
                 persistBookedTimeSlotId(timeSlotId)
-                
-                // Recargar los horarios ocupados del backend para asegurar sincronización
-                // Pero si falla, mantener el estado local
+
                 refreshBookedTimeSlots(workerId, providerId)
                 
                 onDone(true, null)
