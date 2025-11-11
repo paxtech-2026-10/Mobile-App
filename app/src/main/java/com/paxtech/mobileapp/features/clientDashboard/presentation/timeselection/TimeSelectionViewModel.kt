@@ -1,7 +1,9 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.timeselection
 
+import android.service.autofill.UserData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReservationRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlot
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlotRepository
@@ -17,7 +19,8 @@ import java.util.Locale
 @HiltViewModel
 class TimeSelectionViewModel @Inject constructor(
     private val reservationRepository: ReservationRepository,
-    private val timeSlotRepository: TimeSlotRepository
+    private val timeSlotRepository: TimeSlotRepository,
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -56,6 +59,8 @@ class TimeSelectionViewModel @Inject constructor(
             _isLoading.value = true
             _errorMessage.value = null
 
+            val clientId = userDataRepository.getUserId().toLong();
+
             // Cargar time slots del backend para mapear horarios a IDs
             val slots = timeSlotRepository.getAll()
             slots.onSuccess { list ->
@@ -69,7 +74,7 @@ class TimeSelectionViewModel @Inject constructor(
             }.onFailure { _errorMessage.value = it.message }
 
             // Cargar reservas del backend para marcar horarios ocupados
-            val reservations = reservationRepository.getAllDetails()
+            val reservations = reservationRepository.getAllDetails(clientId)
             reservations.onSuccess { details ->
                 println("🔍 TimeSelectionViewModel: Loaded ${details.size} reservations")
                 

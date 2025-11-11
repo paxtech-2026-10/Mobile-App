@@ -6,7 +6,7 @@ import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.Reser
 import javax.inject.Inject
 
 interface ReservationRepository {
-    suspend fun getAllDetails(): Result<List<ReservationDetailsDto>>
+    suspend fun getAllDetails(clientId: Long): Result<List<ReservationDetailsDto>>
     suspend fun createReservation(body: CreateReservationRequest): Result<Unit>
     suspend fun cancelReservation(reservationId: Long): Result<Unit>
 }
@@ -14,9 +14,11 @@ interface ReservationRepository {
 class ReservationRepositoryImpl @Inject constructor(
     private val reservationService: ReservationService
 ) : ReservationRepository {
-    override suspend fun getAllDetails(): Result<List<ReservationDetailsDto>> = try {
+    override suspend fun getAllDetails(clientId: Long): Result<List<ReservationDetailsDto>> = try {
         val response = reservationService.getAllReservationsDetails()
-        if (response.isSuccessful) Result.success(response.body().orEmpty())
+        if (response.isSuccessful) Result.success(response.body().orEmpty().filter { detailsDto ->
+            detailsDto.clientId==clientId
+        })
         else Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
     } catch (e: Exception) {
         Result.failure(e)

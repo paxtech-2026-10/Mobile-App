@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.reservations
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReservationRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationDetailsDto
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,8 @@ enum class ReservationFilter {
 
 @HiltViewModel
 class ReservationsViewModel @Inject constructor(
-    private val reservationRepository: ReservationRepository
+    private val reservationRepository: ReservationRepository,
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
     
     private val _reservations = MutableStateFlow<List<ReservationDetailsDto>>(emptyList())
@@ -42,8 +44,11 @@ class ReservationsViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+
+            //Conseguir id del cliente
+            val clientId = userDataRepository.getUserId().toLong();
             
-            reservationRepository.getAllDetails()
+            reservationRepository.getAllDetails(clientId)
                 .onSuccess { reservations ->
                     _reservations.value = reservations
                     println("🔍 ReservationsViewModel: Loaded ${reservations.size} reservations")
