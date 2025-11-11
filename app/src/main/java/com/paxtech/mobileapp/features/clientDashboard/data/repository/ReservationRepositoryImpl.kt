@@ -8,6 +8,7 @@ import javax.inject.Inject
 interface ReservationRepository {
     suspend fun getAllDetails(): Result<List<ReservationDetailsDto>>
     suspend fun createReservation(body: CreateReservationRequest): Result<Unit>
+    suspend fun cancelReservation(reservationId: Long): Result<Unit>
 }
 
 class ReservationRepositoryImpl @Inject constructor(
@@ -23,6 +24,13 @@ class ReservationRepositoryImpl @Inject constructor(
 
     override suspend fun createReservation(body: CreateReservationRequest): Result<Unit> = try {
         val response = reservationService.createReservation(body)
+        if (response.isSuccessful) Result.success(Unit) else Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+    
+    override suspend fun cancelReservation(reservationId: Long): Result<Unit> = try {
+        val response = reservationService.cancelReservation(reservationId)
         if (response.isSuccessful) Result.success(Unit) else Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
     } catch (e: Exception) {
         Result.failure(e)

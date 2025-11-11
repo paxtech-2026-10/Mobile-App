@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -38,11 +39,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.paxtech.mobileapp.features.clientDashboard.presentation.home.Home
 import com.paxtech.mobileapp.features.clientDashboard.presentation.home.ApiDebugScreen
+import com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.ReservationsScreen
+import com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.ReservationDetailScreen
+import com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.formatTimeRange
+import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationDetailsDto
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.paxtech.mobileapp.features.profile.presentation.ProfileNav
 import com.paxtech.mobileapp.features.services.presentation.SearchServiceView
 import com.paxtech.mobileapp.features.testBooking.TestBookingScreen
@@ -61,6 +69,7 @@ fun Main(
 ) {
 
     val tabNav = rememberNavController()
+    val selectedReservation = remember { mutableStateOf<ReservationDetailsDto?>(null) }
 
     // map each tab to its route + icon (use your sealed routes)
     val tabs = listOf(
@@ -139,7 +148,36 @@ fun Main(
         ) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
             composable(Route.Services.route) { SearchServiceView() }
-            composable(Route.Booking.route)  { BookingPlaceholder() }
+            composable(Route.Booking.route)  { 
+                val reservationsViewModel = hiltViewModel<com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.ReservationsViewModel>()
+                
+                // Usar key para forzar recomposición cuando cambia la reservación
+                val currentReservation = selectedReservation.value
+                
+                if (currentReservation == null) {
+                    ReservationsScreen(
+                        onReservationClick = { reservation ->
+                            selectedReservation.value = reservation
+                        }
+                    )
+                } else {
+                    // Usar key para asegurar que el composable se recree cuando cambia la reservación
+                    key(currentReservation.id) {
+                        ReservationDetailScreen(
+                            reservation = currentReservation,
+                            formatDate = { reservationsViewModel.formatDate(it) },
+                            formatTimeRange = { start, end -> formatTimeRange(start, end) },
+                            onBack = { 
+                                selectedReservation.value = null
+                            },
+                            onReservationCancelled = {
+                                selectedReservation.value = null
+                                reservationsViewModel.loadReservations()
+                            }
+                        )
+                    }
+                }
+            }
             composable(Route.Profile.route)  { ProfileNav(onLogout = onLogout) }
         }
     }

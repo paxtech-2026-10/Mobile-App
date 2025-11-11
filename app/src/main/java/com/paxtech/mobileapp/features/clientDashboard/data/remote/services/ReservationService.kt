@@ -2,8 +2,10 @@ package com.paxtech.mobileapp.features.clientDashboard.data.remote.services
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 data class CreateReservationRequest(
     val clientId: Long,
@@ -26,6 +28,14 @@ data class PaymentDto(
     val status: Boolean
 )
 
+data class ReservationServiceDto(
+    val id: Long,
+    val name: String,
+    val duration: Int,
+    val price: Int,
+    val providerId: Int
+)
+
 data class ReservationWorkerDto(
     val id: Long,
     val name: String,
@@ -36,7 +46,7 @@ data class ReservationDetailsDto(
     val id: Long,
     val clientId: Long,
     val provider: ProviderDto,
-    val paymentId: PaymentDto,
+    val serviceId: ReservationServiceDto,
     val timeSlot: TimeSlotDto,
     val workerId: ReservationWorkerDto
 )
@@ -47,6 +57,9 @@ interface ReservationService {
 
     @POST("api/v1/reservationsDetails")
     suspend fun createReservation(@Body body: CreateReservationRequest): Response<Unit>
+    
+    @DELETE("api/v1/reservationsDetails/{reservationId}")
+    suspend fun cancelReservation(@Path("reservationId") reservationId: Long): Response<Unit>
 }
 
 
