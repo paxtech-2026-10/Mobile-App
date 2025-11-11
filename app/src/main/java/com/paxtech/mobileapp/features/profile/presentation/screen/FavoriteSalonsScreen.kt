@@ -365,7 +365,7 @@ private fun FavoriteSalonCardPreview() {
         imageUrl = "",
         location = "2464 Royal Ln, Mesa, NV",
         email = "contact@braidslayers.com",
-        socials = emptyList(),
+        socials = emptyMap(),
         rating = 4.9,
         distanceKm = 3.5,
         reviewsCount = 136
@@ -387,7 +387,7 @@ private fun FavoriteSalonsScreenPreview() {
                         imageUrl = "",
                         location = "2464 Royal Ln, Mesa, NV",
                         email = "contact@braidslayers.com",
-                        socials = emptyList(),
+                        socials = emptyMap(),
                         rating = 4.9,
                         distanceKm = 3.5,
                         reviewsCount = 136

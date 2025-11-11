@@ -13,7 +13,7 @@ data class FavoriteSalonUi(
     val imageUrl: String,
     val location: String,
     val email: String,
-    val socials: List<String>,
+    val socials: Map<String, String>,
     val rating: Double,
     val distanceKm: Double,
     val reviewsCount: Int
