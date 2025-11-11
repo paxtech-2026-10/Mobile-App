@@ -146,6 +146,12 @@ fun AppNav() {
             Main(
                 onClick = { id ->
                     navController.navigate("${Route.SalonDetails.route}/$id")
+                },
+                onLogout = {
+                    authPrefs.edit().clear().apply()
+                    navController.navigate(Route.Login.route) {
+                        popUpTo(Route.Splash.route) { inclusive = true }
+                    }
                 }
             )
         }

@@ -55,7 +55,10 @@ data class NavigationItem(
 
 
 @Composable
-fun Main(onClick: (Int) -> Unit) {
+fun Main(
+    onClick: (Int) -> Unit,
+    onLogout: () -> Unit
+) {
 
     val tabNav = rememberNavController()
 
@@ -137,7 +140,7 @@ fun Main(onClick: (Int) -> Unit) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
             composable(Route.Services.route) { SearchServiceView() }
             composable(Route.Booking.route)  { BookingPlaceholder() }
-            composable(Route.Profile.route)  { ProfileNav() }
+            composable(Route.Profile.route)  { ProfileNav(onLogout = onLogout) }
         }
     }
 }
@@ -164,5 +167,5 @@ fun BookingPlaceholder() {
 @Preview(showBackground = true)
 @Composable
 fun MainPreview(){
-    Main {}
+    Main(onClick = {}, onLogout = {})
 }
