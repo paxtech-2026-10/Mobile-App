@@ -242,6 +242,7 @@ fun AppNav() {
                 serviceName = current.service.title,
                 servicePrice = current.service.price,
                 serviceDuration = current.service.durationMins,
+                serviceId = current.service.id,
                 selectedProfessional = current.selectedProfessional,
                 clientId = authPrefs.getInt("user_id", 0).toLong(),
                 providerId = current.salonId.toLong(),
@@ -249,12 +250,14 @@ fun AppNav() {
                 salonName = current.salonName,
                 salonAddress = current.salonAddress,
                 onBack = { navController.popBackStack() },
-                onContinue = { selectedDate, selectedTime, formattedDate, formattedTime ->
+                onContinue = { selectedDate, selectedTime, formattedDate, formattedTime, timeSlotId, selectedDateCalendar ->
                     reservationData.value = current.copy(
                         selectedDate = selectedDate,
                         selectedTime = selectedTime,
                         formattedDate = formattedDate,
-                        formattedTime = formattedTime
+                        formattedTime = formattedTime,
+                        timeSlotId = timeSlotId,
+                        selectedDateCalendar = selectedDateCalendar
                     )
                     navController.navigate("${Route.Confirmation.route}/${current.service.id}") {
                         launchSingleTop = true
@@ -288,6 +291,7 @@ fun AppNav() {
                     totalPrice = current.service.price,
                     salonImageUrl = current.salonImageUrl // <-- imagen real en la tarjeta
                 ),
+                reservationData = current,
                 onBack = { navController.popBackStack() },
                 onConfirm = {
                     navController.navigate(Route.ReservationConfirmed.route) {
