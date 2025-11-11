@@ -6,5 +6,7 @@ interface SalonRepository {
     suspend fun getAllSalons(): List<Salon>
 
     suspend fun getSalonById(id: Int): Salon?
+
+    suspend fun getSalonByName(companyName: String): List<Salon>
 }
 

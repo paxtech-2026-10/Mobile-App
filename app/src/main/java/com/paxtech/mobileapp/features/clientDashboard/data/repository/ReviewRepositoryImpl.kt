@@ -1,6 +1,7 @@
 package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReviewService
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.ReviewRepository
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ReviewUi
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,42 @@ class ReviewRepositoryImpl @Inject constructor(
             println("🔍 ReviewRepositoryImpl: Exception occurred: ${e.message}")
             e.printStackTrace()
             emptyList()
+        }
+    }
+    
+    override suspend fun getRatingSummary(providerId: Int): RatingSummary? = withContext(Dispatchers.IO) {
+        try {
+            println("🔍 ReviewRepositoryImpl: Getting rating summary for provider $providerId...")
+            val resp = reviewService.getAllReviews()
+            println("🔍 ReviewRepositoryImpl: Response code: ${resp.code()}")
+            println("🔍 ReviewRepositoryImpl: Response successful: ${resp.isSuccessful}")
+            
+            if (resp.isSuccessful) {
+                val bodyList = resp.body() ?: emptyList()
+                val reviews = bodyList.filter { it.providerId == providerId }
+                
+                if (reviews.isEmpty()) {
+                    println("🔍 ReviewRepositoryImpl: No reviews found for provider $providerId")
+                    return@withContext null
+                }
+                
+                val averageRating = reviews.map { it.rating }.average()
+                val reviewCount = reviews.size
+                
+                println("🔍 ReviewRepositoryImpl: Rating summary for provider $providerId: avg=$averageRating, count=$reviewCount")
+                
+                return@withContext RatingSummary(
+                    averageRating = averageRating,
+                    reviewCount = reviewCount
+                )
+            } else {
+                println("🔍 ReviewRepositoryImpl: Response not successful: ${resp.errorBody()?.string()}")
+            }
+            null
+        } catch (e: Exception) {
+            println("🔍 ReviewRepositoryImpl: Exception occurred getting rating summary: ${e.message}")
+            e.printStackTrace()
+            null
         }
     }
 }

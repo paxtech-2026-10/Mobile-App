@@ -25,11 +25,16 @@ class LocalSalonRepositoryImpl @Inject constructor(
     }
     
     override suspend fun saveSalonToHistory(salon: Salon) = withContext(Dispatchers.IO) {
+        // Primero verificar si el salón ya existe para preservar su estado de favorito
+        val existingEntity = salonDao.getSalonById(salon.id)
+        val isFavorite = existingEntity?.isFavorite ?: false
+        
         val entity = SalonEntity(
             id = salon.id,
             companyName = salon.companyName,
             coverImageUrl = salon.coverImageUrl,
             isVisited = true,
+            isFavorite = isFavorite, // PRESERVAR el estado de favorito existente
             timestamp = System.currentTimeMillis(),
             location = salon.location,
             email = salon.email,
@@ -42,20 +47,23 @@ class LocalSalonRepositoryImpl @Inject constructor(
         val isCurrentlyFavorite = salonDao.isFavorite(salon.id)
         val newFavoriteStatus = !isCurrentlyFavorite
         
-        // Primero insertar el salón si no existe
+        // Obtener la entidad existente si existe, para preservar otros datos
+        val existingEntity = salonDao.getSalonById(salon.id)
+        
         val entity = SalonEntity(
             id = salon.id,
             companyName = salon.companyName,
             coverImageUrl = salon.coverImageUrl,
             isFavorite = newFavoriteStatus,
-            timestamp = System.currentTimeMillis(),
+            isVisited = existingEntity?.isVisited ?: false, // Preservar estado de visitado
+            timestamp = existingEntity?.timestamp ?: System.currentTimeMillis(), // Preservar timestamp
             location = salon.location,
             email = salon.email,
             socials = salon.socials
         )
         salonDao.insertSalon(entity)
         
-        // Actualizar el estado de favorito
+        // Actualizar el estado de favorito (por si acaso)
         salonDao.updateFavoriteStatus(salon.id, newFavoriteStatus)
         
         newFavoriteStatus

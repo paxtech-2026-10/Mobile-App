@@ -35,7 +35,7 @@ class SalonRepositoryImpl @Inject constructor(
                         coverImageUrl = dto.coverImageUrl.orEmpty(),
                         location = dto.location.orEmpty(),
                         email = dto.email.orEmpty(),
-                        socials = emptyList() // TODO: Add socials field to DTO if needed
+                        socials = dto.socials ?: emptyMap()
                     )
                     println("🔍 SalonRepositoryImpl: Mapped salon: $salon")
                     salon
@@ -65,11 +65,47 @@ class SalonRepositoryImpl @Inject constructor(
                     coverImageUrl = dto.coverImageUrl.orEmpty(),
                     location = dto.location.orEmpty(),
                     email = dto.email.orEmpty(),
-                    socials = emptyList() // TODO: Add socials field to DTO if needed
+                    socials = dto.socials ?: emptyMap()
                 )
             }
         } catch (e: Exception) {
             null
+        }
+    }
+
+    override suspend fun getSalonByName(companyName: String): List<Salon> = withContext(Dispatchers.IO){
+        try {
+            if (companyName.isBlank()){
+                return@withContext emptyList()
+            }
+            println("🔍 SalonRepositoryImpl: Searching salons with name: $companyName")
+            val resp = service.getSalonByName(companyName)
+            println("🔍 SalonRepositoryImpl: Response code: ${resp.code()}")
+            println("🔍 SalonRepositoryImpl: Response successful: ${resp.isSuccessful}")
+
+            if (resp.isSuccessful){
+                val body = resp.body()
+                val bodyList = body ?: emptyList()
+
+                val salons = bodyList.map { dto ->
+                    Salon(
+                        id = dto.id ?: 0,
+                        companyName = dto.companyName.orEmpty(),
+                        coverImageUrl = dto.coverImageUrl.orEmpty(),
+                        location = dto.location.orEmpty(),
+                        email = dto.email.orEmpty(),
+                        socials = dto.socials ?: emptyMap()
+                    )
+                }
+                return@withContext salons
+            } else {
+                println("🔍 SalonRepositoryImpl: Response not successful: ${resp.errorBody()?.string()}")
+            }
+            emptyList()
+        } catch (e: Exception) {
+            println("🔍 SalonRepositoryImpl: Exception occurred: ${e.message}")
+            e.printStackTrace()
+            emptyList()
         }
     }
 

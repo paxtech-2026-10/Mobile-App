@@ -137,7 +137,7 @@ fun OnboardingScreen3(
             ) {
                 TextButton(onClick = onSkipClick) {
                     Text(
-                        text = "Skip",
+                        text = "Omitir",
                         color = TextPrimary,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
@@ -252,7 +252,7 @@ fun OnboardingScreen3(
                         shape = RoundedCornerShape(24.dp)
                     ) {
                         Text(
-                            text = "Start",
+                            text = "Comenzar",
                             color = Color.White,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium

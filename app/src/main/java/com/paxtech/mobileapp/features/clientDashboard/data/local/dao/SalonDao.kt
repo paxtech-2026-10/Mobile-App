@@ -22,6 +22,10 @@ interface SalonDao {
     @Query("SELECT * FROM salons WHERE isVisited = 1 ORDER BY timestamp DESC LIMIT 5")
     suspend fun getRecentVisits(): List<SalonEntity>
     
+    // Obtener un salón por ID
+    @Query("SELECT * FROM salons WHERE id = :salonId")
+    suspend fun getSalonById(salonId: Int): SalonEntity?
+    
     // Verificar si un salón es favorito (Room maneja automáticamente booleans)
     @Query("SELECT EXISTS(SELECT 1 FROM salons WHERE id = :salonId AND isFavorite = 1)")
     suspend fun isFavorite(salonId: Int): Boolean

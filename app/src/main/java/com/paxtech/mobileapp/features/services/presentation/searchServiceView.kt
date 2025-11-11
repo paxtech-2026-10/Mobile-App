@@ -1,6 +1,7 @@
 package com.paxtech.mobileapp.features.services.presentation
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,7 +112,17 @@ fun SearchServiceView(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(categories) { category ->
-                        CategoryCard(category)
+                        CategoryCard(
+                            title = category,
+                            onClick = {
+                                // Establecer el query con el nombre de la categoría
+                                viewModel.onChangeQuery(category)
+                                // Realizar la búsqueda automática
+                                viewModel.searchService()
+                                // Activar la vista de resultados
+                                isSearchBarActive.value = true
+                            }
+                        )
                     }
                 }
             }
@@ -139,12 +150,16 @@ fun SearchServiceView(
 }
 
 @Composable
-fun CategoryCard(title: String) {
+fun CategoryCard(
+    title: String,
+    onClick: () -> Unit = {}
+) {
     Card (
         modifier = Modifier
             .border(width = 2.dp, color = MaterialTheme.colorScheme.onPrimaryFixedVariant, shape = CardDefaults.elevatedShape)
             .padding(4.dp)
             .height(70.dp)
+            .clickable(onClick = onClick)
     ){
         Box(
             modifier = Modifier.fillMaxSize(),

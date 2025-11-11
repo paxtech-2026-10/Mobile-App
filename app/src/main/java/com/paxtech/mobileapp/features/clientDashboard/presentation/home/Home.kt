@@ -1,6 +1,5 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +25,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
@@ -36,17 +36,26 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,6 +63,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.paxtech.mobileapp.shared.model.Salon
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
+import com.paxtech.mobileapp.core.utils.LocationUtils
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import com.paxtech.mobileapp.ui.theme.TextPrimary
 import com.paxtech.mobileapp.ui.theme.TextSecondary
@@ -65,21 +76,56 @@ fun Home(
     viewModel: HomeViewModel = hiltViewModel(),
     onSalonClick: (Int) -> Unit = {}
 ) {
-    val context = LocalContext.current
     val recommendedSalons by viewModel.recommendedSalons.collectAsState()
     val favoriteSalons by viewModel.favoriteSalons.collectAsState()
     val recentVisits by viewModel.recentVisits.collectAsState()
+    val userName by viewModel.userName.collectAsState()
+    
+    // Estados del buscador
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
+    
+    // Ratings de salones
+    val salonRatings by viewModel.salonRatings.collectAsState()
+    
+    // Salones con distancias calculadas
+    val salonsWithDistance by viewModel.salonsWithDistance.collectAsState()
+    
+    // Direcciones de los salones
+    val salonAddresses by viewModel.salonAddresses.collectAsState()
+    
+    // Ubicación del usuario
+    val userLocation by viewModel.userLocation.collectAsState()
+    val userAddress by viewModel.userAddress.collectAsState()
+    val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
+    
+    // Estado local para el TextField
+    var searchText by remember { mutableStateOf("") }
+    
+    // Launcher para solicitar permisos de ubicación
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            viewModel.reloadLocationAndDistances()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadAllData()
+        // Asegurar que el nombre se carga cuando se muestra la pantalla
+        viewModel.loadUserName()
     }
 
-    // Obtener el nombre del usuario desde SharedPreferences
-    val userName = remember {
-        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        prefs.getString("user_full_name", "Usuario") ?: "Usuario"
+    // Sincronizar el texto del TextField con el ViewModel
+    LaunchedEffect(searchText) {
+        viewModel.updateSearchQuery(searchText)
     }
-    val userInitials = remember {
+
+    // Calcular iniciales del nombre del usuario
+    val userInitials = remember(userName) {
         userName.split(" ").mapNotNull { it.firstOrNull() }.joinToString("").uppercase().take(2)
     }
 
@@ -125,27 +171,39 @@ fun Home(
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Location",
-                                tint = Color(0xFF4CAF50),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
+                        val currentLocation = userLocation
+                        if (hasLocationPermission && currentLocation != null) {
+                            // Mostrar dirección si está disponible, sino mostrar coordenadas como fallback
                             Text(
-                                text = "2715 Ash Dr. San Jose, So...",
+                                text = if (userAddress != null) {
+                                    "📍 $userAddress"
+                                } else {
+                                    "📍 ${String.format("%.6f", currentLocation.latitude)}, ${String.format("%.6f", currentLocation.longitude)}"
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
+                        } else {
+                            Text(
+                                text = "Permitir acceso a ubicación",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary,
+                                modifier = Modifier.clickable {
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                }
+                            )
                         }
                     }
 
-                    // Notifications
+                    /* Notifications
                     Box {
                         IconButton(onClick = { /* TODO: Navigate to notifications */ }) {
                             Icon(
@@ -162,62 +220,148 @@ fun Home(
                                 .clip(CircleShape)
                                 .background(Color(0xFFF44336))
                         )
-                    }
+                    }*/
                 }
             }
         }
 
-        // Search Bar
+        // Search Bar con Dropdown
         item {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .zIndex(1f) // Asegurar que el dropdown esté por encima
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(BackgroundGray),
-                    contentAlignment = Alignment.CenterStart
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
+                    // Search TextField
+                    Box(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        TextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            placeholder = {
+                                Text(
+                                    text = "Buscar salones...",
+                                    color = TextSecondary
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Buscar",
+                                    tint = TextSecondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchText.isNotEmpty()) {
+                                    IconButton(onClick = { 
+                                        searchText = ""
+                                        viewModel.clearSearch()
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Limpiar",
+                                            tint = TextSecondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = BackgroundGray,
+                                unfocusedContainerColor = BackgroundGray,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true
+                        )
+                        
+                        // Dropdown de resultados
+                        if (searchResults.isNotEmpty() && searchText.isNotEmpty()) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 60.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = BackgroundWhite
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp)
+                                ) {
+                                    searchResults.take(5).forEach { salon ->
+                                        SearchResultItem(
+                                            salon = salon,
+                                            onClick = {
+                                                viewModel.saveVisit(salon)
+                                                viewModel.clearSearch()
+                                                searchText = ""
+                                                onSalonClick(salon.id)
+                                            },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                            }
+                        } else if (isSearching && searchText.length >= 2) {
+                            // Mostrar indicador de carga
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 60.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = BackgroundWhite
+                                )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Buscando...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    /* Filter button
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BackgroundGray),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Filtro",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(24.dp)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Search",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                // Filter button
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(BackgroundGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = "Filter",
-                        tint = TextPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    }*/
                 }
             }
         }
@@ -244,20 +388,20 @@ fun Home(
                             .padding(20.dp)
                     ) {
                         Text(
-                            text = "30% Off",
+                            text = "30% Descuento",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Wedding Package",
+                            text = "Paquete de Boda",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White
                         )
                         Text(
-                            text = "Hair-styling & treatment",
+                            text = "Peinado y tratamiento",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -271,7 +415,7 @@ fun Home(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "Explore",
+                                text = "Explorar",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -281,7 +425,8 @@ fun Home(
             }
         }
 
-        // Categories Section
+        // Categories Section - COMENTADO: Sección de categorías deshabilitada temporalmente
+        /*
         item {
             Row(
                 modifier = Modifier
@@ -291,13 +436,13 @@ fun Home(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Categories",
+                    text = "Categorías",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "View All",
+                    text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryPurple,
                     fontWeight = FontWeight.Medium,
@@ -315,6 +460,7 @@ fun Home(
                 }
             }
         }
+        */
 
         // Nearby Salons Section
         item {
@@ -326,18 +472,21 @@ fun Home(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Nearby Salons",
+                    text = "Salones Cercanos",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
+                // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
+                /*
                 Text(
-                    text = "View All",
+                    text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryPurple,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
                 )
+                */
             }
         }
         item {
@@ -345,7 +494,7 @@ fun Home(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(recommendedSalons) { salon ->
+                items(salonsWithDistance) { (salon, distance) ->
                     NearbySalonCard(
                         salon = salon,
                         onClick = {
@@ -353,13 +502,16 @@ fun Home(
                             onSalonClick(salon.id)
                         },
                         isFavorite = favoriteSalons.any { it.id == salon.id },
-                        onFavoriteClick = { viewModel.toggleFavorite(salon) }
+                        onFavoriteClick = { viewModel.toggleFavorite(salon) },
+                        ratingSummary = salonRatings[salon.id],
+                        distanceKm = distance,
+                        address = salonAddresses[salon.id]
                     )
                 }
             }
         }
 
-        // Popular Salons Section
+        // Recent Salons Section
         item {
             Row(
                 modifier = Modifier
@@ -369,28 +521,70 @@ fun Home(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Popular Salons",
+                    text = "Salones Recientes",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
+                // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
+                /*
                 Text(
-                    text = "View All",
+                    text = "Ver todo",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryPurple,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
                 )
+                */
             }
         }
         items(recentVisits.ifEmpty { recommendedSalons.take(3) }) { salon ->
+            // Buscar la distancia del salón en la lista ordenada
+            val distance = salonsWithDistance.find { it.first.id == salon.id }?.second
             PopularSalonCard(
                 salon = salon,
                 onClick = { onSalonClick(salon.id) },
                 isFavorite = favoriteSalons.any { it.id == salon.id },
                 onFavoriteClick = { viewModel.toggleFavorite(salon) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                ratingSummary = salonRatings[salon.id],
+                distanceKm = distance,
+                address = salonAddresses[salon.id]
             )
+        }
+
+        // Favorite Salons Section
+        if (favoriteSalons.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Salones Favoritos",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
+            }
+            items(favoriteSalons) { salon ->
+                // Buscar la distancia del salón en la lista ordenada
+                val distance = salonsWithDistance.find { it.first.id == salon.id }?.second
+                PopularSalonCard(
+                    salon = salon,
+                    onClick = { onSalonClick(salon.id) },
+                    isFavorite = true,
+                    onFavoriteClick = { viewModel.toggleFavorite(salon) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    ratingSummary = salonRatings[salon.id],
+                    distanceKm = distance,
+                    address = salonAddresses[salon.id]
+                )
+            }
         }
 
         // Bottom padding
@@ -437,11 +631,11 @@ fun CategoryItem(category: Category) {
 }
 
 fun getCategories(): List<Category> = listOf(
-    Category("Hair Cut", "✂️", Color(0xFFFFB6C1)),
-    Category("Shaves", "🪒", Color(0xFFE1BEE7)),
-    Category("Makeup", "💄", Color(0xFFFFB74D)),
-    Category("Nail Cut", "💅", Color(0xFFE1BEE7)),
-    Category("Hair Styling", "💇", Color(0xFFB2DFDB))
+    Category("Corte de Cabello", "✂️", Color(0xFFFFB6C1)),
+    Category("Afeitado", "🪒", Color(0xFFE1BEE7)),
+    Category("Maquillaje", "💄", Color(0xFFFFB74D)),
+    Category("Manicure", "💅", Color(0xFFE1BEE7)),
+    Category("Peinado", "💇", Color(0xFFB2DFDB))
 )
 
 @Composable
@@ -449,7 +643,10 @@ fun NearbySalonCard(
     salon: Salon,
     onClick: () -> Unit,
     isFavorite: Boolean = false,
-    onFavoriteClick: () -> Unit = {}
+    onFavoriteClick: () -> Unit = {},
+    ratingSummary: RatingSummary? = null,
+    distanceKm: Float? = null,
+    address: String? = null
 ) {
     Card(
         modifier = Modifier
@@ -477,7 +674,7 @@ fun NearbySalonCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
                         tint = if (isFavorite) Color(0xFFF44336) else Color.White,
                         modifier = Modifier.size(24.dp)
                     )
@@ -502,7 +699,11 @@ fun NearbySalonCard(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "→ 5 km",
+                        text = if (distanceKm != null && distanceKm != Float.MAX_VALUE) {
+                            "→ ${LocationUtils.formatDistance(distanceKm)}"
+                        } else {
+                            "→ ? km"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -515,13 +716,13 @@ fun NearbySalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
+                        contentDescription = "Ubicación",
                         tint = Color(0xFF4CAF50),
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = salon.location,
+                        text = address ?: LocationUtils.extractAddress(salon.location),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         maxLines = 1,
@@ -537,13 +738,17 @@ fun NearbySalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
+                        contentDescription = "Calificación",
                         tint = Color(0xFFFFC107),
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "4.9 (27)",
+                        text = if (ratingSummary != null) {
+                            "%.1f (%d)".format(ratingSummary.averageRating, ratingSummary.reviewCount)
+                        } else {
+                            "Sin calificar"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -560,7 +765,7 @@ fun NearbySalonCard(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Book Now",
+                        text = "Reservar Ahora",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
@@ -577,7 +782,10 @@ fun PopularSalonCard(
     onClick: () -> Unit,
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ratingSummary: RatingSummary? = null,
+    distanceKm: Float? = null,
+    address: String? = null
 ) {
     Card(
         modifier = modifier
@@ -608,7 +816,7 @@ fun PopularSalonCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
                         tint = if (isFavorite) Color(0xFFF44336) else Color.White,
                         modifier = Modifier.size(20.dp)
                     )
@@ -636,7 +844,11 @@ fun PopularSalonCard(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "→ 5 km",
+                        text = if (distanceKm != null && distanceKm != Float.MAX_VALUE) {
+                            "→ ${LocationUtils.formatDistance(distanceKm)}"
+                        } else {
+                            "→ ? km"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -649,13 +861,13 @@ fun PopularSalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
+                        contentDescription = "Ubicación",
                         tint = Color(0xFF4CAF50),
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = salon.location,
+                        text = address ?: LocationUtils.extractAddress(salon.location),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         maxLines = 1,
@@ -671,13 +883,17 @@ fun PopularSalonCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
+                        contentDescription = "Calificación",
                         tint = Color(0xFFFFC107),
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "4.9 (36)",
+                        text = if (ratingSummary != null) {
+                            "%.1f (%d)".format(ratingSummary.averageRating, ratingSummary.reviewCount)
+                        } else {
+                            "Sin calificar"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -693,13 +909,58 @@ fun PopularSalonCard(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Book Now",
+                        text = "Reservar Ahora",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
             }
+        }
+    }
+}
+
+// Componente para cada item del dropdown
+@Composable
+fun SearchResultItem(
+    salon: Salon,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Icono de salón
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = null,
+            tint = PrimaryPurple,
+            modifier = Modifier.size(24.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        // Información del salón
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = salon.companyName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = LocationUtils.extractAddress(salon.location),
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

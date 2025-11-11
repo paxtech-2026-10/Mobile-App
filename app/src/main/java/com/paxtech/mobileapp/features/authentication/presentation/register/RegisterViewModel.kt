@@ -1,33 +1,34 @@
 package com.paxtech.mobileapp.features.authentication.presentation.register
 
-import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.core.network.TokenStorage
 import com.paxtech.mobileapp.features.authentication.domain.models.Client
 import com.paxtech.mobileapp.features.authentication.domain.models.User
 import com.paxtech.mobileapp.features.authentication.domain.repository.AuthRepository
+import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Named
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    @Named("auth_prefs") private val authPrefs: SharedPreferences
+    private val tokenStorage: TokenStorage,
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
-    
+
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
-    
+
     private val _client = MutableStateFlow<Client?>(null)
     val client: StateFlow<Client?> = _client
-    
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
-    
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -47,25 +48,19 @@ class RegisterViewModel @Inject constructor(
 
             println("🔍 RegisterViewModel: User signed up successfully: ${signedUpUser.id}")
 
-            // 2. Hacer sign-in para obtener el token
+            // 2. Hacer sign-in para obtener el token (ya se guarda automáticamente en AuthRepositoryImpl)
             val signedInUser = authRepository.signIn(email, password)
             _user.value = signedInUser
 
             println("🔍 RegisterViewModel: User signed in successfully with token: ${signedInUser.token}")
 
-            // Guardar el token en SharedPreferences
+            // 3. Guardar el nombre del usuario
             if (signedInUser.token != null) {
-                authPrefs.edit().apply {
-                    putString("auth_token", signedInUser.token)
-                    putInt("user_id", signedInUser.id)
-                    putString("user_first_name", firstName)
-                    putString("user_last_name", lastName)
-                    putString("user_full_name", "$firstName $lastName")
-                }.commit()
-                println("🔍 RegisterViewModel: Token and user data saved to SharedPreferences")
+                userDataRepository.saveUserName(firstName, lastName)
+                println("🔍 RegisterViewModel: User name saved: $firstName $lastName")
             }
-            
-            // 3. Ahora crear el cliente con el token disponible
+
+            // 4. Ahora crear el cliente con el token disponible
             val client = authRepository.createClient(firstName, lastName, signedInUser.id)
             _client.value = client
 

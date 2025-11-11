@@ -110,7 +110,7 @@ fun RegisterScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Atrás",
                             tint = TextPrimary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -120,7 +120,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 
                 Text(
-                    text = "Sign Up",
+                    text = "Registrarse",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -141,7 +141,7 @@ fun RegisterScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Sign Up to access all the features",
+                    text = "Regístrate y encuentra el salón de belleza que más te guste",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     textAlign = TextAlign.Center,
@@ -171,7 +171,7 @@ fun RegisterScreen(
                         // First Name
                         Column {
                             Text(
-                                text = "First Name",
+                                text = "Nombre",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
@@ -182,7 +182,7 @@ fun RegisterScreen(
                                 onValueChange = { firstName = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your first name",
+                                        "Ingresa tu nombre",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -201,7 +201,7 @@ fun RegisterScreen(
                         // Last Name
                         Column {
                             Text(
-                                text = "Last Name",
+                                text = "Apellido",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
@@ -212,7 +212,7 @@ fun RegisterScreen(
                                 onValueChange = { lastName = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your last name",
+                                        "Ingresa tu apellido",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -231,7 +231,7 @@ fun RegisterScreen(
                         // Email
                         Column {
                             Text(
-                                text = "Email",
+                                text = "Correo electrónico",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
@@ -242,7 +242,7 @@ fun RegisterScreen(
                                 onValueChange = { email = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your email",
+                                        "Ingresa tu correo electrónico",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -261,7 +261,7 @@ fun RegisterScreen(
                         // Password
                         Column {
                             Text(
-                                text = "Password",
+                                text = "Contraseña",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Medium
@@ -272,7 +272,7 @@ fun RegisterScreen(
                                 onValueChange = { password = it },
                                 placeholder = { 
                                     Text(
-                                        "Enter your password.",
+                                        "Ingresa tu contraseña",
                                         color = TextSecondary
                                     ) 
                                 },
@@ -283,7 +283,7 @@ fun RegisterScreen(
                                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                         Icon(
                                             imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                            contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
                                             tint = TextSecondary
                                         )
                                     }
@@ -324,7 +324,7 @@ fun RegisterScreen(
                             Text("Registrando...", color = Color.White)
                         } else {
                             Text(
-                                text = "Sign Up",
+                                text = "Registrarse",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold
@@ -348,7 +348,8 @@ fun RegisterScreen(
                     val client by viewModel.client.collectAsState()
 
                     LaunchedEffect(user, client) {
-                        if (user != null && client != null) {
+                        // Verificar que el usuario tenga token válido antes de navegar
+                        if (user != null && user?.token != null && client != null) {
                             // Cuando el usuario y cliente se crean exitosamente, navegar
                             onRegisterClick(RegisterType.CLIENT)
                         }
@@ -364,12 +365,12 @@ fun RegisterScreen(
                             .padding(bottom = 24.dp)
                     ) {
                         Text(
-                            text = "Have an account? ",
+                            text = "¿Ya tienes una cuenta? ",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimary
                         )
                         Text(
-                            text = "SIGN IN",
+                            text = "INICIAR SESIÓN",
                             style = MaterialTheme.typography.bodyMedium,
                             color = PrimaryPurple,
                             fontWeight = FontWeight.Bold
