@@ -56,6 +56,8 @@ fun ProfileScreen(
     uiState: ProfileUiState,
     onNavigateToMyProfile: () -> Unit,
     onNavigateToPaymentMethods: () -> Unit,
+    onNavigateToFavoriteSalons: () -> Unit,
+    onNavigateToNotifications: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
     onNavigateToFaq: () -> Unit,
     onNavigateToAbout: () -> Unit,
@@ -80,6 +82,8 @@ fun ProfileScreen(
                     profile = uiState.profile,
                     onNavigateToMyProfile = onNavigateToMyProfile,
                     onNavigateToPaymentMethods = onNavigateToPaymentMethods,
+                    onNavigateToFavoriteSalons = onNavigateToFavoriteSalons,
+                    onNavigateToNotifications = onNavigateToNotifications,
                     onNavigateToChangePassword = onNavigateToChangePassword,
                     onNavigateToFaq = onNavigateToFaq,
                     onNavigateToAbout = onNavigateToAbout,
@@ -144,6 +148,8 @@ private fun ProfileContent(
     profile: ProfileUi,
     onNavigateToMyProfile: () -> Unit,
     onNavigateToPaymentMethods: () -> Unit,
+    onNavigateToFavoriteSalons: () -> Unit,
+    onNavigateToNotifications: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
     onNavigateToFaq: () -> Unit,
     onNavigateToAbout: () -> Unit,
@@ -165,6 +171,8 @@ private fun ProfileContent(
         ProfileMenu(
             onNavigateToMyProfile = onNavigateToMyProfile,
             onNavigateToPaymentMethods = onNavigateToPaymentMethods,
+            onNavigateToFavoriteSalons = onNavigateToFavoriteSalons,
+            onNavigateToNotifications = onNavigateToNotifications,
             onNavigateToChangePassword = onNavigateToChangePassword,
             onNavigateToFaq = onNavigateToFaq,
             onNavigateToAbout = onNavigateToAbout,
@@ -237,6 +245,8 @@ private fun ProfileHeader(
 private fun ProfileMenu(
     onNavigateToMyProfile: () -> Unit,
     onNavigateToPaymentMethods: () -> Unit,
+    onNavigateToFavoriteSalons: () -> Unit,
+    onNavigateToNotifications: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
     onNavigateToFaq: () -> Unit,
     onNavigateToAbout: () -> Unit,
@@ -255,11 +265,13 @@ private fun ProfileMenu(
         ),
         ProfileMenuItem(
             icon = Icons.Filled.Favorite,
-            title = "Salón favorito"
+            title = "Salones favoritos",
+            onClick = onNavigateToFavoriteSalons
         ),
         ProfileMenuItem(
             icon = Icons.Filled.Notifications,
-            title = "Notificaciones"
+            title = "Notificaciones",
+            onClick = onNavigateToNotifications
         ),
         ProfileMenuItem(
             icon = Icons.Filled.Lock,
@@ -373,6 +385,8 @@ private fun ProfileScreenPreview() {
                 uiState = ProfileUiState.sample(),
                 onNavigateToMyProfile = {},
                 onNavigateToPaymentMethods = {},
+                onNavigateToFavoriteSalons = {},
+                onNavigateToNotifications = {},
                 onNavigateToChangePassword = {},
                 onNavigateToFaq = {},
                 onNavigateToAbout = {},

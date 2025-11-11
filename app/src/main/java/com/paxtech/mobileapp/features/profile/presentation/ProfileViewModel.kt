@@ -2,10 +2,16 @@ package com.paxtech.mobileapp.features.profile.presentation
 
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordField
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordFormState
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordUiState
+import com.paxtech.mobileapp.features.profile.presentation.model.FavoriteSalonUi
+import com.paxtech.mobileapp.features.profile.presentation.model.FavoriteSalonsUiState
 import com.paxtech.mobileapp.features.profile.presentation.model.GenderUi
+import com.paxtech.mobileapp.features.profile.presentation.model.NotificationUi
+import com.paxtech.mobileapp.features.profile.presentation.model.NotificationsUiState
 import com.paxtech.mobileapp.features.profile.presentation.model.PaymentCardBrand
 import com.paxtech.mobileapp.features.profile.presentation.model.PaymentMethodFormField
 import com.paxtech.mobileapp.features.profile.presentation.model.PaymentMethodFormState
@@ -15,6 +21,9 @@ import com.paxtech.mobileapp.features.profile.presentation.model.ProfileFormFiel
 import com.paxtech.mobileapp.features.profile.presentation.model.ProfileFormState
 import com.paxtech.mobileapp.features.profile.presentation.model.ProfileUi
 import com.paxtech.mobileapp.features.profile.presentation.model.ProfileUiState
+import com.paxtech.mobileapp.features.profile.presentation.model.toFavoriteSalonUi
+import com.paxtech.mobileapp.features.profile.presentation.model.toSalon
+import com.paxtech.mobileapp.features.profile.presentation.model.toSections
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import javax.inject.Named
@@ -23,12 +32,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    @Named("auth_prefs") private val authPrefs: SharedPreferences
+    @param:Named("auth_prefs") private val authPrefs: SharedPreferences,
+    private val localSalonRepository: LocalSalonRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -40,10 +51,20 @@ class ProfileViewModel @Inject constructor(
     private val _changePasswordState = MutableStateFlow(ChangePasswordUiState())
     val changePasswordState: StateFlow<ChangePasswordUiState> = _changePasswordState.asStateFlow()
 
+    private val _favoriteSalonsState = MutableStateFlow(FavoriteSalonsUiState())
+    val favoriteSalonsState: StateFlow<FavoriteSalonsUiState> = _favoriteSalonsState.asStateFlow()
+
+    private val _notificationsState = MutableStateFlow(NotificationsUiState())
+    val notificationsState: StateFlow<NotificationsUiState> = _notificationsState.asStateFlow()
+
+    private var storedNotifications: List<NotificationStorage> = emptyList()
+
     init {
         loadProfile()
         loadPaymentMethods()
         loadPassword()
+        refreshFavoriteSalons()
+        loadNotifications()
     }
 
     fun refreshProfile() {
@@ -194,6 +215,85 @@ class ProfileViewModel @Inject constructor(
 
     fun onPaymentMethodDeletedConsumed() {
         _paymentMethodsState.update { it.copy(isDeleted = false) }
+    }
+
+    fun refreshFavoriteSalons() {
+        _favoriteSalonsState.update { it.copy(isLoading = true, errorMessage = null) }
+        viewModelScope.launch {
+            runCatching { localSalonRepository.getAllFavorites() }
+                .mapCatching { salons -> salons.map { it.toFavoriteSalonUi() } }
+                .onSuccess { favorites ->
+                    _favoriteSalonsState.update {
+                        it.copy(
+                            isLoading = false,
+                            salons = favorites,
+                            errorMessage = null
+                        )
+                    }
+                }
+                .onFailure { throwable ->
+                    _favoriteSalonsState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = throwable.message ?: "No pudimos cargar tus salones favoritos"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun requestRemoveFavorite(salon: FavoriteSalonUi) {
+        _favoriteSalonsState.update {
+            it.copy(pendingRemoval = salon)
+        }
+    }
+
+    fun dismissRemoveFavorite() {
+        _favoriteSalonsState.update { it.copy(pendingRemoval = null) }
+    }
+
+    fun confirmRemoveFavorite() {
+        val pending = _favoriteSalonsState.value.pendingRemoval ?: return
+        _favoriteSalonsState.update { it.copy(isLoading = true, pendingRemoval = null) }
+        viewModelScope.launch {
+            runCatching { localSalonRepository.toggleFavorite(pending.toSalon()) }
+                .onSuccess {
+                    refreshFavoriteSalons()
+                }
+                .onFailure { throwable ->
+                    _favoriteSalonsState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = throwable.message ?: "No pudimos actualizar tus favoritos"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun refreshNotifications() {
+        loadNotifications()
+    }
+
+    fun markNotificationAsRead(notification: NotificationUi) {
+        if (notification.isRead) return
+        storedNotifications = storedNotifications.map { stored ->
+            if (stored.id == notification.id) stored.copy(isRead = true) else stored
+        }
+        persistNotifications(storedNotifications)
+        publishNotificationsState(isLoading = false)
+    }
+
+    fun clearNotifications() {
+        storedNotifications = emptyList()
+        persistNotifications(storedNotifications)
+        publishNotificationsState(isLoading = false)
+    }
+
+    fun toggleNotificationMute() {
+        val newValue = !_notificationsState.value.isMuted
+        authPrefs.edit().putBoolean(NOTIFICATIONS_MUTED_KEY, newValue).apply()
+        _notificationsState.update { it.copy(isMuted = newValue) }
     }
 
     fun onChangePasswordFieldChange(field: ChangePasswordField, value: String) {
@@ -382,6 +482,109 @@ class ProfileViewModel @Inject constructor(
         authPrefs.edit().putString(PAYMENT_METHODS_KEY, jsonArray.toString()).apply()
     }
 
+    private fun loadNotifications() {
+        _notificationsState.update { it.copy(isLoading = true) }
+        val stored = readNotificationsFromPreferences()
+        storedNotifications = if (stored.isEmpty()) {
+            val defaults = defaultNotifications()
+            persistNotifications(defaults)
+            defaults
+        } else {
+            stored
+        }
+
+        publishNotificationsState(isLoading = false)
+    }
+
+    private fun publishNotificationsState(isLoading: Boolean) {
+        val notifications = storedNotifications
+            .sortedByDescending { it.timestamp }
+            .map { it.toUi() }
+        _notificationsState.update {
+            it.copy(
+                isLoading = isLoading,
+                sections = notifications.toSections(),
+                isMuted = authPrefs.getBoolean(NOTIFICATIONS_MUTED_KEY, false)
+            )
+        }
+    }
+
+    private fun readNotificationsFromPreferences(): List<NotificationStorage> {
+        val stored = authPrefs.getString(NOTIFICATIONS_KEY, null) ?: return emptyList()
+        return runCatching {
+            val jsonArray = JSONArray(stored)
+            buildList {
+                for (index in 0 until jsonArray.length()) {
+                    val item = jsonArray.getJSONObject(index)
+                    add(
+                        NotificationStorage(
+                            id = item.getString("id"),
+                            title = item.getString("title"),
+                            message = item.getString("message"),
+                            timestamp = item.getLong("timestamp"),
+                            isRead = item.getBoolean("isRead"),
+                            avatarUrl = item.optString("avatarUrl").ifBlank { null }
+                        )
+                    )
+                }
+            }
+        }.getOrElse { emptyList() }
+    }
+
+    private fun persistNotifications(notifications: List<NotificationStorage>) {
+        val jsonArray = JSONArray()
+        notifications.forEach { notification ->
+            val json = JSONObject().apply {
+                put("id", notification.id)
+                put("title", notification.title)
+                put("message", notification.message)
+                put("timestamp", notification.timestamp)
+                put("isRead", notification.isRead)
+                put("avatarUrl", notification.avatarUrl)
+            }
+            jsonArray.put(json)
+        }
+        authPrefs.edit().putString(NOTIFICATIONS_KEY, jsonArray.toString()).apply()
+    }
+
+    private fun defaultNotifications(): List<NotificationStorage> {
+        val now = System.currentTimeMillis()
+        return listOf(
+            NotificationStorage(
+                id = "notification-1",
+                title = "Tu pedido está en camino",
+                message = "La estilista llegará en 30 minutos.",
+                timestamp = now - 15 * 60 * 1000,
+                isRead = false,
+                avatarUrl = null
+            ),
+            NotificationStorage(
+                id = "notification-2",
+                title = "Recordatorio de reserva",
+                message = "No olvides tu cita en Glamour Studio mañana a las 10:00 a.m.",
+                timestamp = now - 3 * 60 * 60 * 1000,
+                isRead = false,
+                avatarUrl = null
+            ),
+            NotificationStorage(
+                id = "notification-3",
+                title = "Nuevas ofertas especiales",
+                message = "Descubre los descuentos exclusivos para esta semana.",
+                timestamp = now - 26 * 60 * 60 * 1000,
+                isRead = true,
+                avatarUrl = null
+            ),
+            NotificationStorage(
+                id = "notification-4",
+                title = "Estilista favorito disponible",
+                message = "Cameron Williamson abrió espacios para el viernes.",
+                timestamp = now - 30 * 60 * 60 * 1000,
+                isRead = true,
+                avatarUrl = null
+            )
+        )
+    }
+
     private object PaymentMethodUiJsonAdapter {
         fun brandFromString(value: String): PaymentCardBrand = runCatching {
             PaymentCardBrand.valueOf(value)
@@ -391,10 +594,30 @@ class ProfileViewModel @Inject constructor(
     companion object {
         private const val PAYMENT_METHODS_KEY = "user_payment_methods"
         private const val USER_PASSWORD_KEY = "user_password"
+        private const val NOTIFICATIONS_KEY = "user_notifications"
+        private const val NOTIFICATIONS_MUTED_KEY = "user_notifications_muted"
     }
 }
 
 private fun String?.toGenderUi(): GenderUi {
     if (this.isNullOrBlank()) return GenderUi.default
     return runCatching { GenderUi.valueOf(this) }.getOrDefault(GenderUi.default)
+}
+
+private data class NotificationStorage(
+    val id: String,
+    val title: String,
+    val message: String,
+    val timestamp: Long,
+    val isRead: Boolean,
+    val avatarUrl: String?
+) {
+    fun toUi(): NotificationUi = NotificationUi(
+        id = id,
+        title = title,
+        message = message,
+        timestamp = timestamp,
+        isRead = isRead,
+        avatarUrl = avatarUrl
+    )
 }
