@@ -18,7 +18,9 @@ import com.paxtech.mobileapp.features.profile.presentation.screen.AboutUsScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.ChangePasswordScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.EditProfileScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.FaqScreen
+import com.paxtech.mobileapp.features.profile.presentation.screen.FavoriteSalonsScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.MyProfileScreen
+import com.paxtech.mobileapp.features.profile.presentation.screen.NotificationsScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.PaymentMethodFormScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.PaymentMethodsScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.ProfileScreen
@@ -33,6 +35,8 @@ private sealed class ProfileDestination(val route: String) {
         const val METHOD_ID = "methodId"
         fun createRoute(methodId: String) = "profile_payment_methods/edit/$methodId"
     }
+    object FavoriteSalons : ProfileDestination("profile_favorite_salons")
+    object Notifications : ProfileDestination("profile_notifications")
     object ChangePassword : ProfileDestination("profile_change_password")
     object Faq : ProfileDestination("profile_faq")
     object About : ProfileDestination("profile_about")
@@ -44,6 +48,8 @@ private data class ProfileNavActions(
     val openPaymentMethods: () -> Unit,
     val openAddPaymentMethod: () -> Unit,
     val openEditPaymentMethod: (String) -> Unit,
+    val openFavoriteSalons: () -> Unit,
+    val openNotifications: () -> Unit,
     val openChangePassword: () -> Unit,
     val openFaq: () -> Unit,
     val openAbout: () -> Unit,
@@ -92,6 +98,14 @@ internal fun ProfileNavHost(
                 viewModel.prepareEditPaymentMethod(methodId)
                 navController.navigateSingleTopTo(ProfileDestination.EditPaymentMethod.createRoute(methodId))
             },
+            openFavoriteSalons = {
+                viewModel.refreshFavoriteSalons()
+                navController.navigateSingleTopTo(ProfileDestination.FavoriteSalons.route)
+            },
+            openNotifications = {
+                viewModel.refreshNotifications()
+                navController.navigateSingleTopTo(ProfileDestination.Notifications.route)
+            },
             openChangePassword = {
                 navController.navigateSingleTopTo(ProfileDestination.ChangePassword.route)
             },
@@ -127,6 +141,8 @@ internal fun ProfileNavHost(
                 uiState = uiState,
                 onNavigateToMyProfile = actions.openMyProfile,
                 onNavigateToPaymentMethods = actions.openPaymentMethods,
+                onNavigateToFavoriteSalons = actions.openFavoriteSalons,
+                onNavigateToNotifications = actions.openNotifications,
                 onNavigateToChangePassword = actions.openChangePassword,
                 onNavigateToFaq = actions.openFaq,
                 onNavigateToAbout = actions.openAbout,
@@ -147,6 +163,8 @@ internal fun ProfileNavHost(
                     uiState = uiState,
                     onNavigateToMyProfile = { },
                     onNavigateToPaymentMethods = { },
+                    onNavigateToFavoriteSalons = { },
+                    onNavigateToNotifications = { },
                     onNavigateToChangePassword = { },
                     onNavigateToFaq = { },
                     onNavigateToAbout = { },
@@ -232,6 +250,27 @@ internal fun ProfileNavHost(
                     actions.navigateBack()
                 }
             }
+        }
+        composable(ProfileDestination.FavoriteSalons.route) {
+            val favoritesState by viewModel.favoriteSalonsState.collectAsState()
+            FavoriteSalonsScreen(
+                state = favoritesState,
+                onBack = actions.navigateBack,
+                onBookNow = { },
+                onRemoveFavorite = viewModel::requestRemoveFavorite,
+                onDismissRemoval = viewModel::dismissRemoveFavorite,
+                onConfirmRemoval = viewModel::confirmRemoveFavorite
+            )
+        }
+        composable(ProfileDestination.Notifications.route) {
+            val notificationsState by viewModel.notificationsState.collectAsState()
+            NotificationsScreen(
+                state = notificationsState,
+                onBack = actions.navigateBack,
+                onToggleMute = viewModel::toggleNotificationMute,
+                onClearAll = viewModel::clearNotifications,
+                onNotificationClick = viewModel::markNotificationAsRead
+            )
         }
         composable(ProfileDestination.ChangePassword.route) {
             val state by viewModel.changePasswordState.collectAsState()
