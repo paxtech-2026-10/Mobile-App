@@ -23,9 +23,20 @@ class ReservationRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createReservation(body: CreateReservationRequest): Result<Unit> = try {
+        println("🔍 ReservationRepositoryImpl: Creando reserva con body: $body")
         val response = reservationService.createReservation(body)
-        if (response.isSuccessful) Result.success(Unit) else Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
+        println("🔍 ReservationRepositoryImpl: Respuesta del servidor - código: ${response.code()}, exitoso: ${response.isSuccessful}")
+        if (response.isSuccessful) {
+            println("🔍 ReservationRepositoryImpl: Reserva creada exitosamente")
+            Result.success(Unit)
+        } else {
+            val errorBody = response.errorBody()?.string()
+            println("🔍 ReservationRepositoryImpl: Error al crear reserva - código: ${response.code()}, body: $errorBody")
+            Result.failure(IllegalStateException("HTTP ${response.code()}: $errorBody"))
+        }
     } catch (e: Exception) {
+        println("🔍 ReservationRepositoryImpl: Excepción al crear reserva: ${e.message}")
+        e.printStackTrace()
         Result.failure(e)
     }
     
