@@ -15,12 +15,69 @@ class ReservationRepositoryImpl @Inject constructor(
     private val reservationService: ReservationService
 ) : ReservationRepository {
     override suspend fun getAllDetails(clientId: Long): Result<List<ReservationDetailsDto>> = try {
+        println("🔍🔍 ReservationRepositoryImpl: ===== INICIANDO getAllDetails =====")
+        println("🔍 ReservationRepositoryImpl: ClientId recibido: $clientId")
+        println("🔍 ReservationRepositoryImpl: Llamando a reservationService.getAllReservationsDetails()")
+        
         val response = reservationService.getAllReservationsDetails()
-        if (response.isSuccessful) Result.success(response.body().orEmpty().filter { detailsDto ->
-            detailsDto.clientId==clientId
-        })
-        else Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
+        println("🔍 ReservationRepositoryImpl: Respuesta recibida")
+        println("   - Código HTTP: ${response.code()}")
+        println("   - Es exitosa: ${response.isSuccessful}")
+        println("   - Mensaje: ${response.message()}")
+        
+        if (response.isSuccessful) {
+            val allReservations = response.body() ?: emptyList()
+            println("🔍 ReservationRepositoryImpl: Total de reservaciones recibidas del API: ${allReservations.size}")
+            
+            if (allReservations.isNotEmpty()) {
+                println("🔍 ReservationRepositoryImpl: Detalles de todas las reservaciones recibidas:")
+                allReservations.forEachIndexed { index, dto ->
+                    println("   Reservación $index:")
+                    println("      - ID: ${dto.id}")
+                    println("      - ClientId: ${dto.clientId} (tipo: ${dto.clientId.javaClass.simpleName})")
+                    println("      - ClientId buscado: $clientId (tipo: ${clientId.javaClass.simpleName})")
+                    println("      - ¿Coincide?: ${dto.clientId == clientId}")
+                    println("      - Service: ${dto.serviceId.name}")
+                    println("      - Provider: ${dto.provider.companyName}")
+                }
+            } else {
+                println("⚠️ ReservationRepositoryImpl: El API retornó una lista vacía o null")
+            }
+            
+            val filteredReservations = allReservations.filter { detailsDto ->
+                val matches = detailsDto.clientId == clientId
+                if (!matches) {
+                    println("   ⚠️ Reservación con ID ${detailsDto.id} NO coincide (ClientId: ${detailsDto.clientId} != $clientId)")
+                }
+                matches
+            }
+            
+            println("🔍 ReservationRepositoryImpl: Reservaciones después del filtro: ${filteredReservations.size}")
+            if (filteredReservations.isNotEmpty()) {
+                filteredReservations.forEachIndexed { index, dto ->
+                    println("   ✅ Reservación filtrada $index: ID=${dto.id}, ClientId=${dto.clientId}")
+                }
+            }
+            
+            println("🔍🔍 ReservationRepositoryImpl: ===== FIN getAllDetails =====")
+            Result.success(filteredReservations)
+        } else {
+            val errorMsg = "HTTP ${response.code()}"
+            println("❌ ReservationRepositoryImpl: Error HTTP ${response.code()}")
+            println("   - Mensaje: ${response.message()}")
+            try {
+                val errorBody = response.errorBody()?.string()
+                println("   - Error body: $errorBody")
+            } catch (e: Exception) {
+                println("   - No se pudo leer el error body: ${e.message}")
+            }
+            Result.failure(IllegalStateException(errorMsg))
+        }
     } catch (e: Exception) {
+        println("❌ ReservationRepositoryImpl: Excepción capturada")
+        println("   - Tipo: ${e.javaClass.simpleName}")
+        println("   - Mensaje: ${e.message}")
+        e.printStackTrace()
         Result.failure(e)
     }
 

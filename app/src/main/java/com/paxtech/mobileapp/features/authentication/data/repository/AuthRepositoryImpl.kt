@@ -79,7 +79,17 @@ class AuthRepositoryImpl @Inject constructor(
 
             if (resp.isSuccessful) {
                 println("🔍 AuthRepositoryImpl: Client created successfully")
-                Client(firstName, lastName, userId)
+                // Después de crear, obtener el cliente para obtener su ID
+                val allClientsResp = authService.getAllClients()
+                if (allClientsResp.isSuccessful) {
+                    val clientDto = allClientsResp.body()?.firstOrNull { it.userId == userId }
+                    if (clientDto != null) {
+                        println("🔍 AuthRepositoryImpl: Client ID obtenido: ${clientDto.id}")
+                        return@withContext Client(clientDto.id, clientDto.firstName, clientDto.lastName, clientDto.userId)
+                    }
+                }
+                // Si no se puede obtener el ID, lanzar error
+                throw Exception("Could not retrieve created client ID")
             } else {
                 val errorBody = resp.errorBody()?.string()
                 println("🔍 AuthRepositoryImpl: Create client failed: $errorBody")
@@ -102,8 +112,8 @@ class AuthRepositoryImpl @Inject constructor(
                 val clients = resp.body()
                 val clientDto = clients?.firstOrNull { it.userId == userId }
                 if (clientDto != null) {
-                    println("🔍 AuthRepositoryImpl: Client found: ${clientDto.firstName} ${clientDto.lastName}")
-                    Client(clientDto.firstName, clientDto.lastName, clientDto.userId)
+                    println("🔍 AuthRepositoryImpl: Client found: ${clientDto.firstName} ${clientDto.lastName}, ID: ${clientDto.id}")
+                    Client(clientDto.id, clientDto.firstName, clientDto.lastName, clientDto.userId)
                 } else {
                     println("🔍 AuthRepositoryImpl: Client not found for userId: $userId")
                     null

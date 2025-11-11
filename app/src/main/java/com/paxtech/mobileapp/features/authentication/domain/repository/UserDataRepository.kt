@@ -22,4 +22,17 @@ class UserDataRepository @Inject constructor(
     fun getUserId(): Int {
         return authPrefs.getInt("user_id", 0)
     }
+    
+    fun saveClientId(clientId: Int) {
+        authPrefs.edit().apply {
+            putInt("client_id", clientId)
+        }.apply()
+        println("🔍 UserDataRepository: ClientId guardado: $clientId")
+    }
+    
+    fun getClientId(): Int {
+        val clientId = authPrefs.getInt("client_id", 0)
+        println("🔍 UserDataRepository: ClientId obtenido: $clientId")
+        return clientId
+    }
 }

@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
@@ -80,16 +84,17 @@ fun Main(
     )
 
     Scaffold(
+        containerColor = Color.Transparent,
         bottomBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .shadow(
-                        elevation = 12.dp,
+                        elevation = 20.dp,
                         shape = RoundedCornerShape(24.dp),
-                        spotColor = Color.Black.copy(alpha = 0.15f),
-                        ambientColor = Color.Black.copy(alpha = 0.1f)
+                        spotColor = Color.Black.copy(alpha = 0.25f),
+                        ambientColor = Color.Black.copy(alpha = 0.15f)
                     )
                     .background(
                         color = Color.White,
@@ -141,10 +146,20 @@ fun Main(
         }
     ) { innerPadding ->
         // THIS renders the content for each tab
+        val layoutDirection = LocalLayoutDirection.current
         NavHost(
             navController = tabNav,
             startDestination = Route.Home.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    PaddingValues(
+                        start = innerPadding.calculateStartPadding(layoutDirection),
+                        top = innerPadding.calculateTopPadding(),
+                        end = innerPadding.calculateEndPadding(layoutDirection),
+                        bottom = 0.dp
+                    )
+                )
         ) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
             composable(Route.Services.route) { SearchServiceView() }

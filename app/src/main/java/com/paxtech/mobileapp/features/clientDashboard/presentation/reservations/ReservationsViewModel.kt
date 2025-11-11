@@ -42,23 +42,43 @@ class ReservationsViewModel @Inject constructor(
     
     fun loadReservations() {
         viewModelScope.launch {
+            println("🔍🔍 ReservationsViewModel: ===== INICIANDO CARGA DE RESERVACIONES =====")
             _isLoading.value = true
             _error.value = null
 
             //Conseguir id del cliente
-            val clientId = userDataRepository.getUserId().toLong();
+            val clientId = userDataRepository.getClientId().toLong()
+            println("🔍 ReservationsViewModel: ClientId obtenido de SharedPreferences: $clientId")
             
+            println("🔍 ReservationsViewModel: Llamando a reservationRepository.getAllDetails($clientId)")
             reservationRepository.getAllDetails(clientId)
                 .onSuccess { reservations ->
+                    println("🔍 ReservationsViewModel: ✅ ÉXITO - Se recibieron ${reservations.size} reservaciones")
+                    if (reservations.isEmpty()) {
+                        println("⚠️ ReservationsViewModel: ADVERTENCIA - La lista de reservaciones está vacía")
+                    } else {
+                        reservations.forEachIndexed { index, reservation ->
+                            println("🔍 ReservationsViewModel: Reservación $index:")
+                            println("   - ID: ${reservation.id}")
+                            println("   - ClientId: ${reservation.clientId}")
+                            println("   - Service: ${reservation.serviceId.name}")
+                            println("   - Provider: ${reservation.provider.companyName}")
+                            println("   - TimeSlot: ${reservation.timeSlot.startTime} - ${reservation.timeSlot.endTime}")
+                        }
+                    }
                     _reservations.value = reservations
-                    println("🔍 ReservationsViewModel: Loaded ${reservations.size} reservations")
+                    println("🔍 ReservationsViewModel: Estado actualizado con ${reservations.size} reservaciones")
                 }
                 .onFailure { exception ->
                     _error.value = exception.message ?: "Error loading reservations"
-                    println("🔍 ReservationsViewModel: Error loading reservations: ${exception.message}")
+                    println("❌ ReservationsViewModel: ERROR al cargar reservaciones")
+                    println("   - Mensaje: ${exception.message}")
+                    println("   - Tipo: ${exception.javaClass.simpleName}")
+                    exception.printStackTrace()
                 }
             
             _isLoading.value = false
+            println("🔍🔍 ReservationsViewModel: ===== FIN DE CARGA DE RESERVACIONES =====")
         }
     }
     
