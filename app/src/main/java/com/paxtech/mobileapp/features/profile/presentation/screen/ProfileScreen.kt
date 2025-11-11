@@ -56,6 +56,9 @@ fun ProfileScreen(
     uiState: ProfileUiState,
     onNavigateToMyProfile: () -> Unit,
     onNavigateToPaymentMethods: () -> Unit,
+    onNavigateToChangePassword: () -> Unit,
+    onNavigateToFaq: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onConfirmLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -77,6 +80,9 @@ fun ProfileScreen(
                     profile = uiState.profile,
                     onNavigateToMyProfile = onNavigateToMyProfile,
                     onNavigateToPaymentMethods = onNavigateToPaymentMethods,
+                    onNavigateToChangePassword = onNavigateToChangePassword,
+                    onNavigateToFaq = onNavigateToFaq,
+                    onNavigateToAbout = onNavigateToAbout,
                     onLogoutClick = { showLogoutDialog = true },
                     modifier = modifier
                 )
@@ -138,6 +144,9 @@ private fun ProfileContent(
     profile: ProfileUi,
     onNavigateToMyProfile: () -> Unit,
     onNavigateToPaymentMethods: () -> Unit,
+    onNavigateToChangePassword: () -> Unit,
+    onNavigateToFaq: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -156,6 +165,9 @@ private fun ProfileContent(
         ProfileMenu(
             onNavigateToMyProfile = onNavigateToMyProfile,
             onNavigateToPaymentMethods = onNavigateToPaymentMethods,
+            onNavigateToChangePassword = onNavigateToChangePassword,
+            onNavigateToFaq = onNavigateToFaq,
+            onNavigateToAbout = onNavigateToAbout,
             onLogoutClick = onLogoutClick
         )
     }
@@ -225,6 +237,9 @@ private fun ProfileHeader(
 private fun ProfileMenu(
     onNavigateToMyProfile: () -> Unit,
     onNavigateToPaymentMethods: () -> Unit,
+    onNavigateToChangePassword: () -> Unit,
+    onNavigateToFaq: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onLogoutClick: () -> Unit,
 ) {
     val menuItems = listOf(
@@ -248,15 +263,18 @@ private fun ProfileMenu(
         ),
         ProfileMenuItem(
             icon = Icons.Filled.Lock,
-            title = "Cambiar contraseña"
+            title = "Cambiar contraseña",
+            onClick = onNavigateToChangePassword
         ),
         ProfileMenuItem(
             icon = Icons.Filled.HelpOutline,
-            title = "Preguntas frecuentes"
+            title = "Preguntas frecuentes",
+            onClick = onNavigateToFaq
         ),
         ProfileMenuItem(
             icon = Icons.Filled.Info,
-            title = "Sobre nosotros"
+            title = "Sobre nosotros",
+            onClick = onNavigateToAbout
         ),
         ProfileMenuItem(
             icon = Icons.Filled.Logout,
@@ -355,6 +373,9 @@ private fun ProfileScreenPreview() {
                 uiState = ProfileUiState.sample(),
                 onNavigateToMyProfile = {},
                 onNavigateToPaymentMethods = {},
+                onNavigateToChangePassword = {},
+                onNavigateToFaq = {},
+                onNavigateToAbout = {},
                 onConfirmLogout = {}
             )
         }

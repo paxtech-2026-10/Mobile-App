@@ -14,7 +14,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.paxtech.mobileapp.features.profile.presentation.screen.AboutUsScreen
+import com.paxtech.mobileapp.features.profile.presentation.screen.ChangePasswordScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.EditProfileScreen
+import com.paxtech.mobileapp.features.profile.presentation.screen.FaqScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.MyProfileScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.PaymentMethodFormScreen
 import com.paxtech.mobileapp.features.profile.presentation.screen.PaymentMethodsScreen
@@ -30,6 +33,9 @@ private sealed class ProfileDestination(val route: String) {
         const val METHOD_ID = "methodId"
         fun createRoute(methodId: String) = "profile_payment_methods/edit/$methodId"
     }
+    object ChangePassword : ProfileDestination("profile_change_password")
+    object Faq : ProfileDestination("profile_faq")
+    object About : ProfileDestination("profile_about")
 }
 
 private data class ProfileNavActions(
@@ -38,6 +44,9 @@ private data class ProfileNavActions(
     val openPaymentMethods: () -> Unit,
     val openAddPaymentMethod: () -> Unit,
     val openEditPaymentMethod: (String) -> Unit,
+    val openChangePassword: () -> Unit,
+    val openFaq: () -> Unit,
+    val openAbout: () -> Unit,
     val navigateBack: () -> Unit
 )
 
@@ -83,6 +92,15 @@ internal fun ProfileNavHost(
                 viewModel.prepareEditPaymentMethod(methodId)
                 navController.navigateSingleTopTo(ProfileDestination.EditPaymentMethod.createRoute(methodId))
             },
+            openChangePassword = {
+                navController.navigateSingleTopTo(ProfileDestination.ChangePassword.route)
+            },
+            openFaq = {
+                navController.navigateSingleTopTo(ProfileDestination.Faq.route)
+            },
+            openAbout = {
+                navController.navigateSingleTopTo(ProfileDestination.About.route)
+            },
             navigateBack = {
                 if (!navController.popBackStack()) {
                     navController.navigateSingleTopTo(ProfileDestination.Home.route)
@@ -109,6 +127,9 @@ internal fun ProfileNavHost(
                 uiState = uiState,
                 onNavigateToMyProfile = actions.openMyProfile,
                 onNavigateToPaymentMethods = actions.openPaymentMethods,
+                onNavigateToChangePassword = actions.openChangePassword,
+                onNavigateToFaq = actions.openFaq,
+                onNavigateToAbout = actions.openAbout,
                 onConfirmLogout = viewModel::logout
             )
         }
@@ -126,6 +147,9 @@ internal fun ProfileNavHost(
                     uiState = uiState,
                     onNavigateToMyProfile = { },
                     onNavigateToPaymentMethods = { },
+                    onNavigateToChangePassword = { },
+                    onNavigateToFaq = { },
+                    onNavigateToAbout = { },
                     onConfirmLogout = { }
                 )
             }
@@ -208,6 +232,22 @@ internal fun ProfileNavHost(
                     actions.navigateBack()
                 }
             }
+        }
+        composable(ProfileDestination.ChangePassword.route) {
+            val state by viewModel.changePasswordState.collectAsState()
+            ChangePasswordScreen(
+                state = state,
+                onBack = actions.navigateBack,
+                onFieldChange = viewModel::onChangePasswordFieldChange,
+                onSubmit = viewModel::changePassword,
+                onMessageConsumed = viewModel::onChangePasswordMessageConsumed
+            )
+        }
+        composable(ProfileDestination.Faq.route) {
+            FaqScreen(onBack = actions.navigateBack)
+        }
+        composable(ProfileDestination.About.route) {
+            AboutUsScreen(onBack = actions.navigateBack)
         }
     }
 }

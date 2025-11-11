@@ -2,6 +2,9 @@ package com.paxtech.mobileapp.features.profile.presentation
 
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
+import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordField
+import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordFormState
+import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordUiState
 import com.paxtech.mobileapp.features.profile.presentation.model.GenderUi
 import com.paxtech.mobileapp.features.profile.presentation.model.PaymentCardBrand
 import com.paxtech.mobileapp.features.profile.presentation.model.PaymentMethodFormField
@@ -34,9 +37,13 @@ class ProfileViewModel @Inject constructor(
     private val _paymentMethodsState = MutableStateFlow(PaymentMethodsUiState())
     val paymentMethodsState: StateFlow<PaymentMethodsUiState> = _paymentMethodsState.asStateFlow()
 
+    private val _changePasswordState = MutableStateFlow(ChangePasswordUiState())
+    val changePasswordState: StateFlow<ChangePasswordUiState> = _changePasswordState.asStateFlow()
+
     init {
         loadProfile()
         loadPaymentMethods()
+        loadPassword()
     }
 
     fun refreshProfile() {
@@ -189,6 +196,48 @@ class ProfileViewModel @Inject constructor(
         _paymentMethodsState.update { it.copy(isDeleted = false) }
     }
 
+    fun onChangePasswordFieldChange(field: ChangePasswordField, value: String) {
+        _changePasswordState.update { state ->
+            state.copy(
+                form = state.form.update(field, value),
+                errorMessage = null,
+                successMessage = null
+            )
+        }
+    }
+
+    fun changePassword() {
+        val storedPassword = authPrefs.getString(USER_PASSWORD_KEY, null)
+        val validatedForm = _changePasswordState.value.form.validate(storedPassword)
+        if (!validatedForm.isValid) {
+            _changePasswordState.update {
+                it.copy(
+                    form = validatedForm,
+                    errorMessage = "Revisa los datos ingresados"
+                )
+            }
+            return
+        }
+
+        _changePasswordState.update { it.copy(isSaving = true, errorMessage = null) }
+
+        authPrefs.edit()
+            .putString(USER_PASSWORD_KEY, validatedForm.newPassword)
+            .apply()
+
+        _changePasswordState.update {
+            ChangePasswordUiState(
+                form = ChangePasswordFormState.empty(),
+                isSaving = false,
+                successMessage = "Tu contraseña se actualizó correctamente"
+            )
+        }
+    }
+
+    fun onChangePasswordMessageConsumed() {
+        _changePasswordState.update { it.copy(successMessage = null, errorMessage = null) }
+    }
+
     fun logout() {
         authPrefs.edit().clear().apply()
         val profile = readProfileFromPreferences()
@@ -202,6 +251,7 @@ class ProfileViewModel @Inject constructor(
             isLoading = false,
             methods = emptyList()
         )
+        _changePasswordState.value = ChangePasswordUiState()
     }
 
     fun onLogoutHandled() {
@@ -233,6 +283,19 @@ class ProfileViewModel @Inject constructor(
                 isSaved = false,
                 isDeleted = false
             )
+        }
+    }
+
+    private fun loadPassword() {
+        val existingPassword = authPrefs.getString(USER_PASSWORD_KEY, null)
+        _changePasswordState.update {
+            it.copy(
+                form = ChangePasswordFormState.empty(),
+                errorMessage = null,
+                successMessage = null
+            ).let { state ->
+                if (!existingPassword.isNullOrEmpty()) state else state
+            }
         }
     }
 
@@ -327,6 +390,7 @@ class ProfileViewModel @Inject constructor(
 
     companion object {
         private const val PAYMENT_METHODS_KEY = "user_payment_methods"
+        private const val USER_PASSWORD_KEY = "user_password"
     }
 }
 
