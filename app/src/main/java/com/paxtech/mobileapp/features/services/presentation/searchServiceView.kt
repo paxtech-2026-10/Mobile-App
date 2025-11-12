@@ -43,7 +43,8 @@ import com.paxtech.mobileapp.shared.model.ServiceResult
 @Preview(showBackground = true)
 @Composable
 fun SearchServiceView(
-    viewModel: SearchServiceViewModel = hiltViewModel()
+    viewModel: SearchServiceViewModel = hiltViewModel(),
+    onReserveService: (Int) -> Unit = {} // providerId del servicio
 ) {
 
     val categories = listOf<String>(
@@ -141,7 +142,12 @@ fun SearchServiceView(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     items(services.value) { service ->
-                        ServiceCard(service)
+                        ServiceCard(
+                            service = service,
+                            onReserveClick = {
+                                onReserveService(service.providerId)
+                            }
+                        )
                     }
                 }
             }
@@ -180,7 +186,10 @@ fun CategoryCard(
 }
 
 @Composable
-fun ServiceCard(service: Service) {
+fun ServiceCard(
+    service: Service,
+    onReserveClick: () -> Unit = {}
+) {
     Card (
         modifier = Modifier
             .border(width = 2.dp, color = MaterialTheme.colorScheme.onPrimaryFixedVariant, shape = CardDefaults.elevatedShape)
@@ -229,7 +238,7 @@ fun ServiceCard(service: Service) {
             contentAlignment = Alignment.Center
         ) {
             ElevatedButton(
-                onClick = {}
+                onClick = onReserveClick
             ) {
                 Text("Reservar ahora")
             }
