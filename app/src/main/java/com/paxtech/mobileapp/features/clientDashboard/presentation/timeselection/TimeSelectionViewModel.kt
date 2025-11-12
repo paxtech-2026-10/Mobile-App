@@ -3,6 +3,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.timeselectio
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReservationRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlot
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlotRepository

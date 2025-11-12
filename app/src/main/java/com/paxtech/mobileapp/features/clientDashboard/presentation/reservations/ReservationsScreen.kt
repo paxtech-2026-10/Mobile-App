@@ -39,8 +39,24 @@ fun ReservationsScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     
+    // Log cuando la pantalla se compone o cuando cambian las reservaciones
+    LaunchedEffect(reservations.size) {
+        println("🔍 ReservationsScreen: Pantalla compuesta/actualizada")
+        println("   - Número de reservaciones en el estado: ${reservations.size}")
+        println("   - isLoading: $isLoading")
+        println("   - error: $error")
+        reservations.forEachIndexed { index, reservation ->
+            println("   - Reservación $index: ID=${reservation.id}, ClientId=${reservation.clientId}, Service=${reservation.serviceId.name}")
+        }
+    }
+    
     // val filteredReservations = viewModel.getFilteredReservations() // Comentado por ahora
     val filteredReservations = reservations // Mostrar todas las reservaciones
+    
+    LaunchedEffect(Unit) {
+        println("🔍 ReservationsScreen: Pantalla inicializada, cargando reservaciones...")
+        viewModel.loadReservations()
+    }
     
     Scaffold(
         topBar = {

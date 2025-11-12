@@ -65,6 +65,10 @@ class RegisterViewModel @Inject constructor(
             _client.value = client
 
             println("🔍 RegisterViewModel: Client created successfully")
+            
+            // Guardar el clientId
+            userDataRepository.saveClientId(client.id)
+            println("🔍 RegisterViewModel: ClientId guardado: ${client.id}")
 
             signedInUser // Retornar el usuario con token
 

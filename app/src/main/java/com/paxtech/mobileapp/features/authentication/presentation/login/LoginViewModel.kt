@@ -46,7 +46,9 @@ class LoginViewModel @Inject constructor(
                         val client = authRepository.getClientByUserId(user.id)
                         if (client != null) {
                             userDataRepository.saveUserName(client.firstName, client.lastName)
+                            userDataRepository.saveClientId(client.id)
                             println("🔍 LoginViewModel: User name saved: ${client.firstName} ${client.lastName}")
+                            println("🔍 LoginViewModel: ClientId guardado: ${client.id}")
                         } else {
                             println("🔍 LoginViewModel: Client not found for userId: ${user.id}")
                         }
