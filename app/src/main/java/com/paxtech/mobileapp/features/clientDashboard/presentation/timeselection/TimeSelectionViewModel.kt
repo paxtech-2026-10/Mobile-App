@@ -26,9 +26,11 @@ class TimeSelectionViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _bookedTimeSlots = MutableStateFlow<Set<String>>(emptySet())
-    val bookedTimeSlots: StateFlow<Set<String>> = _bookedTimeSlots
+    // Cambiar a Map<fecha, Set<hora>> para poder filtrar por fecha
+    private val _bookedTimeSlots = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
+    val bookedTimeSlots: StateFlow<Map<String, Set<String>>> = _bookedTimeSlots
 
+    // Cambiar a Map<"fecha|hora", id> para evitar conflictos
     private val _timeSlotMap = MutableStateFlow<Map<String, Long>>(emptyMap())
     val timeSlotMap: StateFlow<Map<String, Long>> = _timeSlotMap
 
@@ -42,6 +44,7 @@ class TimeSelectionViewModel @Inject constructor(
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US) // Formato ISO sin milisegundos
     )
     private val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US) // Para extraer solo la fecha
     
     private fun parseTime(timeString: String): java.util.Date? {
         for (format in inputFormats) {
@@ -66,12 +69,15 @@ class TimeSelectionViewModel @Inject constructor(
             val slots = timeSlotRepository.getAll()
             slots.onSuccess { list ->
                 val map = list.mapNotNull { slot ->
-                    parseTime(slot.startTime)?.let { 
-                        outputFormat.format(it) to slot.id
+                    parseTime(slot.startTime)?.let { date ->
+                        val dateKey = dateFormat.format(date)
+                        val timeKey = outputFormat.format(date)
+                        val fullKey = "$dateKey|$timeKey" // Formato: "2025-11-10|10:00 AM"
+                        fullKey to slot.id
                     }
                 }.toMap()
                 _timeSlotMap.value = map
-                println("🔍 TimeSelectionViewModel: Mapped ${map.size} time slots: $map")
+                println("🔍 TimeSelectionViewModel: Mapped ${map.size} time slots")
             }.onFailure { _errorMessage.value = it.message }
 
             // Cargar reservas del backend para marcar horarios ocupados
@@ -88,19 +94,21 @@ class TimeSelectionViewModel @Inject constructor(
                 
                 println("🔍 TimeSelectionViewModel: Filtered ${filteredReservations.size} reservations for workerId=$workerId, providerId=$providerId")
                 
-                // Convertir horarios a formato "hh:mm a"
-                val bookedTimes = filteredReservations.mapNotNull { reservation ->
+                // Agrupar reservas por fecha y hora
+                val bookedByDate = mutableMapOf<String, MutableSet<String>>()
+                filteredReservations.forEach { reservation ->
                     val timeString = reservation.timeSlot.startTime
                     val parsed = parseTime(timeString)
-                    val formatted = parsed?.let { outputFormat.format(it) }
-                    if (formatted != null) {
-                        println("🔍 TimeSelectionViewModel: Booked time: $timeString -> $formatted")
+                    if (parsed != null) {
+                        val dateKey = dateFormat.format(parsed)
+                        val timeKey = outputFormat.format(parsed)
+                        bookedByDate.getOrPut(dateKey) { mutableSetOf() }.add(timeKey)
+                        println("🔍 TimeSelectionViewModel: Booked - Date: $dateKey, Time: $timeKey (from: $timeString)")
                     }
-                    formatted
-                }.toSet()
+                }
                 
-                println("🔍 TimeSelectionViewModel: Final booked times: $bookedTimes")
-                _bookedTimeSlots.value = bookedTimes
+                println("🔍 TimeSelectionViewModel: Final booked times by date: $bookedByDate")
+                _bookedTimeSlots.value = bookedByDate
             }.onFailure { 
                 println("🔍 TimeSelectionViewModel: Error loading reservations: ${it.message}")
                 _errorMessage.value = it.message
@@ -110,8 +118,18 @@ class TimeSelectionViewModel @Inject constructor(
         }
     }
 
-    fun getTimeSlotId(timeString: String): Long? {
-        return _timeSlotMap.value[timeString]
+    fun getTimeSlotId(selectedDate: java.util.Calendar, timeString: String): Long? {
+        val dateKey = dateFormat.format(selectedDate.time)
+        val fullKey = "$dateKey|$timeString"
+        return _timeSlotMap.value[fullKey]
+    }
+    
+    /**
+     * Obtiene los time slots ocupados para una fecha específica
+     */
+    fun getBookedTimesForDate(selectedDate: java.util.Calendar): Set<String> {
+        val dateKey = dateFormat.format(selectedDate.time)
+        return _bookedTimeSlots.value[dateKey] ?: emptySet()
     }
     
     /**
@@ -178,8 +196,10 @@ class TimeSelectionViewModel @Inject constructor(
                 result.onSuccess { timeSlot ->
                     println("🔍 TimeSelectionViewModel: Time slot creado exitosamente - ID: ${timeSlot.id}")
                     // Actualizar el mapa con el nuevo time slot
+                    val dateKey = dateFormat.format(calendar.time)
                     val timeKey = outputFormat.format(calendar.time)
-                    _timeSlotMap.value = _timeSlotMap.value + (timeKey to timeSlot.id)
+                    val fullKey = "$dateKey|$timeKey"
+                    _timeSlotMap.value = _timeSlotMap.value + (fullKey to timeSlot.id)
                     onResult(timeSlot.id, null)
                 }.onFailure { exception ->
                     println("🔍 TimeSelectionViewModel: Error al crear time slot: ${exception.message}")

@@ -84,7 +84,11 @@ fun TimeSelectionScreen(
     LaunchedEffect(Unit) { viewModel.load(workerId, providerId) }
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    val bookedTimeSlots by viewModel.bookedTimeSlots.collectAsState()
+    
+    // Obtener time slots ocupados solo para la fecha seleccionada
+    val bookedTimeSlotsForDate = remember(selectedDate.timeInMillis) {
+        viewModel.getBookedTimesForDate(selectedDate)
+    }
 
     Scaffold(
         topBar = {
@@ -232,7 +236,7 @@ fun TimeSelectionScreen(
                                 row.forEach { time ->
                                     val status = when {
                                         time == selectedTime -> TimeStatus.SELECTED
-                                        bookedTimeSlots.contains(time) -> TimeStatus.BOOKED
+                                        bookedTimeSlotsForDate.contains(time) -> TimeStatus.BOOKED
                                         else -> TimeStatus.AVAILABLE
                                     }
                                     TimeSlotButton(
@@ -277,7 +281,7 @@ fun TimeSelectionScreen(
                             )
                             
                             // Intentar crear la reserva en background (no bloquea navegación)
-                            val selectedId = viewModel.getTimeSlotId(selectedTime)
+                            val selectedId = viewModel.getTimeSlotId(selectedDate, selectedTime)
                             if (selectedId != null) {
                                 // Time slot existe, crear la reservación directamente
                                 println("🔍 TimeSelectionScreen: Creando reservación con timeSlotId existente - clientId: $clientId, providerId: $providerId, serviceId: $serviceId, timeSlotId: $selectedId, workerId: $workerId")
@@ -291,7 +295,7 @@ fun TimeSelectionScreen(
                                 }
                             } else {
                                 // Time slot no existe, crearlo primero
-                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime, creando nuevo time slot...")
+                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime en fecha seleccionada, creando nuevo time slot...")
                                 viewModel.createTimeSlotIfNeeded(selectedDate, selectedTime, serviceDuration) { timeSlotId, error ->
                                     if (timeSlotId != null) {
                                         println("🔍 TimeSelectionScreen: Time slot creado con ID: $timeSlotId, creando reservación...")
