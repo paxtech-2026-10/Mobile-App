@@ -30,19 +30,21 @@ class ProfessionalSelectionViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    init {
-        loadWorkers()
-    }
-
-    fun loadWorkers() {
+    fun loadWorkers(providerId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
+            println("🔍 ProfessionalSelectionViewModel: Cargando workers para providerId: $providerId")
             val result = workerRepository.getAllWorkers()
             result.onSuccess { workers ->
-                _professionals.value = workers.map { it.toUi() }
+                println("🔍 ProfessionalSelectionViewModel: Total de workers obtenidos: ${workers.size}")
+                // Filtrar workers por providerId
+                val filteredWorkers = workers.filter { it.providerId == providerId }
+                println("🔍 ProfessionalSelectionViewModel: Workers filtrados para providerId $providerId: ${filteredWorkers.size}")
+                _professionals.value = filteredWorkers.map { it.toUi() }
             }.onFailure { e ->
                 _errorMessage.value = e.message ?: "Error desconocido"
+                println("🔍 ProfessionalSelectionViewModel: Error al cargar workers: ${e.message}")
             }
             _isLoading.value = false
         }

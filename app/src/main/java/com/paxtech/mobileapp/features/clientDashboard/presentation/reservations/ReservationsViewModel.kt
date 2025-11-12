@@ -51,7 +51,7 @@ class ReservationsViewModel @Inject constructor(
             println("🔍 ReservationsViewModel: ClientId obtenido de SharedPreferences: $clientId")
             
             println("🔍 ReservationsViewModel: Llamando a reservationRepository.getAllDetails($clientId)")
-            reservationRepository.getAllDetails(clientId)
+            reservationRepository.getAllDetailsByClientId(clientId)
                 .onSuccess { reservations ->
                     println("🔍 ReservationsViewModel: ✅ ÉXITO - Se recibieron ${reservations.size} reservaciones")
                     if (reservations.isEmpty()) {
@@ -145,4 +145,5 @@ class ReservationsViewModel @Inject constructor(
         return sdf.format(date)
     }
 }
+
 

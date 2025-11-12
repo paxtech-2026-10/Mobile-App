@@ -29,14 +29,17 @@ fun ConfirmationScreen(
     onBack: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    var couponCode by remember { mutableStateOf("") }
-    var appliedDiscount by remember { mutableStateOf(0.0) }
+    // TODO: Sistema de descuentos/cupones no implementado aún
+    // var couponCode by remember { mutableStateOf("") }
+    // var appliedDiscount by remember { mutableStateOf(0.0) }
 
     val basePrice = extractPrice(reservationDetails.totalPrice)
-    val cgst = 5.0
-    val sgst = 5.0
-    val subtotal = basePrice + cgst + sgst
-    val finalTotal = subtotal - appliedDiscount
+    // TODO: Los impuestos deberían venir del backend o configuración del salón
+    // val cgst = 5.0  // Comentado: Impuesto hardcodeado
+    // val sgst = 5.0  // Comentado: Impuesto hardcodeado
+    // val subtotal = basePrice + cgst + sgst
+    val subtotal = basePrice  // Por ahora solo el precio base sin impuestos
+    val finalTotal = subtotal  // Sin descuentos por ahora
 
     Scaffold(
         topBar = {
@@ -139,11 +142,12 @@ fun ConfirmationScreen(
 
                                 Spacer(modifier = Modifier.height(3.dp))
 
-                                Text(
-                                    text = "↔ 5 km",
-                                    fontSize = 11.sp,
-                                    color = Color(0xFF7A7A7A)
-                                )
+                                // TODO: Calcular distancia real usando la ubicación del usuario y del salón
+                                // Text(
+                                //     text = "↔ 5 km",  // Comentado: Distancia hardcodeada
+                                //     fontSize = 11.sp,
+                                //     color = Color(0xFF7A7A7A)
+                                // )
                             }
                         }
                     }
@@ -221,91 +225,96 @@ fun ConfirmationScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("CGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                            Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("SGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                            Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Text(
-                            text = "Apply Coupon",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.W600,
-                            color = Color(0xFF2D3142)
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = couponCode,
-                                onValueChange = { couponCode = it },
-                                modifier = Modifier.weight(1f),
-                                placeholder = {
-                                    Text(
-                                        "Enter coupon",
-                                        fontSize = 13.sp,
-                                        color = Color(0xFFAAAAAA)
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Outlined.LocalOffer,
-                                        contentDescription = null,
-                                        tint = PrimaryPurple,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color(0xFFE8E8E8),
-                                    focusedBorderColor = PrimaryPurple,
-                                    unfocusedContainerColor = Color(0xFFFAFAFA),
-                                    focusedContainerColor = Color(0xFFFAFAFA)
-                                ),
-                                singleLine = true
-                            )
-
-                            Button(
-                                onClick = {
-                                    if (couponCode.isNotEmpty()) {
-                                        appliedDiscount = 15.0
-                                    }
-                                },
-                                modifier = Modifier.height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = PrimaryPurple
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 24.dp)
-                            ) {
-                                Text(
-                                    "Apply",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W600
-                                )
-                            }
-                        }
+                        // TODO: Mostrar impuestos si vienen del backend o configuración del salón
+                        // Row(
+                        //     modifier = Modifier.fillMaxWidth(),
+                        //     horizontalArrangement = Arrangement.SpaceBetween
+                        // ) {
+                        //     Text("CGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                        //     Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))  // Comentado: Impuesto hardcodeado
+                        // }
+                        //
+                        // Spacer(modifier = Modifier.height(8.dp))
+                        //
+                        // Row(
+                        //     modifier = Modifier.fillMaxWidth(),
+                        //     horizontalArrangement = Arrangement.SpaceBetween
+                        // ) {
+                        //     Text("SGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                        //     Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))  // Comentado: Impuesto hardcodeado
+                        // }
 
                         Spacer(modifier = Modifier.height(20.dp))
+
+                        // TODO: Sistema de descuentos/cupones no implementado aún
+                        // Text(
+                        //     text = "Apply Coupon",
+                        //     fontSize = 14.sp,
+                        //     fontWeight = FontWeight.W600,
+                        //     color = Color(0xFF2D3142)
+                        // )
+                        //
+                        // Spacer(modifier = Modifier.height(12.dp))
+                        //
+                        // Row(
+                        //     modifier = Modifier.fillMaxWidth(),
+                        //     horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        //     verticalAlignment = Alignment.CenterVertically
+                        // ) {
+                        //     OutlinedTextField(
+                        //         value = couponCode,
+                        //         onValueChange = { couponCode = it },
+                        //         modifier = Modifier.weight(1f),
+                        //         placeholder = {
+                        //             Text(
+                        //                 "Enter coupon",
+                        //                 fontSize = 13.sp,
+                        //                 color = Color(0xFFAAAAAA)
+                        //             )
+                        //         },
+                        //         leadingIcon = {
+                        //             Icon(
+                        //                 imageVector = Icons.Outlined.LocalOffer,
+                        //                 contentDescription = null,
+                        //                 tint = PrimaryPurple,
+                        //                 modifier = Modifier.size(20.dp)
+                        //             )
+                        //         },
+                        //         shape = RoundedCornerShape(12.dp),
+                        //         colors = OutlinedTextFieldDefaults.colors(
+                        //             unfocusedBorderColor = Color(0xFFE8E8E8),
+                        //             focusedBorderColor = PrimaryPurple,
+                        //             unfocusedContainerColor = Color(0xFFFAFAFA),
+                        //             focusedContainerColor = Color(0xFFFAFAFA)
+                        //         ),
+                        //         singleLine = true
+                        //     )
+                        //
+                        //     Button(
+                        //         onClick = {
+                        //             // TODO: Validar cupón con el backend y obtener el descuento real
+                        //             if (couponCode.isNotEmpty()) {
+                        //                 appliedDiscount = basePrice * 0.10
+                        //             } else {
+                        //                 appliedDiscount = 0.0
+                        //             }
+                        //         },
+                        //         modifier = Modifier.height(56.dp),
+                        //         colors = ButtonDefaults.buttonColors(
+                        //             containerColor = PrimaryPurple
+                        //         ),
+                        //         shape = RoundedCornerShape(12.dp),
+                        //         contentPadding = PaddingValues(horizontal = 24.dp)
+                        //     ) {
+                        //         Text(
+                        //             "Apply",
+                        //             fontSize = 14.sp,
+                        //             fontWeight = FontWeight.W600
+                        //         )
+                        //     }
+                        // }
+                        //
+                        // Spacer(modifier = Modifier.height(20.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -335,17 +344,20 @@ fun ConfirmationScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Coupon Discount", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                            Text(
-                                "-$${String.format("%.2f", appliedDiscount)}",
-                                fontSize = 13.sp,
-                                color = if (appliedDiscount > 0) Color(0xFFEF4444) else Color(0xFF2D3142)
-                            )
-                        }
+                        // TODO: Sistema de descuentos/cupones no implementado aún
+                        // Row(
+                        //     modifier = Modifier.fillMaxWidth(),
+                        //     horizontalArrangement = Arrangement.SpaceBetween
+                        // ) {
+                        //     Text("Coupon Discount", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                        //     Text(
+                        //         "-$${String.format("%.2f", appliedDiscount)}",
+                        //         fontSize = 13.sp,
+                        //         color = if (appliedDiscount > 0) Color(0xFFEF4444) else Color(0xFF2D3142)
+                        //     )
+                        // }
+                        //
+                        // Spacer(modifier = Modifier.height(8.dp))
 
                         Spacer(modifier = Modifier.height(16.dp))
                         HorizontalDivider(thickness = 1.dp, color = Color(0xFFE8E8E8))
@@ -478,6 +490,6 @@ data class ReservationDetails(
     val duration: Int,
     val professional: String,
     val totalPrice: String,
-    val salonImageUrl: String = "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1000"
+    val salonImageUrl: String = ""  // Eliminada URL hardcodeada, siempre se pasa desde AppNav
 )
 

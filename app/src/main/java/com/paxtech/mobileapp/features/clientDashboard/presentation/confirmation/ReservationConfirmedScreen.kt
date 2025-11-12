@@ -29,7 +29,6 @@ import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 @Composable
 fun ReservationConfirmedScreen(
     reservationData: ReservationData,
-    onCancel: () -> Unit,
     onBackToHome: () -> Unit
 ) {
     Scaffold(
@@ -178,24 +177,25 @@ fun ReservationConfirmedScreen(
 
                     Spacer(Modifier.height(8.dp))
 
+                    // TODO: Mostrar impuestos si vienen del backend o configuración del salón
                     // CGST
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("CGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                        Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))
-                    }
-                    Spacer(Modifier.height(8.dp))
-
-                    // SGST
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("SGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                        Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))
-                    }
+                    // Row(
+                    //     modifier = Modifier.fillMaxWidth(),
+                    //     horizontalArrangement = Arrangement.SpaceBetween
+                    // ) {
+                    //     Text("CGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                    //     Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))  // Comentado: Impuesto hardcodeado
+                    // }
+                    // Spacer(Modifier.height(8.dp))
+                    //
+                    // // SGST
+                    // Row(
+                    //     modifier = Modifier.fillMaxWidth(),
+                    //     horizontalArrangement = Arrangement.SpaceBetween
+                    // ) {
+                    //     Text("SGST", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                    //     Text("$5", fontSize = 13.sp, color = Color(0xFF2D3142))  // Comentado: Impuesto hardcodeado
+                    // }
 
                     Spacer(Modifier.height(16.dp))
                     HorizontalDivider(thickness = 1.dp, color = Color(0xFFE8E8E8))
@@ -213,7 +213,9 @@ fun ReservationConfirmedScreen(
 
                     // Calcular subtotal
                     val basePrice = extractPriceValue(reservationData.service.price)
-                    val subtotal = basePrice + 10.0 // CGST + SGST
+                    // TODO: Los impuestos deberían venir del backend o configuración del salón
+                    // val subtotal = basePrice + 10.0 // CGST + SGST  // Comentado: Impuestos hardcodeados
+                    val subtotal = basePrice  // Por ahora solo el precio base sin impuestos
 
                     // Subtotal
                     Row(
@@ -225,14 +227,15 @@ fun ReservationConfirmedScreen(
                     }
                     Spacer(Modifier.height(8.dp))
 
+                    // TODO: Sistema de descuentos/cupones no implementado aún
                     // Coupon Discount
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Coupon Discount", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                        Text("-$0.00", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                    }
+                    // Row(
+                    //     modifier = Modifier.fillMaxWidth(),
+                    //     horizontalArrangement = Arrangement.SpaceBetween
+                    // ) {
+                    //     Text("Coupon Discount", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                    //     Text("-$0.00", fontSize = 13.sp, color = Color(0xFF7A7A7A))  // Comentado: Descuento hardcodeado
+                    // }
 
                     Spacer(Modifier.height(12.dp))
                     HorizontalDivider(thickness = 1.dp, color = Color(0xFFE8E8E8))
@@ -259,46 +262,22 @@ fun ReservationConfirmedScreen(
 
                     Spacer(Modifier.height(24.dp))
 
-                    // Botones
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    // Botón Back to Home
+                    Button(
+                        onClick = onBackToHome,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(25.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryPurple
+                        )
                     ) {
-                        // Botón Cancelar -> vuelve a la pantalla anterior
-                        OutlinedButton(
-                            onClick = onCancel,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(25.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = PrimaryPurple
-                            )
-                        ) {
-                            Text(
-                                "Cancelar",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.W600
-                            )
-                        }
-
-                        // Botón Back to Home
-                        Button(
-                            onClick = onBackToHome,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(25.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryPurple
-                            )
-                        ) {
-                            Text(
-                                "Back to Home",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.W600
-                            )
-                        }
+                        Text(
+                            "Back to Home",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W600
+                        )
                     }
                 }
             }

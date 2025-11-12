@@ -6,7 +6,8 @@ import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.Reser
 import javax.inject.Inject
 
 interface ReservationRepository {
-    suspend fun getAllDetails(clientId: Long): Result<List<ReservationDetailsDto>>
+    suspend fun getAllDetails(): Result<List<ReservationDetailsDto>>
+    suspend fun getAllDetailsByClientId(clientId: Long): Result<List<ReservationDetailsDto>>
     suspend fun createReservation(body: CreateReservationRequest): Result<Unit>
     suspend fun cancelReservation(reservationId: Long): Result<Unit>
 }
@@ -14,7 +15,26 @@ interface ReservationRepository {
 class ReservationRepositoryImpl @Inject constructor(
     private val reservationService: ReservationService
 ) : ReservationRepository {
-    override suspend fun getAllDetails(clientId: Long): Result<List<ReservationDetailsDto>> = try {
+    
+    override suspend fun getAllDetails(): Result<List<ReservationDetailsDto>> = try {
+        println("🔍 ReservationRepositoryImpl: getAllDetails() - Obteniendo todas las reservaciones")
+        val response = reservationService.getAllReservationsDetails()
+        
+        if (response.isSuccessful) {
+            val allReservations = response.body() ?: emptyList()
+            println("🔍 ReservationRepositoryImpl: getAllDetails() - Total de reservaciones: ${allReservations.size}")
+            Result.success(allReservations)
+        } else {
+            val errorMsg = "HTTP ${response.code()}"
+            println("❌ ReservationRepositoryImpl: getAllDetails() - Error HTTP ${response.code()}")
+            Result.failure(IllegalStateException(errorMsg))
+        }
+    } catch (e: Exception) {
+        println("❌ ReservationRepositoryImpl: getAllDetails() - Excepción: ${e.message}")
+        Result.failure(e)
+    }
+    
+    override suspend fun getAllDetailsByClientId(clientId: Long): Result<List<ReservationDetailsDto>> = try {
         println("🔍🔍 ReservationRepositoryImpl: ===== INICIANDO getAllDetails =====")
         println("🔍 ReservationRepositoryImpl: ClientId recibido: $clientId")
         println("🔍 ReservationRepositoryImpl: Llamando a reservationService.getAllReservationsDetails()")

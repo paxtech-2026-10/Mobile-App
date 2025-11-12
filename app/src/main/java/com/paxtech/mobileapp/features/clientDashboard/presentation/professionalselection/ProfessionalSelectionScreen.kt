@@ -28,12 +28,19 @@ import com.paxtech.mobileapp.ui.theme.*
 @Composable
 fun ProfessionalSelectionScreen(
     service: ServiceUi,
+    providerId: Long,
     onBack: () -> Unit,
     onContinue: (selectedProfessional: String, workerId: Long) -> Unit,
     viewModel: ProfessionalSelectionViewModel = hiltViewModel()
 ) {
     var selectedProfessional by remember { mutableStateOf("") }
     var selectedWorkerId by remember { mutableStateOf(0L) }
+
+    // Cargar workers cuando cambia el providerId
+    LaunchedEffect(providerId) {
+        println("🔍 ProfessionalSelectionScreen: Cargando workers para providerId: $providerId")
+        viewModel.loadWorkers(providerId)
+    }
 
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -81,7 +88,10 @@ fun ProfessionalSelectionScreen(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Button(
-                    onClick = { onContinue(selectedProfessional, selectedWorkerId) },
+                    onClick = { 
+                        println("🔍 ProfessionalSelectionScreen: Worker seleccionado - Nombre: $selectedProfessional, ID: $selectedWorkerId")
+                        onContinue(selectedProfessional, selectedWorkerId) 
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

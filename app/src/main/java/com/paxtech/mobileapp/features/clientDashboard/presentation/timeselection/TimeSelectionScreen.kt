@@ -40,6 +40,7 @@ fun TimeSelectionScreen(
     serviceName: String,
     servicePrice: String,
     serviceDuration: Int,
+    serviceId: Long,
     selectedProfessional: String,
     clientId: Long,
     providerId: Long,
@@ -50,6 +51,10 @@ fun TimeSelectionScreen(
     onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String) -> Unit,
     viewModel: TimeSelectionViewModel = hiltViewModel()
 ) {
+    // Log para verificar que los datos se recibieron correctamente
+    LaunchedEffect(workerId, serviceId) {
+        println("🔍 TimeSelectionScreen: Datos recibidos - Worker: $selectedProfessional (ID: $workerId), ServiceId: $serviceId, ClientId: $clientId, ProviderId: $providerId")
+    }
     val localeEn = Locale.ENGLISH
     val localeEs = Locale("es", "ES")
 
@@ -274,7 +279,9 @@ fun TimeSelectionScreen(
                             // Intentar crear la reserva en background (no bloquea navegación)
                             val selectedId = viewModel.getTimeSlotId(selectedTime)
                             if (selectedId != null) {
-                                viewModel.createReservation(clientId, providerId, workerId, selectedId) { ok, error ->
+                                // Time slot existe, crear la reservación directamente
+                                println("🔍 TimeSelectionScreen: Creando reservación con timeSlotId existente - clientId: $clientId, providerId: $providerId, serviceId: $serviceId, timeSlotId: $selectedId, workerId: $workerId")
+                                viewModel.createReservation(clientId, providerId, serviceId, selectedId, workerId) { ok, error ->
                                     if (ok) {
                                         println("🔍 TimeSelectionScreen: Reserva creada exitosamente")
                                     } else {
@@ -283,7 +290,24 @@ fun TimeSelectionScreen(
                                     }
                                 }
                             } else {
-                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime")
+                                // Time slot no existe, crearlo primero
+                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime, creando nuevo time slot...")
+                                viewModel.createTimeSlotIfNeeded(selectedDate, selectedTime, serviceDuration) { timeSlotId, error ->
+                                    if (timeSlotId != null) {
+                                        println("🔍 TimeSelectionScreen: Time slot creado con ID: $timeSlotId, creando reservación...")
+                                        viewModel.createReservation(clientId, providerId, serviceId, timeSlotId, workerId) { ok, reservationError ->
+                                            if (ok) {
+                                                println("🔍 TimeSelectionScreen: Reserva creada exitosamente")
+                                            } else {
+                                                println("🔍 TimeSelectionScreen: Error al crear reserva: $reservationError")
+                                                // Aquí podrías mostrar un snackbar o mensaje si lo necesitas
+                                            }
+                                        }
+                                    } else {
+                                        println("🔍 TimeSelectionScreen: Error al crear time slot: $error")
+                                        // Aquí podrías mostrar un snackbar o mensaje si lo necesitas
+                                    }
+                                }
                             }
                         },
                         modifier = Modifier

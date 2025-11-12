@@ -176,7 +176,7 @@ fun AppNav() {
                         salonAddress = salonAddress,
                         salonRating = salonRating,
                         salonImageUrl = salonImageUrl,
-                        clientId = authPrefs.getInt("user_id", 0).toLong(),
+                        clientId = authPrefs.getInt("client_id", 0).toLong(),
                         providerId = salonId.toLong(),
                         service = ServiceData(
                             id = service.id,
@@ -213,12 +213,15 @@ fun AppNav() {
                     price = current.service.price,
                     durationMins = current.service.durationMins
                 ),
+                providerId = current.salonId.toLong(),
                 onBack = { navController.popBackStack() },
                 onContinue = { selectedProfessional, workerId ->
+                    println("🔍 AppNav: Guardando worker en ReservationData - Nombre: $selectedProfessional, ID: $workerId")
                     reservationData.value = current.copy(
                         selectedProfessional = selectedProfessional,
                         selectedProfessionalId = workerId
                     )
+                    println("🔍 AppNav: ReservationData actualizado - selectedProfessionalId: ${reservationData.value?.selectedProfessionalId}")
                     navController.navigate("${Route.TimeSelection.route}/${current.service.id}") {
                         launchSingleTop = true
                     }
@@ -242,8 +245,9 @@ fun AppNav() {
                 serviceName = current.service.title,
                 servicePrice = current.service.price,
                 serviceDuration = current.service.durationMins,
+                serviceId = current.service.id.toLongOrNull() ?: 0L,
                 selectedProfessional = current.selectedProfessional,
-                clientId = authPrefs.getInt("user_id", 0).toLong(),
+                clientId = authPrefs.getInt("client_id", 0).toLong(),
                 providerId = current.salonId.toLong(),
                 workerId = current.selectedProfessionalId,
                 salonName = current.salonName,
@@ -303,9 +307,6 @@ fun AppNav() {
             if (current != null) {
                 ReservationConfirmedScreen(
                     reservationData = current,
-                    onCancel = {                       // ← agregado: volver a la pantalla anterior
-                        navController.popBackStack()
-                    },
                     onBackToHome = {
                         navController.navigate(Route.Home.route) {
                             popUpTo(Route.Home.route) { inclusive = true }
