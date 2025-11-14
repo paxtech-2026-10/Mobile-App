@@ -144,6 +144,37 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
     
+    override suspend fun getClientById(clientId: Int): Client? = withContext(Dispatchers.IO) {
+        try {
+            println("🔍 AuthRepositoryImpl: Getting client by ID: $clientId")
+            val resp = authService.getClientById(clientId)
+            
+            if (resp.isSuccessful) {
+                val clientDto = resp.body()
+                if (clientDto != null) {
+                    println("🔍 AuthRepositoryImpl: Client found by ID: ${clientDto.firstName} ${clientDto.lastName}, profileImageUrl: ${clientDto.profileImageUrl}")
+                    Client(
+                        clientDto.id, 
+                        clientDto.firstName, 
+                        clientDto.lastName, 
+                        clientDto.userId,
+                        clientDto.profileImageUrl
+                    )
+                } else {
+                    println("🔍 AuthRepositoryImpl: Client DTO is null for clientId: $clientId")
+                    null
+                }
+            } else {
+                println("🔍 AuthRepositoryImpl: Get client by ID failed: ${resp.code()}")
+                null
+            }
+        } catch (e: Exception) {
+            println("🔍 AuthRepositoryImpl: Exception getting client by ID: ${e.message}")
+            e.printStackTrace()
+            null
+        }
+    }
+    
     override suspend fun uploadClientProfileImage(clientId: Int, imageFile: File): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             println("🔍 AuthRepositoryImpl: Starting image upload for clientId: $clientId")

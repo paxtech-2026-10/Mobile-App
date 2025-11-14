@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -265,8 +266,12 @@ class HomeViewModel @Inject constructor(
     }
     
     fun loadUserName() {
+        println("🔍 HomeViewModel: loadUserName() llamado")
         _userName.value = userDataRepository.getUserName()
-        _profileImageUrl.value = userDataRepository.getProfileImageUrl()
+        val url = userDataRepository.getProfileImageUrl()
+        println("🔍 HomeViewModel: URL obtenida de repositorio: $url")
+        _profileImageUrl.value = url
+        println("🔍 HomeViewModel: _profileImageUrl actualizado a: ${_profileImageUrl.value}")
     }
     
     fun saveVisit(salon: Salon) {
@@ -323,7 +328,21 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
+        println("🔍 HomeViewModel: init() - Inicializando ViewModel")
         loadAllData()
         loadUserName()
+        
+        // Observar cambios en la URL de la imagen de perfil
+        println("🔍 HomeViewModel: Iniciando observación del Flow profileImageUrlFlow")
+        viewModelScope.launch {
+            println("🔍 HomeViewModel: Collect iniciado, valor inicial del Flow: ${userDataRepository.profileImageUrlFlow.value}")
+            userDataRepository.profileImageUrlFlow.collect { url ->
+                println("🔍 HomeViewModel: ⚡ Flow emitió nuevo valor: $url")
+                println("🔍 HomeViewModel: Valor anterior en _profileImageUrl: ${_profileImageUrl.value}")
+                _profileImageUrl.value = url
+                println("🔍 HomeViewModel: ✅ _profileImageUrl actualizado a: ${_profileImageUrl.value}")
+            }
+        }
+        println("🔍 HomeViewModel: init() completado")
     }
 }

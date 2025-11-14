@@ -9,5 +9,6 @@ interface AuthRepository {
     suspend fun signIn(email: String, password: String): User
     suspend fun createClient(firstName: String, lastName: String, userId: Int): Client
     suspend fun getClientByUserId(userId: Int): Client?
+    suspend fun getClientById(clientId: Int): Client?
     suspend fun uploadClientProfileImage(clientId: Int, imageFile: File): Result<Unit>
 }

@@ -28,6 +28,9 @@ interface AuthService {
     @GET("api/v1/clients")
     suspend fun getAllClients(): Response<List<ClientDto>>
     
+    @GET("api/v1/clients/{clientId}")
+    suspend fun getClientById(@Path("clientId") clientId: Int): Response<ClientDto>
+    
     @Multipart
     @POST("api/v1/clients/{clientId}/profile-image")
     suspend fun uploadProfileImage(
