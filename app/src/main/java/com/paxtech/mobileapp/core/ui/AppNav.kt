@@ -20,6 +20,7 @@ import com.paxtech.mobileapp.features.authentication.presentation.register.Succe
 import com.paxtech.mobileapp.features.authentication.presentation.splash.SplashScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.confirmation.ConfirmationScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.confirmation.ReservationConfirmedScreen
+import com.paxtech.mobileapp.features.payment.presentation.PaymentProcessingScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.details.ServiceUi
 import com.paxtech.mobileapp.features.clientDashboard.presentation.professionalselection.ProfessionalSelectionScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail.SalonDetailRoute
@@ -253,12 +254,13 @@ fun AppNav() {
                 salonName = current.salonName,
                 salonAddress = current.salonAddress,
                 onBack = { navController.popBackStack() },
-                onContinue = { selectedDate, selectedTime, formattedDate, formattedTime ->
+                onContinue = { selectedDate, selectedTime, formattedDate, formattedTime, timeSlotId ->
                     reservationData.value = current.copy(
                         selectedDate = selectedDate,
                         selectedTime = selectedTime,
                         formattedDate = formattedDate,
-                        formattedTime = formattedTime
+                        formattedTime = formattedTime,
+                        timeSlotId = timeSlotId
                     )
                     navController.navigate("${Route.Confirmation.route}/${current.service.id}") {
                         launchSingleTop = true
@@ -290,13 +292,69 @@ fun AppNav() {
                     duration = current.service.durationMins,
                     professional = current.selectedProfessional,
                     totalPrice = current.service.price,
-                    salonImageUrl = current.salonImageUrl // <-- imagen real en la tarjeta
+                    salonImageUrl = current.salonImageUrl
                 ),
+                clientId = current.clientId,
+                providerId = current.providerId,
+                serviceId = current.service.id.toLongOrNull() ?: 0L,
+                timeSlotId = current.timeSlotId,
+                workerId = current.selectedProfessionalId,
                 onBack = { navController.popBackStack() },
-                onConfirm = {
-                    navController.navigate(Route.ReservationConfirmed.route) {
-                        popUpTo(Route.Home.route) { inclusive = false }
+                onPaymentLinkReady = { reservationId, paymentId, paymentLinkUrl ->
+                    val encodedUrl = java.net.URLEncoder.encode(paymentLinkUrl, "UTF-8")
+                    navController.navigate("payment_processing/$reservationId/$paymentId?paymentLinkUrl=$encodedUrl") {
+                        popUpTo(Route.Confirmation.routeWithArgument) { inclusive = false }
                     }
+                },
+                onError = { errorMessage ->
+                    // TODO: Mostrar error al usuario
+                    println("❌ Error en confirmación: $errorMessage")
+                }
+            )
+        }
+
+        // Procesamiento de pago
+        composable(
+            route = "${Route.PaymentProcessing.routeWithArgument}?paymentLinkUrl={paymentLinkUrl}",
+            arguments = listOf(
+                navArgument(Route.PaymentProcessing.argumentReservationId) {
+                    type = NavType.LongType
+                },
+                navArgument(Route.PaymentProcessing.argumentPaymentId) {
+                    type = NavType.LongType
+                },
+                navArgument("paymentLinkUrl") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val reservationId = backStackEntry.arguments?.getLong(Route.PaymentProcessing.argumentReservationId) ?: 0L
+            val paymentId = backStackEntry.arguments?.getLong(Route.PaymentProcessing.argumentPaymentId) ?: 0L
+            val paymentLinkUrl = backStackEntry.arguments?.getString("paymentLinkUrl")?.let {
+                java.net.URLDecoder.decode(it, "UTF-8")
+            }
+            
+            PaymentProcessingScreen(
+                paymentId = paymentId,
+                paymentLinkUrl = paymentLinkUrl,
+                onPaymentSucceeded = {
+                    val current = reservationData.value
+                    if (current != null) {
+                        navController.navigate(Route.ReservationConfirmed.route) {
+                            popUpTo("payment_processing") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Route.Home.route) {
+                            popUpTo(Route.Home.route) { inclusive = true }
+                        }
+                    }
+                },
+                onPaymentFailed = {
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -362,4 +420,10 @@ sealed class Route(val route: String) {
     }
 
     object ReservationConfirmed : Route("reservation_confirmed")
+    
+    object PaymentProcessing : Route("payment_processing") {
+        const val routeWithArgument = "payment_processing/{reservationId}/{paymentId}"
+        const val argumentReservationId = "reservationId"
+        const val argumentPaymentId = "paymentId"
+    }
 }

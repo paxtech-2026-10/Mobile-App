@@ -15,6 +15,15 @@ data class CreateReservationRequest(
     val workerId: Long
 )
 
+data class CreateReservationResponse(
+    val id: Long,
+    val clientId: Long,
+    val providerId: Long,
+    val serviceId: Long,
+    val timeSlotId: Long,
+    val workerId: Long
+)
+
 data class ProviderDto(
     val id: Long,
     val name: String,
@@ -56,7 +65,7 @@ interface ReservationService {
     suspend fun getAllReservationsDetails(): Response<List<ReservationDetailsDto>>
 
     @POST("api/v1/reservationsDetails")
-    suspend fun createReservation(@Body body: CreateReservationRequest): Response<Unit>
+    suspend fun createReservation(@Body body: CreateReservationRequest): Response<CreateReservationResponse>
     
     @DELETE("api/v1/reservationsDetails/{reservationId}")
     suspend fun cancelReservation(@Path("reservationId") reservationId: Long): Response<Unit>

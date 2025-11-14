@@ -5,6 +5,7 @@ import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.Revie
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.WorkerService
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.TimeSlotService
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationService
+import com.paxtech.mobileapp.features.payment.data.remote.services.PaymentService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,5 +45,11 @@ object RemoteModule {
     @Singleton
     fun provideReservationService(retrofit: Retrofit): ReservationService{
         return retrofit.create(ReservationService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun providePaymentService(retrofit: Retrofit): PaymentService {
+        return retrofit.create(PaymentService::class.java)
     }
 }

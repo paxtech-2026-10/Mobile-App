@@ -1,6 +1,7 @@
 package com.paxtech.mobileapp.features.clientDashboard.data.repository
 
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.CreateReservationRequest
+import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.CreateReservationResponse
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationService
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationDetailsDto
 import javax.inject.Inject
@@ -8,7 +9,7 @@ import javax.inject.Inject
 interface ReservationRepository {
     suspend fun getAllDetails(): Result<List<ReservationDetailsDto>>
     suspend fun getAllDetailsByClientId(clientId: Long): Result<List<ReservationDetailsDto>>
-    suspend fun createReservation(body: CreateReservationRequest): Result<Unit>
+    suspend fun createReservation(body: CreateReservationRequest): Result<CreateReservationResponse>
     suspend fun cancelReservation(reservationId: Long): Result<Unit>
 }
 
@@ -101,10 +102,26 @@ class ReservationRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun createReservation(body: CreateReservationRequest): Result<Unit> = try {
+    override suspend fun createReservation(body: CreateReservationRequest): Result<CreateReservationResponse> = try {
+        println("🔍 ReservationRepositoryImpl: createReservation() - Creando reservación")
         val response = reservationService.createReservation(body)
-        if (response.isSuccessful) Result.success(Unit) else Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
+        if (response.isSuccessful) {
+            val reservationResponse = response.body()
+            if (reservationResponse != null) {
+                println("🔍 ReservationRepositoryImpl: Reservación creada exitosamente - ID: ${reservationResponse.id}")
+                Result.success(reservationResponse)
+            } else {
+                println("❌ ReservationRepositoryImpl: Respuesta exitosa pero body es null")
+                Result.failure(IllegalStateException("Response body is null"))
+            }
+        } else {
+            val errorMsg = "HTTP ${response.code()}"
+            println("❌ ReservationRepositoryImpl: Error HTTP ${response.code()}")
+            Result.failure(IllegalStateException(errorMsg))
+        }
     } catch (e: Exception) {
+        println("❌ ReservationRepositoryImpl: Excepción al crear reservación: ${e.message}")
+        e.printStackTrace()
         Result.failure(e)
     }
     
