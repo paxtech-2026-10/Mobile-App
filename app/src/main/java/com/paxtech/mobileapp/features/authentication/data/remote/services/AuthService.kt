@@ -6,10 +6,13 @@ import com.paxtech.mobileapp.features.authentication.data.remote.models.SignInRe
 import com.paxtech.mobileapp.features.authentication.data.remote.models.SignInResponseDto
 import com.paxtech.mobileapp.features.authentication.data.remote.models.SignUpRequestDto
 import com.paxtech.mobileapp.features.authentication.data.remote.models.SignUpResponseDto
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
-
+import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.Response
 
 interface AuthService {
@@ -24,4 +27,11 @@ interface AuthService {
     
     @GET("api/v1/clients")
     suspend fun getAllClients(): Response<List<ClientDto>>
+    
+    @Multipart
+    @POST("api/v1/clients/{clientId}/profile-image")
+    suspend fun uploadProfileImage(
+        @Path("clientId") clientId: Int,
+        @Part file: MultipartBody.Part
+    ): Response<Unit>
 }

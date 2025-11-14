@@ -42,6 +42,9 @@ class HomeViewModel @Inject constructor(
     
     private val _userName = MutableStateFlow<String>("Usuario")
     val userName: StateFlow<String> = _userName.asStateFlow()
+    
+    private val _profileImageUrl = MutableStateFlow<String?>(null)
+    val profileImageUrl: StateFlow<String?> = _profileImageUrl.asStateFlow()
 
     //Buscador de salones
     private val _searchResults = MutableStateFlow<List<Salon>>(emptyList())
@@ -263,6 +266,7 @@ class HomeViewModel @Inject constructor(
     
     fun loadUserName() {
         _userName.value = userDataRepository.getUserName()
+        _profileImageUrl.value = userDataRepository.getProfileImageUrl()
     }
     
     fun saveVisit(salon: Salon) {

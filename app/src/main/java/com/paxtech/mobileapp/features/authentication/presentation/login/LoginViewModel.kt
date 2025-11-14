@@ -47,8 +47,10 @@ class LoginViewModel @Inject constructor(
                         if (client != null) {
                             userDataRepository.saveUserName(client.firstName, client.lastName)
                             userDataRepository.saveClientId(client.id)
+                            userDataRepository.saveProfileImageUrl(client.profileImageUrl)
                             println("🔍 LoginViewModel: User name saved: ${client.firstName} ${client.lastName}")
                             println("🔍 LoginViewModel: ClientId guardado: ${client.id}")
+                            println("🔍 LoginViewModel: ProfileImageUrl guardado: ${client.profileImageUrl}")
                         } else {
                             println("🔍 LoginViewModel: Client not found for userId: ${user.id}")
                         }

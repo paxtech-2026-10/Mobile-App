@@ -66,9 +66,11 @@ class RegisterViewModel @Inject constructor(
 
             println("🔍 RegisterViewModel: Client created successfully")
             
-            // Guardar el clientId
+            // Guardar el clientId y profileImageUrl
             userDataRepository.saveClientId(client.id)
+            userDataRepository.saveProfileImageUrl(client.profileImageUrl)
             println("🔍 RegisterViewModel: ClientId guardado: ${client.id}")
+            println("🔍 RegisterViewModel: ProfileImageUrl guardado: ${client.profileImageUrl}")
 
             signedInUser // Retornar el usuario con token
 

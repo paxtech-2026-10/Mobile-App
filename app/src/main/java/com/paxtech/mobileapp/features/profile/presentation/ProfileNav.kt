@@ -156,7 +156,10 @@ internal fun ProfileNavHost(
                 MyProfileScreen(
                     profile = profile,
                     onBack = actions.navigateBack,
-                    onEditProfile = actions.openEditProfile
+                    onEditProfile = actions.openEditProfile,
+                    onImageSelected = { file ->
+                        viewModel.uploadProfileImage(file)
+                    }
                 )
             } else {
                 ProfileScreen(

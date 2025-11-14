@@ -35,4 +35,19 @@ class UserDataRepository @Inject constructor(
         println("🔍 UserDataRepository: ClientId obtenido: $clientId")
         return clientId
     }
+    
+    fun saveProfileImageUrl(url: String?) {
+        authPrefs.edit().apply {
+            if (url != null) {
+                putString("user_avatar_url", url)
+            } else {
+                remove("user_avatar_url")
+            }
+        }.apply()
+        println("🔍 UserDataRepository: ProfileImageUrl guardado: $url")
+    }
+    
+    fun getProfileImageUrl(): String? {
+        return authPrefs.getString("user_avatar_url", null)
+    }
 }

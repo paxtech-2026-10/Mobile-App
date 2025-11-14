@@ -3,8 +3,11 @@ package com.paxtech.mobileapp.features.profile.presentation
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.authentication.domain.repository.AuthRepository
+import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordField
+import java.io.File
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordFormState
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordUiState
 import com.paxtech.mobileapp.features.profile.presentation.model.FavoriteSalonUi
@@ -39,7 +42,9 @@ import org.json.JSONObject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     @param:Named("auth_prefs") private val authPrefs: SharedPreferences,
-    private val localSalonRepository: LocalSalonRepository
+    private val localSalonRepository: LocalSalonRepository,
+    private val authRepository: AuthRepository,
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -583,6 +588,68 @@ class ProfileViewModel @Inject constructor(
                 avatarUrl = null
             )
         )
+    }
+
+    fun uploadProfileImage(imageFile: File) {
+        val clientId = userDataRepository.getClientId()
+        if (clientId == 0) {
+            _uiState.update { 
+                it.copy(errorMessage = "No se pudo obtener el ID del cliente") 
+            }
+            return
+        }
+        
+        _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+        
+        viewModelScope.launch {
+            authRepository.uploadClientProfileImage(clientId, imageFile)
+                .onSuccess {
+                    // Recargar el perfil para obtener la nueva URL
+                    refreshClientProfile()
+                }
+                .onFailure { e ->
+                    _uiState.update { 
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Error al subir la imagen: ${e.message}"
+                        ) 
+                    }
+                }
+        }
+    }
+    
+    private fun refreshClientProfile() {
+        val userId = userDataRepository.getUserId()
+        if (userId == 0) {
+            _uiState.update { 
+                it.copy(
+                    isSaving = false,
+                    errorMessage = "No se pudo obtener el ID del usuario"
+                ) 
+            }
+            return
+        }
+        
+        viewModelScope.launch {
+            authRepository.getClientByUserId(userId)
+                ?.let { client ->
+                    // Actualizar el avatar URL en SharedPreferences
+                    authPrefs.edit()
+                        .putString("user_avatar_url", client.profileImageUrl)
+                        .apply()
+                    
+                    // Recargar el perfil
+                    loadProfile()
+                    _uiState.update { it.copy(isSaving = false) }
+                } ?: run {
+                    _uiState.update { 
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "No se pudo actualizar el perfil"
+                        ) 
+                    }
+                }
+        }
     }
 
     private object PaymentMethodUiJsonAdapter {
