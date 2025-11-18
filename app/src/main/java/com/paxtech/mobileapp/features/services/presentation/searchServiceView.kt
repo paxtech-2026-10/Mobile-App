@@ -34,7 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -170,23 +170,29 @@ fun CategoryCard(
     title: String,
     onClick: () -> Unit = {}
 ) {
-    Card (
+    Card(
         modifier = Modifier
-            .border(width = 2.dp, color = MaterialTheme.colorScheme.onPrimaryFixedVariant, shape = CardDefaults.elevatedShape)
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.onPrimaryFixedVariant,
+                shape = CardDefaults.elevatedShape
+            )
             .padding(4.dp)
             .height(70.dp)
-            .clickable(onClick = onClick)
-    ){
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-
-        ){
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    color = MaterialTheme.colorScheme.onPrimaryFixedVariant,
-                    fontFamily = FontFamily.Cursive
+                style = MaterialTheme.typography.titleMedium.copy( // ✔ más pequeño
+                    color = MaterialTheme.colorScheme.onPrimaryFixedVariant
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -194,6 +200,7 @@ fun CategoryCard(
         }
     }
 }
+
 
 @Composable
 fun ServiceCard(
@@ -204,7 +211,10 @@ fun ServiceCard(
         modifier = Modifier
             .border(width = 2.dp, color = MaterialTheme.colorScheme.onPrimaryFixedVariant, shape = CardDefaults.elevatedShape)
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
     ){
         Column(
             modifier = Modifier
