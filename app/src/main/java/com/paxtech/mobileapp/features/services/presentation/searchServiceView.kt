@@ -20,7 +20,9 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -68,30 +70,38 @@ fun SearchServiceView(
         modifier = Modifier
         .fillMaxSize().padding(top = 16.dp)
     ){
-        if (isSearchBarActive.value) {
-            IconButton(onClick = {
-                isSearchBarActive.value = false
-            }) {
-                Icon(Icons.Default.ArrowBackIosNew, contentDescription = null)
-            }
-        }
-        OutlinedTextField(
-            value = query.value,
-            onValueChange = {
-                viewModel.onChangeQuery(it)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            trailingIcon = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isSearchBarActive.value) {
                 IconButton(onClick = {
-                    isSearchBarActive.value = true
-                    viewModel.searchService()
+                    isSearchBarActive.value = false
                 }) {
-                    Icon(Icons.Default.Search, contentDescription = null)
+                    Icon(Icons.Default.ArrowBackIosNew, contentDescription = null)
                 }
             }
-        )
+            OutlinedTextField(
+                value = query.value,
+                onValueChange = {
+                    viewModel.onChangeQuery(it)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                placeholder = {
+                    Text("Corte de cabello")
+                },
+                leadingIcon = {
+                    IconButton(onClick = {
+                        isSearchBarActive.value = true
+                        viewModel.searchService()
+                    }) {
+                        Icon(Icons.Default.Search, contentDescription = null)
+                    }
+                }
+            )
+        }
         Column(
             modifier = Modifier.padding(top = 32.dp)
         ) {
@@ -131,7 +141,7 @@ fun SearchServiceView(
                     .padding(bottom = 12.dp)
                     .padding(horizontal = 8.dp)
                 ) {
-                    Text(text = "Resultados",
+                    Text(text = "Resultados (${services.value.size})",
                         style = MaterialTheme.typography.headlineLarge)
                 }
                 LazyColumn(
@@ -185,53 +195,60 @@ fun ServiceCard(service: Service) {
         modifier = Modifier
             .border(width = 2.dp, color = MaterialTheme.colorScheme.onPrimaryFixedVariant, shape = CardDefaults.elevatedShape)
             .fillMaxWidth()
-            .height(180.dp)
+            .padding(vertical = 4.dp)
     ){
-        Box(
-            modifier = Modifier.padding(horizontal = 16.dp).padding(vertical = 4.dp)
-        ){
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Service name
             Text(
                 text = service.name,
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
-        }
-        Box(
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ){
+            
+            // Duration
             Text(
-                text = "Aprox duration: " + service.duration + " minutes",
-                style = MaterialTheme.typography.titleLarge
+                text = "Aprox duration: ${service.duration} minutes",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(
-                modifier = Modifier.padding(vertical = 8.dp)
-            ){
-                Text(
-                    text = "Salon: " + service.providerId,
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            Box(
-                modifier = Modifier.padding(vertical = 8.dp)
-            ){
-                Text(
-                    text = "Price S/: " + service.price,
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-        Box(
-            modifier = Modifier.fillMaxWidth().height(70.dp).padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            ElevatedButton(
-                onClick = {}
+            
+            // Salon and Price row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Reservar ahora")
+                Text(
+                    text = "Salon: ${service.providerId}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Price: S/ ${service.price}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            
+            // Button aligned to the right
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Reservar ahora")
+                }
             }
         }
     }
