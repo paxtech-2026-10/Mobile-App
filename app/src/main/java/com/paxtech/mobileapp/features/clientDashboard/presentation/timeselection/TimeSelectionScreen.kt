@@ -48,7 +48,7 @@ fun TimeSelectionScreen(
     salonName: String = "Glow & Go Hair Studio",
     salonAddress: String = "Av. Primavera 123, Santiago de Surco, Lima – Perú",
     onBack: () -> Unit,
-    onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String) -> Unit,
+    onContinue: (selectedDate: String, selectedTime: String, formattedDate: String, formattedTime: String, timeSlotId: Long) -> Unit,
     viewModel: TimeSelectionViewModel = hiltViewModel()
 ) {
     // Log para verificar que los datos se recibieron correctamente
@@ -272,41 +272,31 @@ fun TimeSelectionScreen(
                             val sdfEs = SimpleDateFormat("EEE d 'de' MMMM", localeEs)
                             val formatted = capFirst(sdfEs.format(selectedDate.time), localeEs)
                             
-                            // Navegar primero para no bloquear la UI
-                            onContinue(
-                                selectedDate.get(Calendar.DAY_OF_MONTH).toString(),
-                                selectedTime,
-                                formatted,
-                                selectedTime
-                            )
-                            
-                            // Intentar crear la reserva en background (no bloquea navegación)
+                            // Obtener o crear time slot
                             val selectedId = viewModel.getTimeSlotId(selectedDate, selectedTime)
                             if (selectedId != null) {
-                                // Time slot existe, crear la reservación directamente
-                                println("🔍 TimeSelectionScreen: Creando reservación con timeSlotId existente - clientId: $clientId, providerId: $providerId, serviceId: $serviceId, timeSlotId: $selectedId, workerId: $workerId")
-                                viewModel.createReservation(clientId, providerId, serviceId, selectedId, workerId) { ok, error ->
-                                    if (ok) {
-                                        println("🔍 TimeSelectionScreen: Reserva creada exitosamente")
-                                    } else {
-                                        println("🔍 TimeSelectionScreen: Error al crear reserva: $error")
-                                        // Aquí podrías mostrar un snackbar o mensaje si lo necesitas
-                                    }
-                                }
+                                // Time slot existe, navegar con el ID
+                                println("🔍 TimeSelectionScreen: Time slot existente encontrado - ID: $selectedId")
+                                onContinue(
+                                    selectedDate.get(Calendar.DAY_OF_MONTH).toString(),
+                                    selectedTime,
+                                    formatted,
+                                    selectedTime,
+                                    selectedId
+                                )
                             } else {
                                 // Time slot no existe, crearlo primero
-                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime en fecha seleccionada, creando nuevo time slot...")
+                                println("🔍 TimeSelectionScreen: No se encontró timeSlotId para $selectedTime, creando nuevo time slot...")
                                 viewModel.createTimeSlotIfNeeded(selectedDate, selectedTime, serviceDuration) { timeSlotId, error ->
                                     if (timeSlotId != null) {
-                                        println("🔍 TimeSelectionScreen: Time slot creado con ID: $timeSlotId, creando reservación...")
-                                        viewModel.createReservation(clientId, providerId, serviceId, timeSlotId, workerId) { ok, reservationError ->
-                                            if (ok) {
-                                                println("🔍 TimeSelectionScreen: Reserva creada exitosamente")
-                                            } else {
-                                                println("🔍 TimeSelectionScreen: Error al crear reserva: $reservationError")
-                                                // Aquí podrías mostrar un snackbar o mensaje si lo necesitas
-                                            }
-                                        }
+                                        println("🔍 TimeSelectionScreen: Time slot creado con ID: $timeSlotId")
+                                        onContinue(
+                                            selectedDate.get(Calendar.DAY_OF_MONTH).toString(),
+                                            selectedTime,
+                                            formatted,
+                                            selectedTime,
+                                            timeSlotId
+                                        )
                                     } else {
                                         println("🔍 TimeSelectionScreen: Error al crear time slot: $error")
                                         // Aquí podrías mostrar un snackbar o mensaje si lo necesitas

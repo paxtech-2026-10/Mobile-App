@@ -162,7 +162,7 @@ fun Main(
                 )
         ) {
             composable(Route.Home.route)     { Home(onSalonClick = onClick)  }
-            composable(Route.Services.route) { SearchServiceView() }
+            composable(Route.Services.route) { SearchServiceView(onReserveService = onClick) }
             composable(Route.Booking.route)  { 
                 val reservationsViewModel = hiltViewModel<com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.ReservationsViewModel>()
                 

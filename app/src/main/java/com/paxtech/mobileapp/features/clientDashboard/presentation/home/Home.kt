@@ -80,6 +80,7 @@ fun Home(
     val favoriteSalons by viewModel.favoriteSalons.collectAsState()
     val recentVisits by viewModel.recentVisits.collectAsState()
     val userName by viewModel.userName.collectAsState()
+    val profileImageUrl by viewModel.profileImageUrl.collectAsState()
     
     // Estados del buscador
     val searchResults by viewModel.searchResults.collectAsState()
@@ -153,12 +154,23 @@ fun Home(
                             .background(PrimaryPurple.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = userInitials,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryPurple
-                        )
+                        if (!profileImageUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = profileImageUrl,
+                                contentDescription = "Profile image",
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Text(
+                                text = userInitials,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryPurple
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))

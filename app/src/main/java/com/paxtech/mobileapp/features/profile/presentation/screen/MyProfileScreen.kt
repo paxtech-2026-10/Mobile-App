@@ -1,15 +1,25 @@
 package com.paxtech.mobileapp.features.profile.presentation.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -23,14 +33,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.paxtech.mobileapp.core.utils.rememberImagePickerLauncher
+import java.io.File
 import com.paxtech.mobileapp.features.profile.presentation.components.ProfileAvatar
 import com.paxtech.mobileapp.features.profile.presentation.model.ProfileUi
 import com.paxtech.mobileapp.features.profile.presentation.model.ProfileUiState
@@ -48,9 +68,15 @@ fun MyProfileScreen(
     profile: ProfileUi,
     onBack: () -> Unit,
     onEditProfile: () -> Unit,
+    onImageSelected: (File) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    var showImageSourceDialog by remember { mutableStateOf(false) }
+    
+    val imagePickerLauncher = rememberImagePickerLauncher { file ->
+        onImageSelected(file)
+    }
 
     Scaffold(
         modifier = modifier,
@@ -89,7 +115,10 @@ fun MyProfileScreen(
                 .padding(horizontal = 20.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            ProfileDetailsCard(profile = profile)
+            ProfileDetailsCard(
+                profile = profile,
+                onAvatarClick = { showImageSourceDialog = true }
+            )
 
             Button(
                 onClick = onEditProfile,
@@ -103,10 +132,44 @@ fun MyProfileScreen(
             }
         }
     }
+    
+    if (showImageSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showImageSourceDialog = false },
+            title = { Text("Seleccionar imagen") },
+            text = {
+                Column {
+                    TextButton(
+                        onClick = {
+                            showImageSourceDialog = false
+                            imagePickerLauncher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.PhotoLibrary, 
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Galería")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showImageSourceDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
 
 @Composable
-private fun ProfileDetailsCard(profile: ProfileUi) {
+private fun ProfileDetailsCard(
+    profile: ProfileUi,
+    onAvatarClick: () -> Unit = {}
+) {
     Card(
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = BackgroundWhite)
@@ -121,11 +184,29 @@ private fun ProfileDetailsCard(profile: ProfileUi) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                ProfileAvatar(
-                    avatarUrl = profile.avatarUrl,
-                    containerColor = PrimaryPurple,
-                    contentColor = BackgroundWhite
-                )
+                Box {
+                    ProfileAvatar(
+                        avatarUrl = profile.avatarUrl,
+                        containerColor = PrimaryPurple,
+                        contentColor = BackgroundWhite,
+                        modifier = Modifier.clickable(onClick = onAvatarClick)
+                    )
+                    IconButton(
+                        onClick = onAvatarClick,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryPurple)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Cambiar foto",
+                            tint = BackgroundWhite,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
                 Text(
                     text = profile.fullName,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -177,7 +258,8 @@ private fun MyProfileScreenPreview() {
             MyProfileScreen(
                 profile = sampleProfile,
                 onBack = {},
-                onEditProfile = {}
+                onEditProfile = {},
+                onImageSelected = {}
             )
         }
     }

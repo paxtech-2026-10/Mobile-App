@@ -14,7 +14,8 @@ data class ReservationData(
     val selectedDate: String = "",
     val selectedTime: String = "",
     val formattedDate: String = "",
-    val formattedTime: String = ""
+    val formattedTime: String = "",
+    val timeSlotId: Long = 0L
 )
 
 data class ServiceData(

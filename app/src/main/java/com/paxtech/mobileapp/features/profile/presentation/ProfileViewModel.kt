@@ -3,8 +3,11 @@ package com.paxtech.mobileapp.features.profile.presentation
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.features.authentication.domain.repository.AuthRepository
+import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordField
+import java.io.File
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordFormState
 import com.paxtech.mobileapp.features.profile.presentation.model.ChangePasswordUiState
 import com.paxtech.mobileapp.features.profile.presentation.model.FavoriteSalonUi
@@ -39,7 +42,9 @@ import org.json.JSONObject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     @param:Named("auth_prefs") private val authPrefs: SharedPreferences,
-    private val localSalonRepository: LocalSalonRepository
+    private val localSalonRepository: LocalSalonRepository,
+    private val authRepository: AuthRepository,
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -583,6 +588,100 @@ class ProfileViewModel @Inject constructor(
                 avatarUrl = null
             )
         )
+    }
+
+    fun uploadProfileImage(imageFile: File) {
+        println("🔍 ProfileViewModel: uploadProfileImage() llamado con archivo: ${imageFile.name}")
+        val clientId = userDataRepository.getClientId()
+        println("🔍 ProfileViewModel: ClientId obtenido: $clientId")
+        
+        if (clientId == 0) {
+            println("🔍 ProfileViewModel: ERROR - ClientId es 0, no se puede subir la imagen")
+            _uiState.update { 
+                it.copy(errorMessage = "No se pudo obtener el ID del cliente") 
+            }
+            return
+        }
+        
+        _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+        println("🔍 ProfileViewModel: Estado actualizado a isSaving = true")
+        
+        viewModelScope.launch {
+            println("🔍 ProfileViewModel: Iniciando upload de imagen...")
+            val result = authRepository.uploadClientProfileImage(clientId, imageFile)
+            println("🔍 ProfileViewModel: Resultado del upload recibido: ${result.isSuccess}")
+            
+            result.onSuccess {
+                println("🔍 ProfileViewModel: ✅ Upload exitoso, llamando a refreshClientProfile()...")
+                // Recargar el perfil para obtener la nueva URL
+                refreshClientProfile()
+            }
+            .onFailure { e ->
+                println("🔍 ProfileViewModel: ❌ Upload falló: ${e.message}")
+                _uiState.update { 
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = "Error al subir la imagen: ${e.message}"
+                    ) 
+                }
+            }
+        }
+    }
+    
+    private fun refreshClientProfile() {
+        println("🔍 ProfileViewModel: refreshClientProfile() INICIADO")
+        val clientId = userDataRepository.getClientId()
+        println("🔍 ProfileViewModel: refreshClientProfile() - clientId obtenido: $clientId")
+        
+        if (clientId == 0) {
+            println("🔍 ProfileViewModel: refreshClientProfile() - ERROR: clientId es 0")
+            _uiState.update { 
+                it.copy(
+                    isSaving = false,
+                    errorMessage = "No se pudo obtener el ID del cliente"
+                ) 
+            }
+            return
+        }
+        
+        println("🔍 ProfileViewModel: refreshClientProfile() - Iniciando corrutina para obtener cliente por ID...")
+        viewModelScope.launch {
+            println("🔍 ProfileViewModel: refreshClientProfile() - Dentro de la corrutina, obteniendo cliente para clientId: $clientId")
+            try {
+                val client = authRepository.getClientById(clientId)
+                println("🔍 ProfileViewModel: refreshClientProfile() - Cliente obtenido: ${client != null}")
+                
+                client?.let { 
+                    println("🔍 ProfileViewModel: Cliente obtenido - profileImageUrl: ${it.profileImageUrl}")
+                    // Usar el método del repositorio para que el Flow se actualice
+                    userDataRepository.saveProfileImageUrl(it.profileImageUrl)
+                    println("🔍 ProfileViewModel: URL guardada en repositorio, recargando perfil...")
+                    
+                    // Recargar el perfil
+                    loadProfile()
+                    _uiState.update { it.copy(isSaving = false) }
+                    println("🔍 ProfileViewModel: Perfil recargado y estado actualizado")
+                } ?: run {
+                    println("🔍 ProfileViewModel: refreshClientProfile() - ERROR: Cliente es null")
+                    _uiState.update { 
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "No se pudo actualizar el perfil"
+                        ) 
+                    }
+                }
+            } catch (e: Exception) {
+                println("🔍 ProfileViewModel: refreshClientProfile() - EXCEPCIÓN: ${e.message}")
+                e.printStackTrace()
+                _uiState.update { 
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = "Error al actualizar perfil: ${e.message}"
+                    ) 
+                }
+            }
+        }
+        println("🔍 ProfileViewModel: refreshClientProfile() - Corrutina lanzada")
     }
 
     private object PaymentMethodUiJsonAdapter {

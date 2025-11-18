@@ -12,6 +12,8 @@ import androidx.compose.material.icons.outlined.LocalOffer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -26,9 +28,29 @@ import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 @Composable
 fun ConfirmationScreen(
     reservationDetails: ReservationDetails,
+    clientId: Long,
+    providerId: Long,
+    serviceId: Long,
+    timeSlotId: Long,
+    workerId: Long,
     onBack: () -> Unit,
-    onConfirm: () -> Unit
+    onPaymentLinkReady: (reservationId: Long, paymentId: Long, paymentLinkUrl: String) -> Unit,
+    onError: (String) -> Unit
 ) {
+    val viewModel: ConfirmationViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    LaunchedEffect(uiState) {
+        when (val state = uiState) {
+            is ConfirmationUiState.PaymentLinkReady -> {
+                onPaymentLinkReady(state.reservationId, state.paymentId, state.paymentLinkUrl)
+            }
+            is ConfirmationUiState.Error -> {
+                onError(state.message)
+            }
+            else -> {}
+        }
+    }
     // TODO: Sistema de descuentos/cupones no implementado aún
     // var couponCode by remember { mutableStateOf("") }
     // var appliedDiscount by remember { mutableStateOf(0.0) }
@@ -415,7 +437,17 @@ fun ConfirmationScreen(
                     }
 
                     Button(
-                        onClick = onConfirm,
+                        onClick = {
+                            val amount = extractPrice(reservationDetails.totalPrice)
+                            viewModel.createReservationAndStartPayment(
+                                clientId = clientId,
+                                providerId = providerId,
+                                serviceId = serviceId,
+                                timeSlotId = timeSlotId,
+                                workerId = workerId,
+                                amount = amount
+                            )
+                        },
                         modifier = Modifier
                             .width(180.dp)
                             .height(54.dp),

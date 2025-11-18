@@ -12,6 +12,10 @@ import com.paxtech.mobileapp.features.authentication.domain.models.User
 import com.paxtech.mobileapp.features.authentication.domain.repository.AuthRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -85,7 +89,13 @@ class AuthRepositoryImpl @Inject constructor(
                     val clientDto = allClientsResp.body()?.firstOrNull { it.userId == userId }
                     if (clientDto != null) {
                         println("🔍 AuthRepositoryImpl: Client ID obtenido: ${clientDto.id}")
-                        return@withContext Client(clientDto.id, clientDto.firstName, clientDto.lastName, clientDto.userId)
+                        return@withContext Client(
+                            clientDto.id, 
+                            clientDto.firstName, 
+                            clientDto.lastName, 
+                            clientDto.userId,
+                            clientDto.profileImageUrl
+                        )
                     }
                 }
                 // Si no se puede obtener el ID, lanzar error
@@ -113,7 +123,13 @@ class AuthRepositoryImpl @Inject constructor(
                 val clientDto = clients?.firstOrNull { it.userId == userId }
                 if (clientDto != null) {
                     println("🔍 AuthRepositoryImpl: Client found: ${clientDto.firstName} ${clientDto.lastName}, ID: ${clientDto.id}")
-                    Client(clientDto.id, clientDto.firstName, clientDto.lastName, clientDto.userId)
+                    Client(
+                        clientDto.id, 
+                        clientDto.firstName, 
+                        clientDto.lastName, 
+                        clientDto.userId,
+                        clientDto.profileImageUrl
+                    )
                 } else {
                     println("🔍 AuthRepositoryImpl: Client not found for userId: $userId")
                     null
@@ -125,6 +141,113 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             println("🔍 AuthRepositoryImpl: Exception getting client: ${e.message}")
             null
+        }
+    }
+    
+    override suspend fun getClientById(clientId: Int): Client? = withContext(Dispatchers.IO) {
+        try {
+            println("🔍 AuthRepositoryImpl: Getting client by ID: $clientId")
+            val resp = authService.getClientById(clientId)
+            
+            if (resp.isSuccessful) {
+                val clientDto = resp.body()
+                if (clientDto != null) {
+                    println("🔍 AuthRepositoryImpl: Client found by ID: ${clientDto.firstName} ${clientDto.lastName}, profileImageUrl: ${clientDto.profileImageUrl}")
+                    Client(
+                        clientDto.id, 
+                        clientDto.firstName, 
+                        clientDto.lastName, 
+                        clientDto.userId,
+                        clientDto.profileImageUrl
+                    )
+                } else {
+                    println("🔍 AuthRepositoryImpl: Client DTO is null for clientId: $clientId")
+                    null
+                }
+            } else {
+                println("🔍 AuthRepositoryImpl: Get client by ID failed: ${resp.code()}")
+                null
+            }
+        } catch (e: Exception) {
+            println("🔍 AuthRepositoryImpl: Exception getting client by ID: ${e.message}")
+            e.printStackTrace()
+            null
+        }
+    }
+    
+    override suspend fun uploadClientProfileImage(clientId: Int, imageFile: File): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            println("🔍 AuthRepositoryImpl: Starting image upload for clientId: $clientId")
+            println("🔍 AuthRepositoryImpl: Image file path: ${imageFile.absolutePath}")
+            println("🔍 AuthRepositoryImpl: Image file name: ${imageFile.name}")
+            println("🔍 AuthRepositoryImpl: Image file exists: ${imageFile.exists()}")
+            println("🔍 AuthRepositoryImpl: Image file size: ${imageFile.length()} bytes")
+            
+            // Detectar el tipo MIME basado en la extensión del archivo
+            val mimeType = getImageMimeType(imageFile)
+            println("🔍 AuthRepositoryImpl: Detected MIME type: $mimeType")
+            
+            if (mimeType == null) {
+                val errorMsg = "Tipo de archivo no soportado. Solo se permiten: JPEG, PNG, WEBP, GIF"
+                println("🔍 AuthRepositoryImpl: $errorMsg")
+                return@withContext Result.failure(Exception(errorMsg))
+            }
+            
+            val requestFile = imageFile.asRequestBody(mimeType.toMediaTypeOrNull())
+            println("🔍 AuthRepositoryImpl: Created request body with MIME type: $mimeType")
+            
+            val body = MultipartBody.Part.createFormData("file", imageFile.name, requestFile)
+            println("🔍 AuthRepositoryImpl: Created multipart body with field name: file, filename: ${imageFile.name}")
+            
+            println("🔍 AuthRepositoryImpl: Sending upload request to API...")
+            val response = authService.uploadProfileImage(clientId, body)
+            
+            println("🔍 AuthRepositoryImpl: Upload response code: ${response.code()}")
+            println("🔍 AuthRepositoryImpl: Upload response successful: ${response.isSuccessful}")
+            
+            if (response.isSuccessful) {
+                println("🔍 AuthRepositoryImpl: Image uploaded successfully!")
+                Result.success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                println("🔍 AuthRepositoryImpl: Upload profile image failed: ${response.code()} - $errorBody")
+                Result.failure(Exception("Upload failed: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            println("🔍 AuthRepositoryImpl: Exception uploading profile image: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Detecta el tipo MIME de una imagen basándose en su extensión
+     */
+    private fun getImageMimeType(file: File): String? {
+        val extension = file.extension.lowercase()
+        println("🔍 AuthRepositoryImpl: File extension: $extension")
+        
+        return when (extension) {
+            "jpg", "jpeg" -> {
+                println("🔍 AuthRepositoryImpl: Detected JPEG image")
+                "image/jpeg"
+            }
+            "png" -> {
+                println("🔍 AuthRepositoryImpl: Detected PNG image")
+                "image/png"
+            }
+            "webp" -> {
+                println("🔍 AuthRepositoryImpl: Detected WEBP image")
+                "image/webp"
+            }
+            "gif" -> {
+                println("🔍 AuthRepositoryImpl: Detected GIF image")
+                "image/gif"
+            }
+            else -> {
+                println("🔍 AuthRepositoryImpl: Unknown file extension: $extension")
+                null
+            }
         }
     }
 }
