@@ -6,10 +6,12 @@ import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReviewRepo
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.WorkerRepositoryImpl
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlotRepositoryImpl
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReservationRepositoryImpl
+import com.paxtech.mobileapp.features.clientDashboard.data.repository.DiscountRepositoryImpl
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.SalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.ReviewRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.WorkerRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.DiscountRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -37,4 +39,7 @@ interface RepositoryModule {
 
     @Binds
     fun bindReservationRepository(impl: ReservationRepositoryImpl): ReservationRepository
+
+    @Binds
+    fun bindDiscountRepository(impl: DiscountRepositoryImpl): DiscountRepository
 }

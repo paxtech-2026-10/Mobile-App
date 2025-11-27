@@ -42,6 +42,9 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,12 +67,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.paxtech.mobileapp.shared.model.Salon
 import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.Discount
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.DiscountType
 import com.paxtech.mobileapp.core.utils.LocationUtils
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import com.paxtech.mobileapp.ui.theme.TextPrimary
 import com.paxtech.mobileapp.ui.theme.TextSecondary
 import com.paxtech.mobileapp.ui.theme.BackgroundWhite
 import com.paxtech.mobileapp.ui.theme.BackgroundGray
+import kotlinx.coroutines.delay
 
 @Composable
 fun Home(
@@ -99,6 +105,10 @@ fun Home(
     val userLocation by viewModel.userLocation.collectAsState()
     val userAddress by viewModel.userAddress.collectAsState()
     val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
+    
+    // Estados de descuentos
+    val discounts by viewModel.discounts.collectAsState()
+    val isLoadingDiscounts by viewModel.isLoadingDiscounts.collectAsState()
     
     // Estado local para el TextField
     var searchText by remember { mutableStateOf("") }
@@ -378,62 +388,24 @@ fun Home(
             }
         }
 
-        // Promotional Banner
+        // Promotional Carousel - Descuentos dinámicos
         item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .height(160.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = PrimaryPurple
+            if (discounts.isNotEmpty()) {
+                DiscountCarousel(
+                    discounts = discounts,
+                    onDiscountClick = { discount ->
+                        // Guardar visita y navegar al salón del descuento
+                        viewModel.saveVisit(
+                            recommendedSalons.find { it.id == discount.providerProfileId } 
+                                ?: return@DiscountCarousel
+                        )
+                        onSalonClick(discount.providerProfileId)
+                    },
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp)
-                    ) {
-                        Text(
-                            text = "30% Descuento",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Paquete de Boda",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Peinado y tratamiento",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = { /* TODO: Navigate to package */ },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
-                                contentColor = PrimaryPurple
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = "Explorar",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
+            } else if (isLoadingDiscounts) {
+                // Mostrar loading placeholder
+                DiscountCarouselPlaceholder()
             }
         }
 
@@ -972,6 +944,186 @@ fun SearchResultItem(
                 color = TextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+// ========== COMPONENTES DEL CAROUSEL DE DESCUENTOS ==========
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun DiscountCarousel(
+    discounts: List<Discount>,
+    onDiscountClick: (Discount) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val pagerState = rememberPagerState(pageCount = { discounts.size })
+    
+    // Auto-scroll cada 5 segundos
+    LaunchedEffect(pagerState) {
+        while (true) {
+            delay(5000)
+            val nextPage = (pagerState.currentPage + 1) % discounts.size
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
+    
+    Column(modifier = modifier) {
+        // Título de sección
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Ofertas Especiales",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+        }
+        
+        // Pager
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth(),
+            pageSpacing = 16.dp,
+            contentPadding = PaddingValues(horizontal = 16.dp)
+        ) { page ->
+            DiscountCard(
+                discount = discounts[page],
+                onClick = { onDiscountClick(discounts[page]) }
+            )
+        }
+        
+        // Indicadores de página
+        if (discounts.size > 1) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(discounts.size) { index ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (pagerState.currentPage == index) 8.dp else 6.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (pagerState.currentPage == index) 
+                                    PrimaryPurple 
+                                else 
+                                    PrimaryPurple.copy(alpha = 0.3f)
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DiscountCard(
+    discount: Discount,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(160.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = PrimaryPurple
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                // Mostrar el valor del descuento
+                Text(
+                    text = when (discount.discountType) {
+                        DiscountType.PERCENTAGE -> "${discount.discountValue}% Descuento"
+                        DiscountType.FIXED -> "S/${discount.discountValue} Descuento"
+                    },
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Título del descuento
+                Text(
+                    text = discount.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                // Subtítulo
+                Text(
+                    text = discount.subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.9f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Button(
+                    onClick = onClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = PrimaryPurple
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "Ver Salón",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DiscountCarouselPlaceholder() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .height(160.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = BackgroundGray
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Cargando ofertas...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
             )
         }
     }

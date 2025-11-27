@@ -3,7 +3,9 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.LocalSalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.SalonRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.repository.ReviewRepository
+import com.paxtech.mobileapp.features.clientDashboard.domain.repository.DiscountRepository
 import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
+import com.paxtech.mobileapp.features.clientDashboard.domain.model.Discount
 import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.core.location.LocationManager
 import com.paxtech.mobileapp.core.utils.LocationUtils
@@ -28,6 +30,7 @@ class HomeViewModel @Inject constructor(
     private val localRepository: LocalSalonRepository,
     private val userDataRepository: UserDataRepository,
     private val reviewRepository: ReviewRepository,
+    private val discountRepository: DiscountRepository,
     private val locationManager: LocationManager,
     private val geocodingRepository: GeocodingRepository
 ): ViewModel() {
@@ -80,6 +83,13 @@ class HomeViewModel @Inject constructor(
     private val _salonAddresses = MutableStateFlow<Map<Int, String>>(emptyMap())
     val salonAddresses: StateFlow<Map<Int, String>> = _salonAddresses.asStateFlow()
 
+    // Estados para descuentos
+    private val _discounts = MutableStateFlow<List<Discount>>(emptyList())
+    val discounts: StateFlow<List<Discount>> = _discounts.asStateFlow()
+    
+    private val _isLoadingDiscounts = MutableStateFlow<Boolean>(false)
+    val isLoadingDiscounts: StateFlow<Boolean> = _isLoadingDiscounts.asStateFlow()
+
     fun loadAllData(){
         viewModelScope.launch {
             println("🔍 HomeViewModel: Loading all data...")
@@ -113,6 +123,24 @@ class HomeViewModel @Inject constructor(
             
             // Cargar nombre del usuario
             loadUserName()
+            
+            // Cargar descuentos
+            loadDiscounts()
+        }
+    }
+    
+    private suspend fun loadDiscounts() {
+        try {
+            _isLoadingDiscounts.value = true
+            println("🎟️ HomeViewModel: Loading discounts...")
+            val discountsList = discountRepository.getAllDiscounts()
+            _discounts.value = discountsList
+            println("🎟️ HomeViewModel: Loaded ${discountsList.size} discounts")
+        } catch (e: Exception) {
+            println("🎟️ HomeViewModel: Error loading discounts: ${e.message}")
+            _discounts.value = emptyList()
+        } finally {
+            _isLoadingDiscounts.value = false
         }
     }
     
