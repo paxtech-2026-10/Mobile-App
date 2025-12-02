@@ -33,6 +33,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
+import com.paxtech.mobileapp.ui.theme.BackgroundGray
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -84,7 +85,7 @@ fun Main(
     )
 
     Scaffold(
-        containerColor = Color.Transparent,
+        containerColor = Color.White,
         bottomBar = {
             Box(
                 modifier = Modifier
@@ -102,7 +103,7 @@ fun Main(
                     )
             ) {
                 NavigationBar(
-                    containerColor = Color.Transparent,
+                    containerColor = BackgroundGray,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     val currentRoute = tabNav.currentBackStackEntryAsState().value?.destination?.route
@@ -157,7 +158,7 @@ fun Main(
                         start = innerPadding.calculateStartPadding(layoutDirection),
                         top = innerPadding.calculateTopPadding(),
                         end = innerPadding.calculateEndPadding(layoutDirection),
-                        bottom = 0.dp
+                        bottom = innerPadding.calculateBottomPadding()
                     )
                 )
         ) {

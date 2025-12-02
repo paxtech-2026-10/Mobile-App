@@ -90,42 +90,55 @@ class HomeViewModel @Inject constructor(
     private val _isLoadingDiscounts = MutableStateFlow<Boolean>(false)
     val isLoadingDiscounts: StateFlow<Boolean> = _isLoadingDiscounts.asStateFlow()
 
+    private val _isLoadingHome = MutableStateFlow(true)
+    val isLoadingHome: StateFlow<Boolean> = _isLoadingHome.asStateFlow()
+
+    private val _hasLoadedHomeData = MutableStateFlow(false)
+
     fun loadAllData(){
         viewModelScope.launch {
+            if (_hasLoadedHomeData.value) return@launch
             println("🔍 HomeViewModel: Loading all data...")
-            
-            // Verificar permisos de ubicación
-            checkLocationPermission()
-            
-            // Cargar salones recomendados del API
-            val salons = repository.getAllSalons()
-            println("🔍 HomeViewModel: Received ${salons.size} recommended salons")
-            _recommendedSalons.value = salons
-            
-            // Cargar ratings para todos los salones
-            loadSalonRatings(salons)
-            
-            // Obtener ubicación del usuario
-            loadUserLocation()
-            
-            // Calcular distancias y ordenar salones
-            calculateSalonDistances(salons)
-            
-            // Cargar favoritos locales
-            val favorites = localRepository.getAllFavorites()
-            println("🔍 HomeViewModel: Received ${favorites.size} favorite salons")
-            _favoriteSalons.value = favorites
-            
-            // Cargar visitas recientes locales
-            val recent = localRepository.getRecentVisits()
-            println("🔍 HomeViewModel: Received ${recent.size} recent visits")
-            _recentVisits.value = recent
-            
-            // Cargar nombre del usuario
-            loadUserName()
-            
-            // Cargar descuentos
-            loadDiscounts()
+
+            _isLoadingHome.value = true
+
+            try {
+                // Verificar permisos de ubicación
+                checkLocationPermission()
+
+                // Cargar salones recomendados del API
+                val salons = repository.getAllSalons()
+                println("🔍 HomeViewModel: Received ${salons.size} recommended salons")
+                _recommendedSalons.value = salons
+
+                // Cargar ratings para todos los salones
+                loadSalonRatings(salons)
+
+                // Obtener ubicación del usuario
+                loadUserLocation()
+
+                // Calcular distancias y ordenar salones
+                calculateSalonDistances(salons)
+
+                // Cargar favoritos locales
+                val favorites = localRepository.getAllFavorites()
+                println("🔍 HomeViewModel: Received ${favorites.size} favorite salons")
+                _favoriteSalons.value = favorites
+
+                // Cargar visitas recientes locales
+                val recent = localRepository.getRecentVisits()
+                println("🔍 HomeViewModel: Received ${recent.size} recent visits")
+                _recentVisits.value = recent
+
+                // Cargar nombre del usuario
+                loadUserName()
+
+                // Cargar descuentos
+                loadDiscounts()
+                _hasLoadedHomeData.value = true
+            } finally {
+                _isLoadingHome.value = false
+            }
         }
     }
     

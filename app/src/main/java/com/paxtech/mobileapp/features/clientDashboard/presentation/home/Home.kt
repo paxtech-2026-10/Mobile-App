@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,9 +43,17 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -55,13 +64,16 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
@@ -75,6 +87,8 @@ import com.paxtech.mobileapp.ui.theme.TextPrimary
 import com.paxtech.mobileapp.ui.theme.TextSecondary
 import com.paxtech.mobileapp.ui.theme.BackgroundWhite
 import com.paxtech.mobileapp.ui.theme.BackgroundGray
+import com.paxtech.mobileapp.ui.theme.DividerGray
+import com.paxtech.mobileapp.R
 import kotlinx.coroutines.delay
 
 @Composable
@@ -87,32 +101,34 @@ fun Home(
     val recentVisits by viewModel.recentVisits.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val profileImageUrl by viewModel.profileImageUrl.collectAsState()
-    
+
     // Estados del buscador
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
-    
+
     // Ratings de salones
     val salonRatings by viewModel.salonRatings.collectAsState()
-    
+
     // Salones con distancias calculadas
     val salonsWithDistance by viewModel.salonsWithDistance.collectAsState()
-    
+
     // Direcciones de los salones
     val salonAddresses by viewModel.salonAddresses.collectAsState()
-    
+
     // Ubicación del usuario
     val userLocation by viewModel.userLocation.collectAsState()
     val userAddress by viewModel.userAddress.collectAsState()
     val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
-    
+
     // Estados de descuentos
     val discounts by viewModel.discounts.collectAsState()
     val isLoadingDiscounts by viewModel.isLoadingDiscounts.collectAsState()
-    
+
+    val isHomeLoading by viewModel.isLoadingHome.collectAsState()
+
     // Estado local para el TextField
     var searchText by remember { mutableStateOf("") }
-    
+
     // Launcher para solicitar permisos de ubicación
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -140,92 +156,101 @@ fun Home(
         userName.split(" ").mapNotNull { it.firstOrNull() }.joinToString("").uppercase().take(2)
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundWhite)
-    ) {
-        // Header Section
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+    if (isHomeLoading) {
+        HomeLoadingSkeleton()
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundWhite),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        ) {
+            // Header Section
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    // Profile picture
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryPurple.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (!profileImageUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = profileImageUrl,
-                                contentDescription = "Profile image",
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
+                        // Profile picture
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryPurple.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (!profileImageUrl.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = profileImageUrl,
+                                    contentDescription = "Profile image",
+                                    modifier = Modifier
+                                        .size(50.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = userInitials,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryPurple
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // User info
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = userInitials,
+                                text = userName,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = PrimaryPurple
+                                color = TextPrimary
                             )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    // User info
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = userName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        val currentLocation = userLocation
-                        if (hasLocationPermission && currentLocation != null) {
-                            // Mostrar dirección si está disponible, sino mostrar coordenadas como fallback
-                            Text(
-                                text = if (userAddress != null) {
-                                    "📍 $userAddress"
-                                } else {
-                                    "📍 ${String.format("%.6f", currentLocation.latitude)}, ${String.format("%.6f", currentLocation.longitude)}"
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        } else {
-                            Text(
-                                text = "Permitir acceso a ubicación",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary,
-                                modifier = Modifier.clickable {
-                                    locationPermissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                            Spacer(modifier = Modifier.height(2.dp))
+                            val currentLocation = userLocation
+                            if (hasLocationPermission && currentLocation != null) {
+                                // Mostrar dirección si está disponible, sino mostrar coordenadas como fallback
+                                Text(
+                                    text = if (userAddress != null) {
+                                        "📍 $userAddress"
+                                    } else {
+                                        "📍 ${
+                                            String.format(
+                                                "%.6f",
+                                                currentLocation.latitude
+                                            )
+                                        }, ${String.format("%.6f", currentLocation.longitude)}"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            } else {
+                                Text(
+                                    text = "Permitir acceso a ubicación",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary,
+                                    modifier = Modifier.clickable {
+                                        locationPermissionLauncher.launch(
+                                            arrayOf(
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                            )
                                         )
-                                    )
-                                }
-                            )
+                                    }
+                                )
+                            }
                         }
-                    }
 
-                    /* Notifications
+                        /* Notifications
                     Box {
                         IconButton(onClick = { /* TODO: Navigate to notifications */ }) {
                             Icon(
@@ -243,133 +268,133 @@ fun Home(
                                 .background(Color(0xFFF44336))
                         )
                     }*/
+                    }
                 }
             }
-        }
 
-        // Search Bar con Dropdown
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .zIndex(1f) // Asegurar que el dropdown esté por encima
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+            // Search Bar con Dropdown
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .zIndex(1f) // Asegurar que el dropdown esté por encima
                 ) {
-                    // Search TextField
-                    Box(
-                        modifier = Modifier.weight(1f)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextField(
-                            value = searchText,
-                            onValueChange = { searchText = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            placeholder = {
-                                Text(
-                                    text = "Buscar salones...",
-                                    color = TextSecondary
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Buscar",
-                                    tint = TextSecondary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                if (searchText.isNotEmpty()) {
-                                    IconButton(onClick = { 
-                                        searchText = ""
-                                        viewModel.clearSearch()
-                                    }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Limpiar",
-                                            tint = TextSecondary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = BackgroundGray,
-                                unfocusedContainerColor = BackgroundGray,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true
-                        )
-                        
-                        // Dropdown de resultados
-                        if (searchResults.isNotEmpty() && searchText.isNotEmpty()) {
-                            Card(
+                        // Search TextField
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            TextField(
+                                value = searchText,
+                                onValueChange = { searchText = it },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 60.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = BackgroundWhite
-                                )
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                ) {
-                                    searchResults.take(5).forEach { salon ->
-                                        SearchResultItem(
-                                            salon = salon,
-                                            onClick = {
-                                                viewModel.saveVisit(salon)
-                                                viewModel.clearSearch()
-                                                searchText = ""
-                                                onSalonClick(salon.id)
-                                            },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                }
-                            }
-                        } else if (isSearching && searchText.length >= 2) {
-                            // Mostrar indicador de carga
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 60.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = BackgroundWhite
-                                )
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
+                                    .height(56.dp),
+                                placeholder = {
                                     Text(
-                                        text = "Buscando...",
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        text = "Buscar salones...",
                                         color = TextSecondary
                                     )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Buscar",
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (searchText.isNotEmpty()) {
+                                        IconButton(onClick = {
+                                            searchText = ""
+                                            viewModel.clearSearch()
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Limpiar",
+                                                tint = TextSecondary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+                                },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = BackgroundGray,
+                                    unfocusedContainerColor = BackgroundGray,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true
+                            )
+
+                            // Dropdown de resultados
+                            if (searchResults.isNotEmpty() && searchText.isNotEmpty()) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 60.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = BackgroundWhite
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                    ) {
+                                        searchResults.take(5).forEach { salon ->
+                                            SearchResultItem(
+                                                salon = salon,
+                                                onClick = {
+                                                    viewModel.saveVisit(salon)
+                                                    viewModel.clearSearch()
+                                                    searchText = ""
+                                                    onSalonClick(salon.id)
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+                                }
+                            } else if (isSearching && searchText.length >= 2) {
+                                // Mostrar indicador de carga
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 60.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = BackgroundWhite
+                                    )
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Buscando...",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = TextSecondary
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                    
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
-                    /* Filter button
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        /* Filter button
                     Box(
                         modifier = Modifier
                             .size(48.dp)
@@ -384,33 +409,33 @@ fun Home(
                             modifier = Modifier.size(24.dp)
                         )
                     }*/
+                    }
                 }
             }
-        }
 
-        // Promotional Carousel - Descuentos dinámicos
-        item {
-            if (discounts.isNotEmpty()) {
-                DiscountCarousel(
-                    discounts = discounts,
-                    onDiscountClick = { discount ->
-                        // Guardar visita y navegar al salón del descuento
-                        viewModel.saveVisit(
-                            recommendedSalons.find { it.id == discount.providerProfileId } 
-                                ?: return@DiscountCarousel
-                        )
-                        onSalonClick(discount.providerProfileId)
-                    },
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            } else if (isLoadingDiscounts) {
-                // Mostrar loading placeholder
-                DiscountCarouselPlaceholder()
+            // Promotional Carousel - Descuentos dinámicos
+            item {
+                if (discounts.isNotEmpty()) {
+                    DiscountCarousel(
+                        discounts = discounts,
+                        onDiscountClick = { discount ->
+                            // Guardar visita y navegar al salón del descuento
+                            viewModel.saveVisit(
+                                recommendedSalons.find { it.id == discount.providerProfileId }
+                                    ?: return@DiscountCarousel
+                            )
+                            onSalonClick(discount.providerProfileId)
+                        },
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else if (isLoadingDiscounts) {
+                    // Mostrar loading placeholder
+                    DiscountCarouselPlaceholder()
+                }
             }
-        }
 
-        // Categories Section - COMENTADO: Sección de categorías deshabilitada temporalmente
-        /*
+            // Categories Section - COMENTADO: Sección de categorías deshabilitada temporalmente
+            /*
         item {
             Row(
                 modifier = Modifier
@@ -446,99 +471,7 @@ fun Home(
         }
         */
 
-        // Nearby Salons Section
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Salones Cercanos",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
-                /*
-                Text(
-                    text = "Ver todo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PrimaryPurple,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
-                )
-                */
-            }
-        }
-        item {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(salonsWithDistance) { (salon, distance) ->
-                    NearbySalonCard(
-                        salon = salon,
-                        onClick = {
-                            viewModel.saveVisit(salon)
-                            onSalonClick(salon.id)
-                        },
-                        isFavorite = favoriteSalons.any { it.id == salon.id },
-                        onFavoriteClick = { viewModel.toggleFavorite(salon) },
-                        ratingSummary = salonRatings[salon.id],
-                        distanceKm = distance,
-                        address = salonAddresses[salon.id]
-                    )
-                }
-            }
-        }
-
-        // Recent Salons Section
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Salones Recientes",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
-                /*
-                Text(
-                    text = "Ver todo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PrimaryPurple,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
-                )
-                */
-            }
-        }
-        items(recentVisits.ifEmpty { recommendedSalons.take(3) }) { salon ->
-            // Buscar la distancia del salón en la lista ordenada
-            val distance = salonsWithDistance.find { it.first.id == salon.id }?.second
-            PopularSalonCard(
-                salon = salon,
-                onClick = { onSalonClick(salon.id) },
-                isFavorite = favoriteSalons.any { it.id == salon.id },
-                onFavoriteClick = { viewModel.toggleFavorite(salon) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                ratingSummary = salonRatings[salon.id],
-                distanceKm = distance,
-                address = salonAddresses[salon.id]
-            )
-        }
-
-        // Favorite Salons Section
-        if (favoriteSalons.isNotEmpty()) {
+            // Nearby Salons Section
             item {
                 Row(
                     modifier = Modifier
@@ -548,20 +481,79 @@ fun Home(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Salones Favoritos",
+                        text = "Salones Cercanos",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
+                    // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
+                    /*
+                Text(
+                    text = "Ver todo",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PrimaryPurple,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
+                )
+                */
                 }
             }
-            items(favoriteSalons) { salon ->
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(salonsWithDistance) { (salon, distance) ->
+                        NearbySalonCard(
+                            salon = salon,
+                            onClick = {
+                                viewModel.saveVisit(salon)
+                                onSalonClick(salon.id)
+                            },
+                            isFavorite = favoriteSalons.any { it.id == salon.id },
+                            onFavoriteClick = { viewModel.toggleFavorite(salon) },
+                            ratingSummary = salonRatings[salon.id],
+                            distanceKm = distance,
+                            address = salonAddresses[salon.id]
+                        )
+                    }
+                }
+            }
+
+            // Recent Salons Section
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Salones Recientes",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    // COMENTADO: Botón "Ver todo" deshabilitado temporalmente
+                    /*
+                Text(
+                    text = "Ver todo",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PrimaryPurple,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable { /* TODO: Navigate to all salons */ }
+                )
+                */
+                }
+            }
+            items(recentVisits.ifEmpty { recommendedSalons.take(3) }) { salon ->
                 // Buscar la distancia del salón en la lista ordenada
                 val distance = salonsWithDistance.find { it.first.id == salon.id }?.second
                 PopularSalonCard(
                     salon = salon,
                     onClick = { onSalonClick(salon.id) },
-                    isFavorite = true,
+                    isFavorite = favoriteSalons.any { it.id == salon.id },
                     onFavoriteClick = { viewModel.toggleFavorite(salon) },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                     ratingSummary = salonRatings[salon.id],
@@ -569,11 +561,269 @@ fun Home(
                     address = salonAddresses[salon.id]
                 )
             }
+
+            // Favorite Salons Section
+            if (favoriteSalons.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Salones Favoritos",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                    }
+                }
+                items(favoriteSalons) { salon ->
+                    // Buscar la distancia del salón en la lista ordenada
+                    val distance = salonsWithDistance.find { it.first.id == salon.id }?.second
+                    PopularSalonCard(
+                        salon = salon,
+                        onClick = { onSalonClick(salon.id) },
+                        isFavorite = true,
+                        onFavoriteClick = { viewModel.toggleFavorite(salon) },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        ratingSummary = salonRatings[salon.id],
+                        distanceKm = distance,
+                        address = salonAddresses[salon.id]
+                    )
+                }
+            }
+
+        }
+    }
+}
+
+// --- Reemplaza desde aquí hacia abajo en tu archivo ---
+
+@Composable
+fun HomeLoadingSkeleton() {
+    val shimmerAlpha by rememberInfiniteTransition(label = "homeSkeleton")
+        .animateFloat(
+            initialValue = 0.3f,
+            targetValue = 0.6f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "homeSkeletonAlpha"
+        )
+
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundWhite)
+            .verticalScroll(scrollState)
+            .padding(bottom = 24.dp)
+    ) {
+        // 1. Header
+        HeaderSkeleton(shimmerAlpha = shimmerAlpha)
+
+        // 2. Buscador
+        SearchSkeleton(shimmerAlpha = shimmerAlpha)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 3. Ofertas Especiales
+        SectionTitleSkeleton(width = 180.dp, shimmerAlpha = shimmerAlpha)
+        DiscountBannerSkeleton(shimmerAlpha = shimmerAlpha)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 4. Salones Cercanos
+        SectionTitleSkeleton(width = 160.dp, shimmerAlpha = shimmerAlpha)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat(2) {
+                NearbyVerticalCardSkeleton(shimmerAlpha = shimmerAlpha)
+            }
         }
 
-        // Bottom padding
-        item {
-            Spacer(modifier = Modifier.height(80.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 5. Salones Recientes
+        SectionTitleSkeleton(width = 170.dp, shimmerAlpha = shimmerAlpha)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat(3) {
+                RecentHorizontalCardSkeleton(shimmerAlpha = shimmerAlpha)
+            }
+        }
+    }
+}
+
+// --- COMPONENTES AUXILIARES ACTUALIZADOS CON DividerGray ---
+
+@Composable
+private fun HeaderSkeleton(shimmerAlpha: Float) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(DividerGray.copy(alpha = shimmerAlpha)) // Usamos DividerGray también aquí para consistencia
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(16.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(DividerGray.copy(alpha = shimmerAlpha))
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .width(180.dp)
+                    .height(12.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(DividerGray.copy(alpha = shimmerAlpha))
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchSkeleton(shimmerAlpha: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(56.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(DividerGray.copy(alpha = shimmerAlpha * 0.5f))
+    )
+}
+
+@Composable
+private fun SectionTitleSkeleton(width: Dp, shimmerAlpha: Float) {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .width(width)
+            .height(20.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(DividerGray.copy(alpha = shimmerAlpha))
+    )
+}
+
+@Composable
+private fun DiscountBannerSkeleton(shimmerAlpha: Float) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(160.dp),
+        shape = RoundedCornerShape(16.dp),
+        // AQUI EL CAMBIO: Usamos DividerGray como color del container
+        colors = CardDefaults.cardColors(containerColor = DividerGray),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Sin sombra para aspecto "flat" de carga
+    ) {
+        // Contenido vacío
+    }
+}
+
+@Composable
+private fun NearbyVerticalCardSkeleton(shimmerAlpha: Float) {
+    Card(
+        modifier = Modifier
+            .width(220.dp)
+            .height(280.dp),
+        shape = RoundedCornerShape(16.dp),
+        // AQUI EL CAMBIO:
+        colors = CardDefaults.cardColors(containerColor = DividerGray),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column {
+            // Simulamos la imagen con un tono un poco más oscuro o usando alpha
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .background(Color.Black.copy(alpha = 0.05f)) // Sutil diferencia para la zona de imagen
+            )
+
+            Column(modifier = Modifier.padding(12.dp)) {
+                // Huesos de texto
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.width(100.dp).height(14.dp).clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = 0.05f)))
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(modifier = Modifier.fillMaxWidth(0.8f).height(12.dp).clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = 0.05f)))
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Botón
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Black.copy(alpha = 0.05f))
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentHorizontalCardSkeleton(shimmerAlpha: Float) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        // AQUI EL CAMBIO:
+        colors = CardDefaults.cardColors(containerColor = DividerGray),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.Black.copy(alpha = 0.05f))
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Box(modifier = Modifier.width(100.dp).height(14.dp).clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = 0.05f)))
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(modifier = Modifier.fillMaxWidth(0.9f).height(12.dp).clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = 0.05f)))
+                Spacer(modifier = Modifier.height(12.dp))
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Black.copy(alpha = 0.05f))
+                )
+            }
         }
     }
 }
