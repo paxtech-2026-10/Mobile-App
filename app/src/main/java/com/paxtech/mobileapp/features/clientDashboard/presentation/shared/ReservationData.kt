@@ -15,7 +15,11 @@ data class ReservationData(
     val selectedTime: String = "",
     val formattedDate: String = "",
     val formattedTime: String = "",
-    val timeSlotId: Long = 0L
+    val timeSlotId: Long = 0L,
+    // Información del descuento aplicado
+    val appliedDiscountTitle: String? = null,
+    val discountAmount: Double = 0.0,
+    val discountType: String? = null  // "PERCENTAGE" o "FIXED"
 )
 
 data class ServiceData(

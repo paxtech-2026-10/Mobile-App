@@ -227,19 +227,33 @@ fun ReservationConfirmedScreen(
                     }
                     Spacer(Modifier.height(8.dp))
 
-                    // TODO: Sistema de descuentos/cupones no implementado aún
-                    // Coupon Discount
-                    // Row(
-                    //     modifier = Modifier.fillMaxWidth(),
-                    //     horizontalArrangement = Arrangement.SpaceBetween
-                    // ) {
-                    //     Text("Coupon Discount", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                    //     Text("-$0.00", fontSize = 13.sp, color = Color(0xFF7A7A7A))  // Comentado: Descuento hardcodeado
-                    // }
+                    // Mostrar descuento si fue aplicado
+                    if (reservationData.appliedDiscountTitle != null && reservationData.discountAmount > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Descuento (${reservationData.appliedDiscountTitle})",
+                                fontSize = 13.sp,
+                                color = Color(0xFF7A7A7A)
+                            )
+                            Text(
+                                "-$${String.format("%.2f", reservationData.discountAmount)}",
+                                fontSize = 13.sp,
+                                color = Color(0xFF10B981),
+                                fontWeight = FontWeight.W500
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
 
                     Spacer(Modifier.height(12.dp))
                     HorizontalDivider(thickness = 1.dp, color = Color(0xFFE8E8E8))
                     Spacer(Modifier.height(12.dp))
+
+                    // Calcular precio final con descuento
+                    val finalTotal = (subtotal - reservationData.discountAmount).coerceAtLeast(0.0)
 
                     // Total Price
                     Row(
@@ -253,7 +267,7 @@ fun ReservationConfirmedScreen(
                             color = Color(0xFF2D3142)
                         )
                         Text(
-                            "$${String.format("%.2f", subtotal)}",
+                            "$${String.format("%.2f", finalTotal)}",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.W700,
                             color = Color(0xFF2D3142)

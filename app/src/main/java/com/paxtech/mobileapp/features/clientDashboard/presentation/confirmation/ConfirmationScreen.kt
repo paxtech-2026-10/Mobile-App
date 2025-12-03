@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.LocalOffer
 import androidx.compose.material3.*
@@ -34,16 +35,34 @@ fun ConfirmationScreen(
     timeSlotId: Long,
     workerId: Long,
     onBack: () -> Unit,
-    onPaymentLinkReady: (reservationId: Long, paymentId: Long, paymentLinkUrl: String) -> Unit,
+    onPaymentLinkReady: (reservationId: Long, paymentId: Long, paymentLinkUrl: String, discountTitle: String?, discountAmount: Double, discountType: String?) -> Unit,
     onError: (String) -> Unit
 ) {
     val viewModel: ConfirmationViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val appliedDiscount by viewModel.appliedDiscount.collectAsStateWithLifecycle()
+    val couponError by viewModel.couponError.collectAsStateWithLifecycle()
+    
+    // Estado local para el input de cupón
+    var couponCode by remember { mutableStateOf("") }
+    
+    val basePrice = extractPrice(reservationDetails.totalPrice)
     
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is ConfirmationUiState.PaymentLinkReady -> {
-                onPaymentLinkReady(state.reservationId, state.paymentId, state.paymentLinkUrl)
+                // Pasar información del descuento aplicado
+                val discountTitle = appliedDiscount?.title
+                val discountAmountValue = viewModel.calculateDiscountAmount(basePrice)
+                val discountTypeValue = appliedDiscount?.discountType?.name
+                onPaymentLinkReady(
+                    state.reservationId, 
+                    state.paymentId, 
+                    state.paymentLinkUrl,
+                    discountTitle,
+                    discountAmountValue,
+                    discountTypeValue
+                )
             }
             is ConfirmationUiState.Error -> {
                 onError(state.message)
@@ -51,17 +70,12 @@ fun ConfirmationScreen(
             else -> {}
         }
     }
-    // TODO: Sistema de descuentos/cupones no implementado aún
-    // var couponCode by remember { mutableStateOf("") }
-    // var appliedDiscount by remember { mutableStateOf(0.0) }
 
-    val basePrice = extractPrice(reservationDetails.totalPrice)
-    // TODO: Los impuestos deberían venir del backend o configuración del salón
-    // val cgst = 5.0  // Comentado: Impuesto hardcodeado
-    // val sgst = 5.0  // Comentado: Impuesto hardcodeado
-    // val subtotal = basePrice + cgst + sgst
-    val subtotal = basePrice  // Por ahora solo el precio base sin impuestos
-    val finalTotal = subtotal  // Sin descuentos por ahora
+    val subtotal = basePrice
+    
+    // Calcular descuento y precio final
+    val discountAmount = viewModel.calculateDiscountAmount(basePrice)
+    val finalTotal = viewModel.calculateFinalPrice(basePrice)
 
     Scaffold(
         topBar = {
@@ -268,75 +282,113 @@ fun ConfirmationScreen(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // TODO: Sistema de descuentos/cupones no implementado aún
-                        // Text(
-                        //     text = "Apply Coupon",
-                        //     fontSize = 14.sp,
-                        //     fontWeight = FontWeight.W600,
-                        //     color = Color(0xFF2D3142)
-                        // )
-                        //
-                        // Spacer(modifier = Modifier.height(12.dp))
-                        //
-                        // Row(
-                        //     modifier = Modifier.fillMaxWidth(),
-                        //     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        //     verticalAlignment = Alignment.CenterVertically
-                        // ) {
-                        //     OutlinedTextField(
-                        //         value = couponCode,
-                        //         onValueChange = { couponCode = it },
-                        //         modifier = Modifier.weight(1f),
-                        //         placeholder = {
-                        //             Text(
-                        //                 "Enter coupon",
-                        //                 fontSize = 13.sp,
-                        //                 color = Color(0xFFAAAAAA)
-                        //             )
-                        //         },
-                        //         leadingIcon = {
-                        //             Icon(
-                        //                 imageVector = Icons.Outlined.LocalOffer,
-                        //                 contentDescription = null,
-                        //                 tint = PrimaryPurple,
-                        //                 modifier = Modifier.size(20.dp)
-                        //             )
-                        //         },
-                        //         shape = RoundedCornerShape(12.dp),
-                        //         colors = OutlinedTextFieldDefaults.colors(
-                        //             unfocusedBorderColor = Color(0xFFE8E8E8),
-                        //             focusedBorderColor = PrimaryPurple,
-                        //             unfocusedContainerColor = Color(0xFFFAFAFA),
-                        //             focusedContainerColor = Color(0xFFFAFAFA)
-                        //         ),
-                        //         singleLine = true
-                        //     )
-                        //
-                        //     Button(
-                        //         onClick = {
-                        //             // TODO: Validar cupón con el backend y obtener el descuento real
-                        //             if (couponCode.isNotEmpty()) {
-                        //                 appliedDiscount = basePrice * 0.10
-                        //             } else {
-                        //                 appliedDiscount = 0.0
-                        //             }
-                        //         },
-                        //         modifier = Modifier.height(56.dp),
-                        //         colors = ButtonDefaults.buttonColors(
-                        //             containerColor = PrimaryPurple
-                        //         ),
-                        //         shape = RoundedCornerShape(12.dp),
-                        //         contentPadding = PaddingValues(horizontal = 24.dp)
-                        //     ) {
-                        //         Text(
-                        //             "Apply",
-                        //             fontSize = 14.sp,
-                        //             fontWeight = FontWeight.W600
-                        //         )
-                        //     }
-                        // }
-                        //
-                        // Spacer(modifier = Modifier.height(20.dp))
+                        // ========== SECCIÓN DE CUPÓN ==========
+                        Text(
+                            text = "Apply Coupon",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W600,
+                            color = Color(0xFF2D3142)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = couponCode,
+                                onValueChange = { 
+                                    couponCode = it
+                                    // Limpiar error cuando el usuario escribe
+                                    if (couponError != null) {
+                                        viewModel.removeCoupon()
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                placeholder = {
+                                    Text(
+                                        "Ingresa el título del descuento",
+                                        fontSize = 13.sp,
+                                        color = Color(0xFFAAAAAA)
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.LocalOffer,
+                                        contentDescription = null,
+                                        tint = PrimaryPurple,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (appliedDiscount != null) {
+                                        IconButton(onClick = {
+                                            couponCode = ""
+                                            viewModel.removeCoupon()
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Remover cupón",
+                                                tint = Color(0xFFEF4444),
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+                                },
+                                isError = couponError != null,
+                                supportingText = {
+                                    if (couponError != null) {
+                                        Text(
+                                            text = couponError!!,
+                                            color = Color(0xFFEF4444),
+                                            fontSize = 12.sp
+                                        )
+                                    } else if (appliedDiscount != null) {
+                                        Text(
+                                            text = "Cupón aplicado: ${appliedDiscount!!.title}",
+                                            color = Color(0xFF10B981),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = if (appliedDiscount != null) Color(0xFF10B981) else Color(0xFFE8E8E8),
+                                    focusedBorderColor = PrimaryPurple,
+                                    unfocusedContainerColor = Color(0xFFFAFAFA),
+                                    focusedContainerColor = Color(0xFFFAFAFA),
+                                    errorBorderColor = Color(0xFFEF4444)
+                                ),
+                                singleLine = true,
+                                enabled = appliedDiscount == null  // Deshabilitar cuando hay cupón aplicado
+                            )
+
+                            Button(
+                                onClick = {
+                                    viewModel.applyCoupon(couponCode.trim(), providerId)
+                                },
+                                modifier = Modifier.height(56.dp),
+                                enabled = couponCode.isNotBlank() && appliedDiscount == null,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = PrimaryPurple,
+                                    disabledContainerColor = Color(0xFFE8E8E8)
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp)
+                            ) {
+                                Text(
+                                    if (appliedDiscount != null) "Aplicado" else "Aplicar",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.W600,
+                                    color = if (appliedDiscount != null) Color(0xFF10B981) else Color.White
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                        // ========== FIN SECCIÓN DE CUPÓN ==========
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -366,20 +418,26 @@ fun ConfirmationScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // TODO: Sistema de descuentos/cupones no implementado aún
-                        // Row(
-                        //     modifier = Modifier.fillMaxWidth(),
-                        //     horizontalArrangement = Arrangement.SpaceBetween
-                        // ) {
-                        //     Text("Coupon Discount", fontSize = 13.sp, color = Color(0xFF7A7A7A))
-                        //     Text(
-                        //         "-$${String.format("%.2f", appliedDiscount)}",
-                        //         fontSize = 13.sp,
-                        //         color = if (appliedDiscount > 0) Color(0xFFEF4444) else Color(0xFF2D3142)
-                        //     )
-                        // }
-                        //
-                        // Spacer(modifier = Modifier.height(8.dp))
+                        // Mostrar descuento si está aplicado
+                        if (appliedDiscount != null && discountAmount > 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    "Descuento (${appliedDiscount!!.title})",
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF7A7A7A)
+                                )
+                                Text(
+                                    "-$${String.format("%.2f", discountAmount)}",
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF10B981),
+                                    fontWeight = FontWeight.W500
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
                         HorizontalDivider(thickness = 1.dp, color = Color(0xFFE8E8E8))
@@ -438,14 +496,13 @@ fun ConfirmationScreen(
 
                     Button(
                         onClick = {
-                            val amount = extractPrice(reservationDetails.totalPrice)
                             viewModel.createReservationAndStartPayment(
                                 clientId = clientId,
                                 providerId = providerId,
                                 serviceId = serviceId,
                                 timeSlotId = timeSlotId,
                                 workerId = workerId,
-                                amount = amount
+                                baseAmount = basePrice  // Pasar precio base, el ViewModel calculará el descuento
                             )
                         },
                         modifier = Modifier

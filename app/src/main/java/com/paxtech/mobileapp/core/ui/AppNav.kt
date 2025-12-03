@@ -300,7 +300,14 @@ fun AppNav() {
                 timeSlotId = current.timeSlotId,
                 workerId = current.selectedProfessionalId,
                 onBack = { navController.popBackStack() },
-                onPaymentLinkReady = { reservationId, paymentId, paymentLinkUrl ->
+                onPaymentLinkReady = { reservationId, paymentId, paymentLinkUrl, discountTitle, discountAmount, discountType ->
+                    // Actualizar ReservationData con la información del descuento antes de navegar
+                    reservationData.value = current.copy(
+                        appliedDiscountTitle = discountTitle,
+                        discountAmount = discountAmount,
+                        discountType = discountType
+                    )
+                    
                     val encodedUrl = java.net.URLEncoder.encode(paymentLinkUrl, "UTF-8")
                     navController.navigate("payment_processing/$reservationId/$paymentId?paymentLinkUrl=$encodedUrl") {
                         popUpTo(Route.Confirmation.routeWithArgument) { inclusive = false }
