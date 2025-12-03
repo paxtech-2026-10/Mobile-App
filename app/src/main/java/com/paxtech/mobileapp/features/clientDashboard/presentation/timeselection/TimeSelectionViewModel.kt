@@ -38,10 +38,18 @@ class TimeSelectionViewModel @Inject constructor(
     val errorMessage: StateFlow<String?> = _errorMessage
 
     // Soporta múltiples formatos de fecha del backend
+    // IMPORTANTE: El backend devuelve fechas sin zona horaria, pero las guarda en UTC
+    // Por lo tanto, interpretamos las fechas sin 'Z' como UTC
     private val inputFormats = listOf(
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US), // Formato del backend: 2025-11-02T16:30:00
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US), // Formato ISO con milisegundos
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US) // Formato ISO sin milisegundos
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { 
+            timeZone = TimeZone.getTimeZone("UTC") 
+        }, // Formato del backend: 2025-11-02T16:30:00 (interpretado como UTC)
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply { 
+            timeZone = TimeZone.getTimeZone("UTC") 
+        }, // Formato ISO con milisegundos en UTC
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { 
+            timeZone = TimeZone.getTimeZone("UTC") 
+        } // Formato ISO sin milisegundos en UTC
     )
     private val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US) // Para extraer solo la fecha
@@ -177,11 +185,15 @@ class TimeSelectionViewModel @Inject constructor(
                     add(Calendar.MINUTE, serviceDuration)
                 }
                 
-                // Formatear a ISO 8601 con Z (UTC)
-                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+                // Formatear a ISO 8601 convirtiendo a UTC
+                // El backend guarda en UTC, así que convertimos la hora local a UTC
+                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
                 isoFormat.timeZone = TimeZone.getTimeZone("UTC")
                 val startTimeISO = isoFormat.format(calendar.time)
                 val endTimeISO = isoFormat.format(endCalendar.time)
+                
+                println("🔍 TimeSelectionViewModel: Hora local seleccionada: ${calendar.get(Calendar.HOUR_OF_DAY)}:${calendar.get(Calendar.MINUTE)}")
+                println("🔍 TimeSelectionViewModel: ISO string generado (UTC): $startTimeISO")
                 
                 println("🔍 TimeSelectionViewModel: Creando time slot - startTime: $startTimeISO, endTime: $endTimeISO, duration: $serviceDuration min")
                 

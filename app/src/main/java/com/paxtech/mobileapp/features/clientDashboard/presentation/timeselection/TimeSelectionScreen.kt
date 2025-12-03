@@ -58,12 +58,23 @@ fun TimeSelectionScreen(
     val localeEn = Locale.ENGLISH
     val localeEs = Locale("es", "ES")
 
+    val today = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    
     var currentWeekStart by remember { mutableStateOf(startOfWeek(Calendar.getInstance())) }
     var selectedDate by remember { mutableStateOf(cloneCal(currentWeekStart)) }
     var selectedTime by remember { mutableStateOf("10:00 AM") }
 
     val weekDates = remember(currentWeekStart.timeInMillis) {
         List(6) { idx -> addDays(currentWeekStart, idx) }
+            .filter { dateCal ->
+                // Filtrar días anteriores a hoy
+                !dateCal.before(today)
+            }
     }
 
     val monthTitle = remember(currentWeekStart.timeInMillis) {
@@ -226,6 +237,12 @@ fun TimeSelectionScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Mostrar horarios hardcodeados en filas de 4
+                        // Filtrar horas pasadas si la fecha seleccionada es hoy
+                        val isToday = isSameDay(selectedDate, today)
+                        val currentTime = Calendar.getInstance()
+                        val currentHour = currentTime.get(Calendar.HOUR_OF_DAY)
+                        val currentMinute = currentTime.get(Calendar.MINUTE)
+                        
                         timeSlots.forEach { row ->
                             Row(
                                 modifier = Modifier
@@ -234,9 +251,26 @@ fun TimeSelectionScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 row.forEach { time ->
+                                    // Verificar si la hora ya pasó (solo para hoy)
+                                    val isPastTime = if (isToday) {
+                                        val timeFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                                        val timeDate = timeFormat.parse(time)
+                                        if (timeDate != null) {
+                                            val timeCal = Calendar.getInstance().apply { this.time = timeDate }
+                                            val timeHour = timeCal.get(Calendar.HOUR_OF_DAY)
+                                            val timeMinute = timeCal.get(Calendar.MINUTE)
+                                            timeHour < currentHour || (timeHour == currentHour && timeMinute <= currentMinute)
+                                        } else {
+                                            false
+                                        }
+                                    } else {
+                                        false
+                                    }
+                                    
                                     val status = when {
                                         time == selectedTime -> TimeStatus.SELECTED
                                         bookedTimeSlotsForDate.contains(time) -> TimeStatus.BOOKED
+                                        isPastTime -> TimeStatus.BOOKED // Tratar horas pasadas como ocupadas
                                         else -> TimeStatus.AVAILABLE
                                     }
                                     TimeSlotButton(
