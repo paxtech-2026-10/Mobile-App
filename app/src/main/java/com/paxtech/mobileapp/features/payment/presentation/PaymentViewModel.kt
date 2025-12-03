@@ -99,6 +99,37 @@ class PaymentViewModel @Inject constructor(
         pollingJob?.cancel()
     }
     
+    /**
+     * Verifica inmediatamente el estado del pago sin esperar el delay del polling
+     * Útil cuando la app vuelve al foreground después de completar el pago
+     */
+    fun checkPaymentStatusImmediately(paymentId: Long) {
+        viewModelScope.launch {
+            val result = paymentRepository.getPaymentById(paymentId)
+            result.onSuccess { payment ->
+                when (payment.paymentStatus) {
+                    PaymentStatus.SUCCEEDED -> {
+                        println("🔍 PaymentViewModel: Payment succeeded detected immediately!")
+                        _paymentState.value = PaymentState.PaymentSucceeded(payment)
+                        pollingJob?.cancel()
+                    }
+                    PaymentStatus.FAILED -> {
+                        println("🔍 PaymentViewModel: Payment failed detected immediately!")
+                        _paymentState.value = PaymentState.PaymentFailed("El pago falló")
+                        pollingJob?.cancel()
+                    }
+                    PaymentStatus.PENDING -> {
+                        println("🔍 PaymentViewModel: Payment still pending, continuing polling")
+                        // Si aún está pendiente, el polling continuará verificando
+                    }
+                }
+            }.onFailure { error ->
+                println("🔍 PaymentViewModel: Error checking payment status immediately: ${error.message}")
+                // No cambiar el estado si hay error, dejar que el polling continúe
+            }
+        }
+    }
+    
     fun resetState() {
         _paymentState.value = PaymentState.Idle
     }

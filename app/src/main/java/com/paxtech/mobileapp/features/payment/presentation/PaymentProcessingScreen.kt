@@ -19,6 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.DisposableEffect
 import com.paxtech.mobileapp.ui.theme.PrimaryPurple
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,8 +36,24 @@ fun PaymentProcessingScreen(
     viewModel: PaymentViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val paymentState by viewModel.paymentState.collectAsStateWithLifecycle()
     var hasOpenedBrowser by remember { mutableStateOf(false) }
+    
+    // Detectar cuando la app vuelve al foreground para verificar inmediatamente el estado del pago
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && paymentId != null && hasOpenedBrowser) {
+                // Cuando la app vuelve al foreground, verificar inmediatamente el estado del pago
+                println("🔍 PaymentProcessingScreen: App resumed, checking payment status immediately")
+                viewModel.checkPaymentStatusImmediately(paymentId)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
     
     LaunchedEffect(paymentId, paymentLinkUrl) {
         if (paymentId != null && paymentLinkUrl != null && !hasOpenedBrowser) {
