@@ -361,13 +361,17 @@ private fun parseDate(dateString: String): Date? {
             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
             "yyyy-MM-dd'T'HH:mm:ss'Z'",
             "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
-            "yyyy-MM-dd'T'HH:mm:ssXXX"
+            "yyyy-MM-dd'T'HH:mm:ssXXX",
+            "yyyy-MM-dd'T'HH:mm:ss"  // Formato sin 'Z' ni milisegundos (ej: "2025-11-11T16:15:00")
         )
         
         for (format in formats) {
             try {
                 val sdf = SimpleDateFormat(format, Locale.getDefault())
-                sdf.timeZone = TimeZone.getTimeZone("UTC")
+                // Solo establecer timeZone si el formato incluye 'Z' o zona horaria
+                if (format.contains("Z") || format.contains("XXX")) {
+                    sdf.timeZone = TimeZone.getTimeZone("UTC")
+                }
                 return sdf.parse(dateString)
             } catch (e: Exception) {
                 continue

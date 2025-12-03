@@ -259,7 +259,7 @@ fun ServiceCard(
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Button(
-                    onClick = {},
+                    onClick = onReserveClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary

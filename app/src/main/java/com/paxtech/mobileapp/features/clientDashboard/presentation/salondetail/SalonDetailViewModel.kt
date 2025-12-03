@@ -67,22 +67,22 @@ class SalonDetailViewModel @Inject constructor(
                 if (salonData != null) {
                     _salon.value = salonData
 
-                    // Cargar rating del salón
-                    loadRatingSummary(salonId)
-                    
-                    // Cargar dirección real usando geocoding
-                    loadSalonAddress(salonData.location)
-                    
-                    // Verificar si es favorito
-                    checkFavoriteStatus(salonId)
-
-                    // Actualizar la información "About" con datos reales del salón
+                    // Actualizar la información "About" con datos reales del salón primero
                     // La ubicación se actualizará cuando se cargue la dirección real
                     _about.value = AboutUi(
                         email = salonData.email,
                         socials = salonData.socials,
-                        ubicacion = salonData.location, // Se actualizará cuando se cargue la dirección
+                        ubicacion = salonData.location, // Temporal: se actualizará cuando se cargue la dirección
                     )
+
+                    // Cargar rating del salón
+                    loadRatingSummary(salonId)
+                    
+                    // Cargar dirección real usando geocoding (esto actualizará about.ubicacion)
+                    loadSalonAddress(salonData.location)
+                    
+                    // Verificar si es favorito
+                    checkFavoriteStatus(salonId)
                 } else {
                     // Si no se encuentra el salón en el API, usar datos mockeados
                     _salon.value = Salon(
