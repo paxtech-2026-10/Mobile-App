@@ -143,7 +143,8 @@ fun Home(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundWhite)
+            .background(BackgroundWhite),
+        contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         // Header Section
         item {
@@ -571,9 +572,9 @@ fun Home(
             }
         }
 
-        // Bottom padding
+        // Bottom padding adicional para asegurar que el contenido sea visible
         item {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
