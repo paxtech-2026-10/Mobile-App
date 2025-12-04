@@ -300,10 +300,23 @@ fun AppNav() {
                 timeSlotId = current.timeSlotId,
                 workerId = current.selectedProfessionalId,
                 onBack = { navController.popBackStack() },
-                onPaymentLinkReady = { reservationId, paymentId, paymentLinkUrl ->
-                    val encodedUrl = java.net.URLEncoder.encode(paymentLinkUrl, "UTF-8")
-                    navController.navigate("payment_processing/$reservationId/$paymentId?paymentLinkUrl=$encodedUrl") {
-                        popUpTo(Route.Confirmation.routeWithArgument) { inclusive = false }
+                onCancel = {
+                    val salonRoute = "${Route.SalonDetails.route}/${current.salonId}"
+                    val popped = navController.popBackStack(route = salonRoute, inclusive = false)
+                    if (!popped) {
+                        navController.navigate(salonRoute) {
+                            popUpTo(Route.Home.route) { inclusive = false }
+                        }
+                    }
+                },
+                onReservationConfirmed = {
+                    val salonRoute = "${Route.SalonDetails.route}/${current.salonId}"
+                    val popped = navController.popBackStack(route = salonRoute, inclusive = false)
+                    if (!popped) {
+                        navController.navigate(salonRoute) {
+                            popUpTo(Route.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     }
                 },
                 onError = { errorMessage ->

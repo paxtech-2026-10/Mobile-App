@@ -600,8 +600,6 @@ fun Home(
     }
 }
 
-// --- Reemplaza desde aquí hacia abajo en tu archivo ---
-
 @Composable
 fun HomeLoadingSkeleton() {
     val shimmerAlpha by rememberInfiniteTransition(label = "homeSkeleton")
@@ -624,21 +622,17 @@ fun HomeLoadingSkeleton() {
             .verticalScroll(scrollState)
             .padding(bottom = 24.dp)
     ) {
-        // 1. Header
         HeaderSkeleton(shimmerAlpha = shimmerAlpha)
 
-        // 2. Buscador
         SearchSkeleton(shimmerAlpha = shimmerAlpha)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 3. Ofertas Especiales
         SectionTitleSkeleton(width = 180.dp, shimmerAlpha = shimmerAlpha)
         DiscountBannerSkeleton(shimmerAlpha = shimmerAlpha)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 4. Salones Cercanos
         SectionTitleSkeleton(width = 160.dp, shimmerAlpha = shimmerAlpha)
         Row(
             modifier = Modifier
@@ -653,7 +647,6 @@ fun HomeLoadingSkeleton() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 5. Salones Recientes
         SectionTitleSkeleton(width = 170.dp, shimmerAlpha = shimmerAlpha)
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -665,7 +658,6 @@ fun HomeLoadingSkeleton() {
     }
 }
 
-// --- COMPONENTES AUXILIARES ACTUALIZADOS CON DividerGray ---
 
 @Composable
 private fun HeaderSkeleton(shimmerAlpha: Float) {
@@ -679,7 +671,7 @@ private fun HeaderSkeleton(shimmerAlpha: Float) {
             modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape)
-                .background(DividerGray.copy(alpha = shimmerAlpha)) // Usamos DividerGray también aquí para consistencia
+                .background(DividerGray.copy(alpha = shimmerAlpha))
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -736,11 +728,10 @@ private fun DiscountBannerSkeleton(shimmerAlpha: Float) {
             .padding(horizontal = 16.dp)
             .height(160.dp),
         shape = RoundedCornerShape(16.dp),
-        // AQUI EL CAMBIO: Usamos DividerGray como color del container
         colors = CardDefaults.cardColors(containerColor = DividerGray),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Sin sombra para aspecto "flat" de carga
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        // Contenido vacío
+
     }
 }
 
@@ -751,21 +742,18 @@ private fun NearbyVerticalCardSkeleton(shimmerAlpha: Float) {
             .width(220.dp)
             .height(280.dp),
         shape = RoundedCornerShape(16.dp),
-        // AQUI EL CAMBIO:
         colors = CardDefaults.cardColors(containerColor = DividerGray),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column {
-            // Simulamos la imagen con un tono un poco más oscuro o usando alpha
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp)
-                    .background(Color.Black.copy(alpha = 0.05f)) // Sutil diferencia para la zona de imagen
+                    .background(Color.Black.copy(alpha = 0.05f))
             )
 
             Column(modifier = Modifier.padding(12.dp)) {
-                // Huesos de texto
                 Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Box(modifier = Modifier.width(100.dp).height(14.dp).clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = 0.05f)))
                 }
@@ -774,7 +762,6 @@ private fun NearbyVerticalCardSkeleton(shimmerAlpha: Float) {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Botón
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -794,7 +781,6 @@ private fun RecentHorizontalCardSkeleton(shimmerAlpha: Float) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        // AQUI EL CAMBIO:
         colors = CardDefaults.cardColors(containerColor = DividerGray),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {

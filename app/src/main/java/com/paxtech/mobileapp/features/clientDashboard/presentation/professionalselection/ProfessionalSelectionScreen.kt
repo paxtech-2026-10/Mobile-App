@@ -71,7 +71,7 @@ fun ProfessionalSelectionScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Volver",
                             tint = Color.Black
                         )
                     }
@@ -222,7 +222,7 @@ private fun ProfessionalCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
-                        contentDescription = "Selected",
+                        contentDescription = "Seleccionado",
                         tint = Color.White,
                         modifier = Modifier.size(14.dp)
                     )

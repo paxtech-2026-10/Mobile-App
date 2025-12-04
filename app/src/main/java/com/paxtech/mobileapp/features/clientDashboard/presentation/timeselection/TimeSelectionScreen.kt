@@ -95,7 +95,7 @@ fun TimeSelectionScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Select Date & Time",
+                        "Selecciona fecha y hora",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = Color.Black
@@ -105,7 +105,7 @@ fun TimeSelectionScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Regresar",
                             tint = Color.Black
                         )
                     }
@@ -148,7 +148,7 @@ fun TimeSelectionScreen(
                             ) {
                                 Icon(
                                     Icons.Filled.ChevronLeft,
-                                    contentDescription = "Previous",
+                                    contentDescription = "Anterior",
                                     tint = Color.White
                                 )
                             }
@@ -166,7 +166,7 @@ fun TimeSelectionScreen(
                             ) {
                                 Icon(
                                     Icons.Filled.ChevronRight,
-                                    contentDescription = "Next",
+                                    contentDescription = "Siguiente",
                                     tint = Color.White
                                 )
                             }
@@ -210,16 +210,16 @@ fun TimeSelectionScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Time",
+                                "Horarios",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
 
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                LegendItem(color = PrimaryPurple, label = "Selected")
-                                LegendItem(color = Color(0xFFF3EDFF), label = "Available")
-                                LegendItem(color = Color(0xFFE7F1ED), label = "Booked")
+                                LegendItem(color = PrimaryPurple, label = "Seleccionado")
+                                LegendItem(color = Color(0xFFF3EDFF), label = "Disponible")
+                                LegendItem(color = Color(0xFFE7F1ED), label = "Reservado")
                             }
                         }
 
@@ -311,7 +311,7 @@ fun TimeSelectionScreen(
                         shape = RoundedCornerShape(28.dp)
                     ) {
                         Text(
-                            "Continue",
+                            "Continuar",
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp

@@ -1,12 +1,15 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.confirmation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.LocalOffer
 import androidx.compose.material3.*
@@ -19,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -34,16 +38,21 @@ fun ConfirmationScreen(
     timeSlotId: Long,
     workerId: Long,
     onBack: () -> Unit,
-    onPaymentLinkReady: (reservationId: Long, paymentId: Long, paymentLinkUrl: String) -> Unit,
+    onCancel: () -> Unit,
+    onReservationConfirmed: () -> Unit,
     onError: (String) -> Unit
 ) {
     val viewModel: ConfirmationViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showSuccessDialog by remember { mutableStateOf(false) }
     
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is ConfirmationUiState.PaymentLinkReady -> {
-                onPaymentLinkReady(state.reservationId, state.paymentId, state.paymentLinkUrl)
+                showSuccessDialog = true
+                viewModel.resetState()
             }
             is ConfirmationUiState.Error -> {
                 onError(state.message)
@@ -64,11 +73,12 @@ fun ConfirmationScreen(
     val finalTotal = subtotal  // Sin descuentos por ahora
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Your Appointment",
+                        "Tu cita",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.W600,
                         color = Color(0xFF2D3142)
@@ -78,7 +88,7 @@ fun ConfirmationScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Regresar",
                             tint = Color(0xFF2D3142)
                         )
                     }
@@ -196,7 +206,7 @@ fun ConfirmationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Date & Time:",
+                                text = "Fecha y hora:",
                                 fontSize = 13.sp,
                                 color = Color(0xFF7A7A7A)
                             )
@@ -216,7 +226,7 @@ fun ConfirmationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Gender Type:",
+                                text = "Profesional:",
                                 fontSize = 13.sp,
                                 color = Color(0xFF7A7A7A)
                             )
@@ -231,7 +241,7 @@ fun ConfirmationScreen(
                         Spacer(modifier = Modifier.height(20.dp))
 
                         Text(
-                            text = "Service List",
+                            text = "Servicio",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.W600,
                             color = Color(0xFF2D3142)
@@ -342,9 +352,9 @@ fun ConfirmationScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Total Time", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                            Text("Tiempo total", fontSize = 13.sp, color = Color(0xFF7A7A7A))
                             Text(
-                                "${reservationDetails.duration} Minutes",
+                                "${reservationDetails.duration} minutos",
                                 fontSize = 13.sp,
                                 color = Color(0xFF2D3142)
                             )
@@ -390,7 +400,7 @@ fun ConfirmationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Total Price",
+                                text = "Precio total",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.W600,
                                 color = Color(0xFF2D3142)
@@ -436,38 +446,115 @@ fun ConfirmationScreen(
                         )
                     }
 
-                    Button(
-                        onClick = {
-                            val amount = extractPrice(reservationDetails.totalPrice)
-                            viewModel.createReservationAndStartPayment(
-                                clientId = clientId,
-                                providerId = providerId,
-                                serviceId = serviceId,
-                                timeSlotId = timeSlotId,
-                                workerId = workerId,
-                                amount = amount
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(
+                            onClick = onCancel,
+                            modifier = Modifier
+                                .height(54.dp),
+                            shape = RoundedCornerShape(27.dp),
+                            border = BorderStroke(1.dp, Color(0x332D3142)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFF2D3142)
                             )
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .height(54.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryPurple
-                        ),
-                        shape = RoundedCornerShape(27.dp),
-                        elevation = ButtonDefaults.buttonElevation(0.dp)
-                    ) {
-                        Text(
-                            text = "Confirmar",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.W600
-                        )
+                        ) {
+                            Text(
+                                text = "Cancelar",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W600
+                            )
+                        }
+                        Button(
+                            onClick = {
+                                val amount = extractPrice(reservationDetails.totalPrice)
+                                viewModel.createReservationAndStartPayment(
+                                    clientId = clientId,
+                                    providerId = providerId,
+                                    serviceId = serviceId,
+                                    timeSlotId = timeSlotId,
+                                    workerId = workerId,
+                                    amount = amount
+                                )
+                            },
+                            modifier = Modifier
+                                .height(54.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryPurple
+                            ),
+                            shape = RoundedCornerShape(27.dp),
+                            elevation = ButtonDefaults.buttonElevation(0.dp)
+                        ) {
+                            Text(
+                                text = "Confirmar",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W600
+                            )
+                        }
                     }
                 }
             }
         }
     }
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // Evitar que se cierre al hacer click afuera si quieres obligar al botón
+            },
+            containerColor = Color.White,
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFE8F5E9)), // Fondo verde muy claro
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Éxito",
+                        tint = Color(0xFF4CAF50), // Verde éxito
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "¡Reservación Exitosa!",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2D3142),
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = "Tu cita ha sido confirmada correctamente. Te esperamos.",
+                    fontSize = 14.sp,
+                    color = Color(0xFF7A7A7A),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSuccessDialog = false
+                        onReservationConfirmed() // ESTO ejecuta la lógica de AppNav para volver al salón
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 12.dp)
+                        .height(48.dp)
+                ) {
+                    Text("Volver a Servicios", fontWeight = FontWeight.SemiBold)
+                }
+            }
+        )
+    }
 }
+
 
 @Composable
 private fun ServiceRow(name: String, duration: String, price: String) {
