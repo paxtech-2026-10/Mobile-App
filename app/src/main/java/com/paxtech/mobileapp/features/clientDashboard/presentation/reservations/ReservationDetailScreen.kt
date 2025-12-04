@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.*
@@ -32,8 +33,8 @@ import java.util.*
 @Composable
 fun ReservationDetailScreen(
     reservation: ReservationDetailsDto,
-    formatDate: (String) -> String,
-    formatTimeRange: (String, String) -> String,
+    formatDate: (String) -> String = { "" },
+    formatTimeRange: (String, String) -> String = { _, _ -> "" },
     onBack: () -> Unit,
     onReservationCancelled: () -> Unit = {},
     viewModel: ReservationDetailViewModel = hiltViewModel(key = "reservation_${reservation.id}")
@@ -42,7 +43,17 @@ fun ReservationDetailScreen(
     val salonAddress by viewModel.salonAddress.collectAsState()
     val isCancelling by viewModel.isCancelling.collectAsState()
     val cancelResult by viewModel.cancelResult.collectAsState()
-    
+
+    val displayDate = remember(reservation.timeSlot.startTime) {
+        UiDateFormatter.formatDate(reservation.timeSlot.startTime)
+    }
+
+    val displayTime = remember(reservation.timeSlot.startTime, reservation.serviceId.duration) {
+        UiDateFormatter.formatCalculatedTimeRange(
+            startTimeString = reservation.timeSlot.startTime,
+            durationMinutes = reservation.serviceId.duration
+        )
+    }
     // Resetear estado cuando cambia la reservación
     LaunchedEffect(reservation.id) {
         // Resetear todo el estado del ViewModel para la nueva reservación
@@ -50,7 +61,7 @@ fun ReservationDetailScreen(
         // Cargar información del salón
         viewModel.loadSalonInfo(reservation.provider.id.toInt())
     }
-    
+
     // Manejar resultado de cancelación - solo una vez
     LaunchedEffect(cancelResult) {
         cancelResult?.onSuccess {
@@ -59,8 +70,9 @@ fun ReservationDetailScreen(
             onReservationCancelled()
         }
     }
-    
+
     Scaffold(
+        containerColor = BackgroundWhite,
         topBar = {
             TopAppBar(
                 title = { },
@@ -111,9 +123,9 @@ fun ReservationDetailScreen(
                     color = TextPrimary
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Cita confirmada
             Column(
                 modifier = Modifier
@@ -133,9 +145,9 @@ fun ReservationDetailScreen(
                     color = TextSecondary
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Resumen
             Card(
                 modifier = Modifier
@@ -156,9 +168,9 @@ fun ReservationDetailScreen(
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // Servicio
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -167,40 +179,45 @@ fun ReservationDetailScreen(
                         Text(
                             text = reservation.serviceId.name,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextPrimary
+                            color = TextPrimary,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Text(
                             text = "s/${reservation.serviceId.price}.00",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = TextPrimary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Fecha y Hora
-                    Text(
-                        text = formatDate(reservation.timeSlot.startTime),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
-                    )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Text(
-                        text = formatTimeRange(reservation.timeSlot.startTime, reservation.timeSlot.endTime),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
-                    )
-                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = null,
+                            tint = TextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "$displayDate • $displayTime",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Divider
-                    HorizontalDivider(color = TextSecondary.copy(alpha = 0.2f))
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
+                    HorizontalDivider(color = androidx.compose.ui.graphics.Color.LightGray.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // Total
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -221,9 +238,9 @@ fun ReservationDetailScreen(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Política de cancelación
             Column(
                 modifier = Modifier
@@ -243,9 +260,9 @@ fun ReservationDetailScreen(
                     color = TextSecondary
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Información del establecimiento
             Column(
                 modifier = Modifier
@@ -284,9 +301,9 @@ fun ReservationDetailScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Cancelar cita
             Column(
                 modifier = Modifier
@@ -322,7 +339,7 @@ fun ReservationDetailScreen(
                         color = PrimaryPurple
                     )
                 }
-                
+
                 // Mostrar error si hay
                 cancelResult?.onFailure { exception ->
                     Spacer(modifier = Modifier.height(8.dp))
@@ -333,49 +350,63 @@ fun ReservationDetailScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
-fun formatTimeRange(startTime: String, endTime: String): String {
-    return try {
-        val start = parseDate(startTime)
-        val end = parseDate(endTime)
-        
-        if (start != null && end != null) {
-            val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-            "${timeFormat.format(start)} - ${timeFormat.format(end)}"
-        } else {
-            "$startTime - $endTime"
-        }
-    } catch (e: Exception) {
-        "$startTime - $endTime"
-    }
+@Composable
+fun ContainerSection(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        content = content
+    )
 }
 
-private fun parseDate(dateString: String): Date? {
-    return try {
+// --- OBJETO AUXILIAR DE FORMATEO ---
+object UiDateFormatter {
+
+    private fun parseDate(dateString: String): Date? {
         val formats = listOf(
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd HH:mm:ss",
             "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
-            "yyyy-MM-dd'T'HH:mm:ssXXX"
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         )
-        
+
         for (format in formats) {
             try {
                 val sdf = SimpleDateFormat(format, Locale.getDefault())
-                sdf.timeZone = TimeZone.getTimeZone("UTC")
                 return sdf.parse(dateString)
             } catch (e: Exception) {
                 continue
             }
         }
-        null
-    } catch (e: Exception) {
-        null
+        return null
+    }
+
+    fun formatDate(dateString: String): String {
+        val date = parseDate(dateString) ?: return dateString
+        val sdf = SimpleDateFormat("EEE, dd MMM yyyy", Locale("es", "ES"))
+        return sdf.format(date)
+    }
+
+    // AQUI ESTÁ LA MAGIA: Calculamos la hora de fin sumando minutos
+    fun formatCalculatedTimeRange(startTimeString: String, durationMinutes: Int): String {
+        val startDate = parseDate(startTimeString) ?: return "Hora por confirmar"
+
+        // Calcular fecha de fin
+        val calendar = Calendar.getInstance()
+        calendar.time = startDate
+        calendar.add(Calendar.MINUTE, durationMinutes)
+        val endDate = calendar.time
+
+        val timeFormat = SimpleDateFormat("h:mm a", Locale("es", "ES"))
+        return "${timeFormat.format(startDate)} - ${timeFormat.format(endDate)}"
     }
 }
 

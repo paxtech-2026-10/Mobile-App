@@ -59,11 +59,12 @@ fun ReservationsScreen(
     }
     
     Scaffold(
+        containerColor = BackgroundWhite,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "My Appointment Booking",
+                        text = "Mis reservas",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -133,7 +134,7 @@ fun ReservationsScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(filteredReservations) { reservation ->

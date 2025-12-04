@@ -141,7 +141,7 @@ class ReservationsViewModel @Inject constructor(
     
     fun formatDate(dateString: String): String {
         val date = parseDate(dateString) ?: return dateString
-        val sdf = SimpleDateFormat("EEE, dd MMM yyyy - hh:mm a", Locale.getDefault())
+        val sdf = SimpleDateFormat("EEE, dd MMM yyyy", Locale.getDefault())
         return sdf.format(date)
     }
 }

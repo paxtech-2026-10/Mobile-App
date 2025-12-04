@@ -52,7 +52,6 @@ import com.paxtech.mobileapp.features.clientDashboard.presentation.home.Home
 import com.paxtech.mobileapp.features.clientDashboard.presentation.home.ApiDebugScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.ReservationsScreen
 import com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.ReservationDetailScreen
-import com.paxtech.mobileapp.features.clientDashboard.presentation.reservations.formatTimeRange
 import com.paxtech.mobileapp.features.clientDashboard.data.remote.services.ReservationDetailsDto
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -181,8 +180,6 @@ fun Main(
                     key(currentReservation.id) {
                         ReservationDetailScreen(
                             reservation = currentReservation,
-                            formatDate = { reservationsViewModel.formatDate(it) },
-                            formatTimeRange = { start, end -> formatTimeRange(start, end) },
                             onBack = { 
                                 selectedReservation.value = null
                             },
