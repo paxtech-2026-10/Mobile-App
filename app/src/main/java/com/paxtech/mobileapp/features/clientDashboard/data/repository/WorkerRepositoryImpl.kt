@@ -17,7 +17,7 @@ class WorkerRepositoryImpl @Inject constructor(
                 val body = response.body().orEmpty()
                 Result.success(body.map { it.toDomain() })
             } else {
-                Result.failure(IllegalStateException("HTTP ${'$'}{response.code()}"))
+                Result.failure(IllegalStateException("HTTP ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

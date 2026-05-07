@@ -131,4 +131,5 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences-rxjava2:1.1.7")
 // optional - RxJava3 support
     implementation("androidx.datastore:datastore-preferences-rxjava3:1.1.7")
+    testImplementation(kotlin("test"))
 }
