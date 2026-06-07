@@ -1,0 +1,56 @@
+name: Build Android APK
+
+on:
+  release:
+    types: [published]   # runs when you publish a GitHub Release
+  workflow_dispatch:      # allow manual runs from the Actions tab
+
+permissions:
+  contents: write         # required to attach the APK to the release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # versionCode is derived from `git rev-list --count HEAD` in
+          # app/build.gradle.kts, so the full history must be available.
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'   # AGP 8.13 / compileSdk 36 require JDK 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # assembleDebug produces an APK signed with the auto-generated debug
+      # keystore, so it installs on any device with no secrets required.
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Stage APK with a versioned name
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk \
+            "dist/MobileApp-${{ github.event.release.tag_name || github.run_number }}.apk"
+
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-app-apk
+          path: dist/*.apk
+
+      - name: Attach APK to the GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk

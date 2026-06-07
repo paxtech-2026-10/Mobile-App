@@ -19,7 +19,7 @@ object RemoteModule {
     @Singleton
     @Named("url")
     fun provideApiBaseUrl(): String{
-        return "https://paxtech.azurewebsites.net/"
+        return "https://paxtech-ashgghgnf7fpfxe9.canadacentral-01.azurewebsites.net/"
     }
 
     @Provides
