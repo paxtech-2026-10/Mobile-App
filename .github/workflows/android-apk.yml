@@ -1,23 +1,53 @@
-name: Build Android APK
+name: Release APK on version change
+
+# Builds and publishes a GitHub Release with the APK ONLY when versionName in
+# app/build.gradle.kts changes (i.e. when a tag v<version> does not yet exist).
+# Bump `versionName` in app/build.gradle.kts, commit, push to main -> a release appears.
 
 on:
-  release:
-    types: [published]   # runs when you publish a GitHub Release
-  workflow_dispatch:      # allow manual runs from the Actions tab
+  push:
+    branches: [main]
+  workflow_dispatch:   # manual run (still skips if the version already released)
 
 permissions:
-  contents: write         # required to attach the APK to the release
+  contents: write      # required to create the release / tag
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Read versionName & check if it was already released
+        id: check
+        run: |
+          VERSION=$(grep -E 'versionName[[:space:]]*=[[:space:]]*"' app/build.gradle.kts | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not read versionName from app/build.gradle.kts"; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q .; then
+            echo "Release v$VERSION already exists - nothing to do."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New version v$VERSION - a release will be created."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # versionCode is derived from `git rev-list --count HEAD` in
-          # app/build.gradle.kts, so the full history must be available.
+          # versionCode is derived from `git rev-list --count HEAD`,
+          # so the full history must be available.
           fetch-depth: 0
 
       - name: Set up Java
@@ -41,7 +71,7 @@ jobs:
         run: |
           mkdir -p dist
           cp app/build/outputs/apk/debug/app-debug.apk \
-            "dist/MobileApp-${{ github.event.release.tag_name || github.run_number }}.apk"
+            "dist/MobileApp-v${{ needs.check.outputs.version }}.apk"
 
       - name: Upload APK as workflow artifact
         uses: actions/upload-artifact@v4
@@ -49,8 +79,11 @@ jobs:
           name: mobile-app-apk
           path: dist/*.apk
 
-      - name: Attach APK to the GitHub Release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.apk
+      - name: Create GitHub Release and attach APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ needs.check.outputs.version }}" dist/*.apk \
+            --title "v${{ needs.check.outputs.version }}" \
+            --notes "Automated release for version ${{ needs.check.outputs.version }}." \
+            --target "${{ github.sha }}"
