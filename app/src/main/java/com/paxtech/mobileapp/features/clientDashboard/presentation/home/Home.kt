@@ -60,6 +60,7 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -210,10 +211,9 @@ fun Home(
                                 overflow = TextOverflow.Ellipsis
                             )
                         } else {
-                            Text(
-                                text = "Permitir acceso a ubicación",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary,
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 modifier = Modifier.clickable {
                                     locationPermissionLauncher.launch(
                                         arrayOf(
@@ -222,7 +222,21 @@ fun Home(
                                         )
                                     )
                                 }
-                            )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = PrimaryPurple,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Permitir acceso a ubicación",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrimaryPurple,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            }
                         }
                     }
 

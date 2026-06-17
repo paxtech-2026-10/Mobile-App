@@ -1,5 +1,6 @@
 package com.paxtech.mobileapp.features.clientDashboard.presentation.reservations
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,12 +8,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +44,9 @@ fun ReservationDetailScreen(
     val salonAddress by viewModel.salonAddress.collectAsState()
     val isCancelling by viewModel.isCancelling.collectAsState()
     val cancelResult by viewModel.cancelResult.collectAsState()
-    
+    var showCancelDialog by remember { mutableStateOf(false) }
+    val destructiveRed = Color(0xFFD32F2F)
+
     // Resetear estado cuando cambia la reservación
     LaunchedEffect(reservation.id) {
         // Resetear todo el estado del ViewModel para la nueva reservación
@@ -170,7 +174,7 @@ fun ReservationDetailScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "s/${reservation.serviceId.price}.00",
+                            text = "S/ ${reservation.serviceId.price}.00",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -213,7 +217,7 @@ fun ReservationDetailScreen(
                             color = TextPrimary
                         )
                         Text(
-                            text = "s/${reservation.serviceId.price}.00",
+                            text = "S/ ${reservation.serviceId.price}.00",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -293,25 +297,29 @@ fun ReservationDetailScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                TextButton(
-                    onClick = { viewModel.cancelReservation(reservation.id) },
+                OutlinedButton(
+                    onClick = { if (!isCancelling) showCancelDialog = true },
                     enabled = !isCancelling,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = PrimaryPurple
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, destructiveRed),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = destructiveRed
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
                 ) {
                     if (isCancelling) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = PrimaryPurple,
+                            color = destructiveRed,
                             strokeWidth = 2.dp
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Default.CalendarToday,
+                            imageVector = Icons.Default.Cancel,
                             contentDescription = null,
-                            tint = PrimaryPurple,
+                            tint = destructiveRed,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -319,10 +327,11 @@ fun ReservationDetailScreen(
                     Text(
                         text = if (isCancelling) "Cancelando..." else "Cancelar cita",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = PrimaryPurple
+                        fontWeight = FontWeight.Bold,
+                        color = destructiveRed
                     )
                 }
-                
+
                 // Mostrar error si hay
                 cancelResult?.onFailure { exception ->
                     Spacer(modifier = Modifier.height(8.dp))
@@ -336,6 +345,30 @@ fun ReservationDetailScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    // Diálogo de confirmación para evitar cancelaciones accidentales (acción destructiva)
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("Cancelar cita") },
+            text = { Text("¿Estás seguro de que deseas cancelar tu cita? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCancelDialog = false
+                        viewModel.cancelReservation(reservation.id)
+                    }
+                ) {
+                    Text("Sí, cancelar", color = destructiveRed, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text("No, mantener", color = PrimaryPurple)
+                }
+            }
+        )
     }
 }
 

@@ -21,7 +21,7 @@ android {
         targetSdk = 36
         // Nombre de versión estable: súbelo para publicar un nuevo release.
         // El workflow de CI construye y publica un release cuando este valor cambia.
-        versionName = "1.0.0"
+        versionName = "1.1.0"
 
         // versionCode sigue auto-incrementándose con el número de commits de Git,
         // para que cada build tenga un código único y creciente.

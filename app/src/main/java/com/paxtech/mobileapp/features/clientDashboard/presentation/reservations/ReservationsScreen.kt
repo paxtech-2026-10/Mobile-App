@@ -63,7 +63,7 @@ fun ReservationsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "My Appointment Booking",
+                        text = "Mis reservas",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -106,7 +106,7 @@ fun ReservationsScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text(
-                                text = error ?: "Error loading reservations",
+                                text = error ?: "Error al cargar las reservas",
                                 color = TextSecondary
                             )
                             Button(
@@ -272,7 +272,7 @@ fun ReservationCard(
                                 contentColor = PrimaryPurple
                             )
                         ) {
-                            Text("Rebook", fontSize = 12.sp)
+                            Text("Reservar de nuevo", fontSize = 12.sp)
                         }
                     }
                 }
@@ -288,9 +288,9 @@ enum class ReservationStatus {
 @Composable
 fun StatusChip(status: ReservationStatus) {
     val (text, color) = when (status) {
-        ReservationStatus.UPCOMING -> "Upcoming" to androidx.compose.ui.graphics.Color(0xFF2196F3)
-        ReservationStatus.COMPLETED -> "Completed" to androidx.compose.ui.graphics.Color(0xFF4CAF50)
-        ReservationStatus.PENDING -> "Pending" to androidx.compose.ui.graphics.Color(0xFFE91E63)
+        ReservationStatus.UPCOMING -> "Próxima" to androidx.compose.ui.graphics.Color(0xFF2196F3)
+        ReservationStatus.COMPLETED -> "Completada" to androidx.compose.ui.graphics.Color(0xFF4CAF50)
+        ReservationStatus.PENDING -> "Pendiente" to androidx.compose.ui.graphics.Color(0xFFE91E63)
     }
     
     Surface(

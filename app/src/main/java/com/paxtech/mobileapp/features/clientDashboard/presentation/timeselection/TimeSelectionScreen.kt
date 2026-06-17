@@ -78,7 +78,7 @@ fun TimeSelectionScreen(
     }
 
     val monthTitle = remember(currentWeekStart.timeInMillis) {
-        capFirst(SimpleDateFormat("MMMM yyyy", localeEn).format(currentWeekStart.time), localeEn)
+        capFirst(SimpleDateFormat("MMMM yyyy", localeEs).format(currentWeekStart.time), localeEs)
     }
 
     // Horarios hardcodeados (no se toman del backend)
@@ -106,7 +106,7 @@ fun TimeSelectionScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Select Date & Time",
+                        "Selecciona fecha y hora",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = Color.Black
@@ -221,16 +221,16 @@ fun TimeSelectionScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Time",
+                                "Hora",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
 
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                LegendItem(color = PrimaryPurple, label = "Selected")
-                                LegendItem(color = Color(0xFFF3EDFF), label = "Available")
-                                LegendItem(color = Color(0xFFE7F1ED), label = "Booked")
+                                LegendItem(color = PrimaryPurple, label = "Seleccionado")
+                                LegendItem(color = Color(0xFFF3EDFF), label = "Disponible")
+                                LegendItem(color = Color(0xFFE5E7EB), label = "Ocupado")
                             }
                         }
 
@@ -345,7 +345,7 @@ fun TimeSelectionScreen(
                         shape = RoundedCornerShape(28.dp)
                     ) {
                         Text(
-                            "Continue",
+                            "Continuar",
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
@@ -364,7 +364,7 @@ private fun DateCircle(
     onSelect: () -> Unit
 ) {
     val dayNumber = cal.get(Calendar.DAY_OF_MONTH)
-    val dayName = SimpleDateFormat("EEE", Locale.ENGLISH).format(cal.time).replace(".", "")
+    val dayName = SimpleDateFormat("EEE", Locale("es", "ES")).format(cal.time).replace(".", "")
 
     Box(
         modifier = Modifier
@@ -413,13 +413,13 @@ private fun TimeSlotButton(
 ) {
     val backgroundColor = when (status) {
         TimeStatus.SELECTED -> PrimaryPurple
-        TimeStatus.BOOKED -> Color(0xFFE7F1ED)
+        TimeStatus.BOOKED -> Color(0xFFE5E7EB)   // gris: indica horario deshabilitado
         TimeStatus.AVAILABLE -> Color(0xFFF3EDFF)
     }
     val textColor = when (status) {
         TimeStatus.SELECTED -> Color.White
-        TimeStatus.BOOKED -> Color(0xFF4DD0E1)
-        TimeStatus.AVAILABLE -> Color(0xFF9CA3AF)
+        TimeStatus.BOOKED -> Color(0xFF9CA3AF)   // gris: horario no disponible
+        TimeStatus.AVAILABLE -> Color(0xFF6B5B95)
     }
 
     Surface(

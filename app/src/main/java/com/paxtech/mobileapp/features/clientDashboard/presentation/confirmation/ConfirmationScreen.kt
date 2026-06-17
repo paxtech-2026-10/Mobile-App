@@ -82,7 +82,7 @@ fun ConfirmationScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Your Appointment",
+                        "Tu cita",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.W600,
                         color = Color(0xFF2D3142)
@@ -210,7 +210,7 @@ fun ConfirmationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Date & Time:",
+                                text = "Fecha y hora:",
                                 fontSize = 13.sp,
                                 color = Color(0xFF7A7A7A)
                             )
@@ -230,7 +230,7 @@ fun ConfirmationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Gender Type:",
+                                text = "Profesional:",
                                 fontSize = 13.sp,
                                 color = Color(0xFF7A7A7A)
                             )
@@ -245,7 +245,7 @@ fun ConfirmationScreen(
                         Spacer(modifier = Modifier.height(20.dp))
 
                         Text(
-                            text = "Service List",
+                            text = "Lista de servicios",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.W600,
                             color = Color(0xFF2D3142)
@@ -284,7 +284,7 @@ fun ConfirmationScreen(
 
                         // ========== SECCIÓN DE CUPÓN ==========
                         Text(
-                            text = "Apply Coupon",
+                            text = "Aplicar cupón",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.W600,
                             color = Color(0xFF2D3142)
@@ -394,9 +394,9 @@ fun ConfirmationScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Total Time", fontSize = 13.sp, color = Color(0xFF7A7A7A))
+                            Text("Tiempo total", fontSize = 13.sp, color = Color(0xFF7A7A7A))
                             Text(
-                                "${reservationDetails.duration} Minutes",
+                                "${reservationDetails.duration} minutos",
                                 fontSize = 13.sp,
                                 color = Color(0xFF2D3142)
                             )
@@ -410,7 +410,7 @@ fun ConfirmationScreen(
                         ) {
                             Text("Subtotal", fontSize = 13.sp, color = Color(0xFF7A7A7A))
                             Text(
-                                "$${String.format("%.2f", subtotal)}",
+                                "S/ ${String.format("%.2f", subtotal)}",
                                 fontSize = 13.sp,
                                 color = Color(0xFF2D3142)
                             )
@@ -430,7 +430,7 @@ fun ConfirmationScreen(
                                     color = Color(0xFF7A7A7A)
                                 )
                                 Text(
-                                    "-$${String.format("%.2f", discountAmount)}",
+                                    "-S/ ${String.format("%.2f", discountAmount)}",
                                     fontSize = 13.sp,
                                     color = Color(0xFF10B981),
                                     fontWeight = FontWeight.W500
@@ -448,13 +448,13 @@ fun ConfirmationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Total Price",
+                                text = "Precio total",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.W600,
                                 color = Color(0xFF2D3142)
                             )
                             Text(
-                                text = "$${String.format("%.2f", finalTotal)}",
+                                text = "S/ ${String.format("%.2f", finalTotal)}",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.W700,
                                 color = Color(0xFF2D3142)
@@ -487,7 +487,7 @@ fun ConfirmationScreen(
                             fontWeight = FontWeight.W400
                         )
                         Text(
-                            text = "$${String.format("%.2f", finalTotal)}",
+                            text = "S/ ${String.format("%.2f", finalTotal)}",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.W700,
                             color = Color(0xFF2D3142)

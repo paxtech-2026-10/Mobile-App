@@ -31,7 +31,7 @@ fun SalonDetailRoute(
     val isFavorite by viewModel.isFavorite.collectAsState()
 
     val defaultServices = if (services.isEmpty())
-        listOf(ServiceUi("0", "Servicio no disponible", "Descripción no disponible", "s/0.00", 0))
+        listOf(ServiceUi("0", "Servicio no disponible", "Descripción no disponible", "S/ 0.00", 0))
     else services
 
     val defaultReviews = if (reviews.isEmpty())

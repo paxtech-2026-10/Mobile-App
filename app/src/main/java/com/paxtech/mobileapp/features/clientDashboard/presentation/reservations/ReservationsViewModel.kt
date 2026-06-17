@@ -70,7 +70,7 @@ class ReservationsViewModel @Inject constructor(
                     println("🔍 ReservationsViewModel: Estado actualizado con ${reservations.size} reservaciones")
                 }
                 .onFailure { exception ->
-                    _error.value = exception.message ?: "Error loading reservations"
+                    _error.value = exception.message ?: "Error al cargar las reservas"
                     println("❌ ReservationsViewModel: ERROR al cargar reservaciones")
                     println("   - Mensaje: ${exception.message}")
                     println("   - Tipo: ${exception.javaClass.simpleName}")

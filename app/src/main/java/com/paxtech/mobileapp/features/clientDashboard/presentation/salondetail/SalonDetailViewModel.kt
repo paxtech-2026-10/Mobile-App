@@ -108,7 +108,7 @@ class SalonDetailViewModel @Inject constructor(
                             id = service.id.toString(),
                             title = service.name,
                             subtitle = "", // Valor por defecto vacío, se puede usar descripción si está disponible en el futuro
-                            price = "s/${service.price}.00",
+                            price = "S/ ${service.price}.00",
                             durationMins = service.duration
                         )
                     }
@@ -116,7 +116,7 @@ class SalonDetailViewModel @Inject constructor(
                     println("🔍 SalonDetailViewModel: Error loading services for salon $salonId: ${e.message}")
                     // Mantener servicios mockeados en caso de error
                     _services.value = listOf(
-                        ServiceUi("1", "Servicio no disponible", "Error al cargar servicios", "s/0.00", 0)
+                        ServiceUi("1", "Servicio no disponible", "Error al cargar servicios", "S/ 0.00", 0)
                     )
                 }
 
