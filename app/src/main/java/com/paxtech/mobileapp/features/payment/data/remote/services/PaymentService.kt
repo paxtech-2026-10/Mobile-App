@@ -16,6 +16,11 @@ interface PaymentService {
     
     @GET("api/v1/payments/{paymentId}")
     suspend fun getPaymentById(@Path("paymentId") paymentId: Long): Response<PaymentDto>
+
+    // Simula un pago exitoso sin depender del webhook de Stripe.
+    // Solo funciona si el backend tiene PAYMENTS_SIMULATION_ENABLED=true.
+    @POST("api/v1/payments/{paymentId}/confirm")
+    suspend fun confirmPayment(@Path("paymentId") paymentId: Long): Response<PaymentDto>
 }
 
 

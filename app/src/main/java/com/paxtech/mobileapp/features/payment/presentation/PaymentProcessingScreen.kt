@@ -61,9 +61,13 @@ fun PaymentProcessingScreen(
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(paymentLinkUrl))
             context.startActivity(intent)
             hasOpenedBrowser = true
-            
+
             // Iniciar polling después de abrir el navegador
             viewModel.startPollingPaymentStatus(paymentId)
+
+            // Simulación: a los 10s se aprueba el pago automáticamente (si el backend
+            // tiene PAYMENTS_SIMULATION_ENABLED=true), sin esperar el webhook de Stripe.
+            viewModel.startPaymentSimulation(paymentId)
         }
     }
     

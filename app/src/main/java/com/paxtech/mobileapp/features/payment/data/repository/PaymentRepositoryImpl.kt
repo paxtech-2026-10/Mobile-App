@@ -89,6 +89,31 @@ class PaymentRepositoryImpl @Inject constructor(
         }
     }
     
+    override suspend fun confirmPayment(paymentId: Long): Result<Payment> = withContext(Dispatchers.IO) {
+        try {
+            println("🔍 PaymentRepositoryImpl: Simulating payment confirmation - ID: $paymentId")
+            val response = paymentService.confirmPayment(paymentId)
+
+            if (response.isSuccessful) {
+                val paymentDto = response.body()
+                if (paymentDto != null) {
+                    println("🔍 PaymentRepositoryImpl: Payment confirmed (simulated) - ID: ${paymentDto.id}, Status: ${paymentDto.paymentStatus}")
+                    Result.success(paymentDto.toDomain())
+                } else {
+                    Result.failure(Exception("Confirm payment response body is null"))
+                }
+            } else {
+                // 403 => simulación deshabilitada en el backend; se ignora y sigue el flujo normal.
+                val errorBody = response.errorBody()?.string()
+                println("🔍 PaymentRepositoryImpl: Confirm payment not applied: ${response.code()} - $errorBody")
+                Result.failure(Exception("Confirm payment failed: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            println("🔍 PaymentRepositoryImpl: Exception confirming payment: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getPaymentById(paymentId: Long): Result<Payment> = withContext(Dispatchers.IO) {
         try {
             println("🔍 PaymentRepositoryImpl: Getting payment by ID: $paymentId")

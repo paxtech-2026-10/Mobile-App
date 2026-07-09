@@ -23,7 +23,8 @@ class PaymentViewModel @Inject constructor(
     val paymentState: StateFlow<PaymentState> = _paymentState.asStateFlow()
     
     private var pollingJob: Job? = null
-    
+    private var simulationJob: Job? = null
+
     fun startPaymentFlow(
         amount: Double,
         currency: String,
@@ -95,8 +96,33 @@ class PaymentViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Simula la aprobación automática del pago después de [delayMillis] (10s por defecto),
+     * sin esperar la respuesta de Stripe. Llama al endpoint /confirm del backend, que solo
+     * surte efecto si PAYMENTS_SIMULATION_ENABLED=true; si está deshabilitado (403) o falla,
+     * no altera el estado y el flujo normal de polling continúa.
+     */
+    fun startPaymentSimulation(paymentId: Long, delayMillis: Long = 10_000) {
+        simulationJob?.cancel()
+        simulationJob = viewModelScope.launch {
+            delay(delayMillis)
+            val result = paymentRepository.confirmPayment(paymentId)
+            result.onSuccess { payment ->
+                if (payment.paymentStatus == PaymentStatus.SUCCEEDED) {
+                    println("🔍 PaymentViewModel: Payment auto-confirmed (simulation)")
+                    pollingJob?.cancel()
+                    _paymentState.value = PaymentState.PaymentSucceeded(payment)
+                }
+            }.onFailure { error ->
+                // Simulación deshabilitada o error: se ignora y se mantiene el flujo normal.
+                println("🔍 PaymentViewModel: Simulation not applied: ${error.message}")
+            }
+        }
+    }
+
     fun stopPolling() {
         pollingJob?.cancel()
+        simulationJob?.cancel()
     }
     
     /**
