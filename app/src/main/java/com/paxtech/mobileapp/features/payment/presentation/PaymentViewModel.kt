@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.payment.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.core.analytics.AnalyticsTracker
 import com.paxtech.mobileapp.features.payment.domain.models.Payment
 import com.paxtech.mobileapp.features.payment.domain.models.PaymentStatus
 import com.paxtech.mobileapp.features.payment.domain.repository.PaymentRepository
@@ -16,14 +17,30 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PaymentViewModel @Inject constructor(
-    private val paymentRepository: PaymentRepository
+    private val paymentRepository: PaymentRepository,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
-    
+
     private val _paymentState = MutableStateFlow<PaymentState>(PaymentState.Idle)
     val paymentState: StateFlow<PaymentState> = _paymentState.asStateFlow()
-    
+
     private var pollingJob: Job? = null
     private var simulationJob: Job? = null
+
+    // Contexto para analítica del pago
+    private var currentReservationId: Long? = null
+    private var completedTracked = false
+
+    /** Marca el pago como exitoso y registra payment_completed una sola vez. */
+    private fun onPaymentSucceeded(payment: Payment) {
+        _paymentState.value = PaymentState.PaymentSucceeded(payment)
+        if (!completedTracked) {
+            completedTracked = true
+            analyticsTracker.paymentCompleted(reservationId = currentReservationId)  // UE03/WI12
+        }
+        pollingJob?.cancel()
+        simulationJob?.cancel()
+    }
 
     fun startPaymentFlow(
         amount: Double,
@@ -32,6 +49,9 @@ class PaymentViewModel @Inject constructor(
         clientId: Long,
         description: String = "Reserva de servicio"
     ) {
+        currentReservationId = reservationId
+        completedTracked = false
+        analyticsTracker.paymentStarted(reservationId = reservationId)  // UE03/WI12
         viewModelScope.launch {
             _paymentState.value = PaymentState.CreatingPayment
             
@@ -73,8 +93,7 @@ class PaymentViewModel @Inject constructor(
                 result.onSuccess { payment ->
                     when (payment.paymentStatus) {
                         PaymentStatus.SUCCEEDED -> {
-                            _paymentState.value = PaymentState.PaymentSucceeded(payment)
-                            pollingJob?.cancel()
+                            onPaymentSucceeded(payment)
                             return@launch
                         }
                         PaymentStatus.FAILED -> {
@@ -110,8 +129,7 @@ class PaymentViewModel @Inject constructor(
             result.onSuccess { payment ->
                 if (payment.paymentStatus == PaymentStatus.SUCCEEDED) {
                     println("🔍 PaymentViewModel: Payment auto-confirmed (simulation)")
-                    pollingJob?.cancel()
-                    _paymentState.value = PaymentState.PaymentSucceeded(payment)
+                    onPaymentSucceeded(payment)
                 }
             }.onFailure { error ->
                 // Simulación deshabilitada o error: se ignora y se mantiene el flujo normal.
@@ -135,9 +153,7 @@ class PaymentViewModel @Inject constructor(
             result.onSuccess { payment ->
                 when (payment.paymentStatus) {
                     PaymentStatus.SUCCEEDED -> {
-                        println("🔍 PaymentViewModel: Payment succeeded detected immediately!")
-                        _paymentState.value = PaymentState.PaymentSucceeded(payment)
-                        pollingJob?.cancel()
+                        onPaymentSucceeded(payment)
                     }
                     PaymentStatus.FAILED -> {
                         println("🔍 PaymentViewModel: Payment failed detected immediately!")
