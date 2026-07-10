@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.salondetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.core.analytics.AnalyticsTracker
 import com.paxtech.mobileapp.core.geocoding.GeocodingRepository
 import com.paxtech.mobileapp.core.utils.LocationUtils
 import com.paxtech.mobileapp.features.clientDashboard.domain.model.RatingSummary
@@ -26,7 +27,8 @@ class SalonDetailViewModel @Inject constructor(
     private val serviceRepository: ServiceRepository,
     private val reviewRepository: ReviewRepository,
     private val geocodingRepository: GeocodingRepository,
-    private val localRepository: LocalSalonRepository
+    private val localRepository: LocalSalonRepository,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private val _salon = MutableStateFlow<Salon?>(null)
     val salon: StateFlow<Salon?> = _salon
@@ -123,6 +125,11 @@ class SalonDetailViewModel @Inject constructor(
                 try {
                     val salonReviews = reviewRepository.getReviewsByProviderId(salonId)
                     _reviews.value = salonReviews
+                    // UE05/WI20 — perfil visto, con señal de si tiene reseñas
+                    analyticsTracker.profileView(
+                        providerId = salonId.toLong(),
+                        hasReviews = salonReviews.isNotEmpty()
+                    )
                 } catch (e: Exception) {
                     println("🔍 SalonDetailViewModel: Error loading reviews for salon $salonId: ${e.message}")
                     // Mantener reseñas mockeadas en caso de error

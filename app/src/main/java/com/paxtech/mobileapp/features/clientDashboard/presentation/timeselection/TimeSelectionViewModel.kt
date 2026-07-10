@@ -2,6 +2,7 @@ package com.paxtech.mobileapp.features.clientDashboard.presentation.timeselectio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.paxtech.mobileapp.core.analytics.AnalyticsTracker
 import com.paxtech.mobileapp.features.authentication.domain.repository.UserDataRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.ReservationRepository
 import com.paxtech.mobileapp.features.clientDashboard.data.repository.TimeSlotRepository
@@ -20,7 +21,8 @@ import java.util.TimeZone
 class TimeSelectionViewModel @Inject constructor(
     private val reservationRepository: ReservationRepository,
     private val timeSlotRepository: TimeSlotRepository,
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -224,11 +226,18 @@ class TimeSelectionViewModel @Inject constructor(
     fun createReservation(clientId: Long, providerId: Long, serviceId: Long, timeSlotId: Long, workerId: Long, onDone: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             println("🔍 TimeSelectionViewModel: Creando reservación - clientId: $clientId, providerId: $providerId, serviceId: $serviceId, timeSlotId: $timeSlotId, workerId: $workerId")
+            // UE04/WI15 — intento de reserva en app
+            analyticsTracker.bookInAppStarted(providerId = providerId)
             val result = reservationRepository.createReservation(
                 CreateReservationRequest(clientId, providerId, serviceId, timeSlotId, workerId)
             )
             if (result.isSuccess) {
                 println("🔍 TimeSelectionViewModel: Reservación creada exitosamente")
+                // UE04/WI15 — reserva en app completada
+                analyticsTracker.bookInAppCompleted(
+                    providerId = providerId,
+                    reservationId = result.getOrNull()?.id
+                )
                 onDone(true, null)
             } else {
                 val error = result.exceptionOrNull()?.message
